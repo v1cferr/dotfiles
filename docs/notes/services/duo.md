@@ -27,13 +27,13 @@ stays INERT and the system keeps building normally. Same pattern as `caddy.nix`.
 1. Bitwarden, create the items. The VALUE always goes in the *password* field, because
    `sync-secrets` uses `bw get password`:
 
-   | Item | Purpose |
-   | --- | --- |
-   | `Duo DB Password` | required; generate a strong one |
-   | `Gemini API Key` | optional, a solver fallback |
-   | `ntfy Topic` | the streak-at-risk alert, a shared topic |
-   | `Duolingo` | optional, the account password (login fallback) |
-   | `Duolingo Email` | the fallback's pair, in the password field |
+   | Item              | Purpose                                         |
+   | ----------------- | ----------------------------------------------- |
+   | `Duo DB Password` | required; generate a strong one                 |
+   | `Gemini API Key`  | optional, a solver fallback                     |
+   | `ntfy Topic`      | the streak-at-risk alert, a shared topic        |
+   | `Duolingo`        | optional, the account password (login fallback) |
+   | `Duolingo Email`  | the fallback's pair, in the password field      |
 
 2. Add the corresponding lines to `secrets/bitwarden-secrets.json`:
 

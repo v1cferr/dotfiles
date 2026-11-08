@@ -33,9 +33,9 @@ diff against unstable's module is a postgres client option and a comment. On the
 
 ## Layout
 
-| Path | Owner | What |
-| --- | --- | --- |
-| `/srv/photos/immich` | `immich`, `0700` | uploads, thumbnails, encoded video; Immich's own state |
+| Path                  | Owner                    | What                                                    |
+| --------------------- | ------------------------ | ------------------------------------------------------- |
+| `/srv/photos/immich`  | `immich`, `0700`         | uploads, thumbnails, encoded video; Immich's own state  |
 | `/srv/photos/archive` | `v1cferr:immich`, `2750` | an EXTERNAL library: files I copy in, Immich only reads |
 
 **Not under `/home`**: the unit runs with `ProtectHome`, so `~/Pictures` does not exist for it.

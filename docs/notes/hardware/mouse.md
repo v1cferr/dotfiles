@@ -40,12 +40,12 @@ every increment (PixlOne/logiops#310, open).
 The gesture button (cid 195, `0xC3`, under the thumb rest) manages THE TAPE with the thumb, ever
 since scrolling became global and a workspace stopped being where you stock windows.
 
-| Gesture | Bind it synthesizes | What it does |
-| --- | --- | --- |
-| Left / Right | SUPER+SHIFT+`,` / `.` | MOVE the window along the tape (`swapcol l/r`) |
-| Up | SUPER+CTRL+G | see everything (fit all) |
-| Down | SUPER+CTRL+`.` | focus, 1 per screen (`colresize all 1.0`) |
-| click, no movement | SUPER+Q | the app launcher |
+| Gesture            | Bind it synthesizes   | What it does                                   |
+| ------------------ | --------------------- | ---------------------------------------------- |
+| Left / Right       | SUPER+SHIFT+`,` / `.` | MOVE the window along the tape (`swapcol l/r`) |
+| Up                 | SUPER+CTRL+G          | see everything (fit all)                       |
+| Down               | SUPER+CTRL+`.`        | focus, 1 per screen (`colresize all 1.0`)      |
+| click, no movement | SUPER+Q               | the app launcher                               |
 
 Left/Right is the "put it beside with the mouse": dragging does not do that, it stacks, hardcoded.
 Up/Down is the pair of view modes, on the thumb.

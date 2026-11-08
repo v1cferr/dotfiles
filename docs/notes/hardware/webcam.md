@@ -16,13 +16,13 @@ Snapshot only previews, and OBS Studio is a studio, which is a different job.
 A Sonix `0c45:636b` sold as a REDRAGON Live Camera, UVC 1.00, on a USB 2.0 hub. The parts that
 work needed nothing declared:
 
-| Piece | State |
-| --- | --- |
-| Driver | `uvcvideo` binds it at enumeration, no module option, no quirk |
-| Nodes | `/dev/video0` (capture), `/dev/video1` (metadata), `/dev/media0` |
-| Access | the seat ACL already grants `user:v1cferr:rw-`, so no group and no rule of mine |
-| Microphone | interfaces 1.2 and 1.3 bind `snd-usb-audio`, and PipeWire has it as a source |
-| Formats offered | MJPG up to 1280x720 at 30 fps, YUYV up to 640x480 at 30 fps |
+| Piece           | State                                                                           |
+| --------------- | ------------------------------------------------------------------------------- |
+| Driver          | `uvcvideo` binds it at enumeration, no module option, no quirk                  |
+| Nodes           | `/dev/video0` (capture), `/dev/video1` (metadata), `/dev/media0`                |
+| Access          | the seat ACL already grants `user:v1cferr:rw-`, so no group and no rule of mine |
+| Microphone      | interfaces 1.2 and 1.3 bind `snd-usb-audio`, and PipeWire has it as a source    |
+| Formats offered | MJPG up to 1280x720 at 30 fps, YUYV up to 640x480 at 30 fps                     |
 
 The microphone matters as EVIDENCE and not as a feature: recording from it produced 3 seconds of
 real, non-silent audio over the same cable and the same hub. So enumeration works, the control

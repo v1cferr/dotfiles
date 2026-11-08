@@ -69,12 +69,12 @@ The binary only exists inside `kdePackages.plasma-workspace`, which brings **758
 closure, 429 MiB of them qtwebengine, plus kwin, breeze and oxygen-icons. Ugly on a Hyprland
 system. The alternatives were discarded with a reason:
 
-| Alternative | Why not |
-| --- | --- |
-| `snixembed` | it goes the OPPOSITE way (publishes SNI as XEmbed, for old bars) and so tries to BE the StatusNotifierWatcher, dying with "could not acquire watcher name" because Quickshell already is |
-| a standalone package | there is none in nixpkgs (checked: `xembed-sni-proxy` and `xembedsniproxy` do not exist as attributes) |
-| extracting the binary by hand | does not escape the weight, since plasma-workspace references kwin, breeze and oxygen-icons DIRECTLY |
-| `stalonetray` | another floating window, which is the original problem coming back |
+| Alternative                   | Why not                                                                                                                                                                                  |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `snixembed`                   | it goes the OPPOSITE way (publishes SNI as XEmbed, for old bars) and so tries to BE the StatusNotifierWatcher, dying with "could not acquire watcher name" because Quickshell already is |
+| a standalone package          | there is none in nixpkgs (checked: `xembed-sni-proxy` and `xembedsniproxy` do not exist as attributes)                                                                                   |
+| extracting the binary by hand | does not escape the weight, since plasma-workspace references kwin, breeze and oxygen-icons DIRECTLY                                                                                     |
+| `stalonetray`                 | another floating window, which is the original problem coming back                                                                                                                       |
 
 ### A known limitation of icons that come through here
 
@@ -276,13 +276,13 @@ findings bare, and 2267 with Quickshell's own QML types on the import path
 (`-I <quickshell>/lib/qt-6/qml`). What survives is not signal, it is a linter that does not model
 Quickshell:
 
-| Category | Count | Verdict |
-| --- | --- | --- |
-| `unqualified` | 1014 | style, and this is how Quickshell code is written |
-| `import` | 520 | it still cannot resolve part of the module tree |
-| `unresolved-type` | 366 | the same cause |
-| `uncreatable-type` | 14 | it calls `PanelWindow` not creatable, and the whole bar is made of them |
-| `incompatible-type` | 14 | it rejects `color: "transparent"`, which is valid QML |
+| Category            | Count | Verdict                                                                 |
+| ------------------- | ----- | ----------------------------------------------------------------------- |
+| `unqualified`       | 1014  | style, and this is how Quickshell code is written                       |
+| `import`            | 520   | it still cannot resolve part of the module tree                         |
+| `unresolved-type`   | 366   | the same cause                                                          |
+| `uncreatable-type`  | 14    | it calls `PanelWindow` not creatable, and the whole bar is made of them |
+| `incompatible-type` | 14    | it rejects `color: "transparent"`, which is valid QML                   |
 
 A lint that flags `PanelWindow` is a lint you learn to skip, and that is the argument
 [`../repo/flake.md`](../repo/flake.md) already records for the two statix rules that are off. So

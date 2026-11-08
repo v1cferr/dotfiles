@@ -17,19 +17,19 @@ account, the lock screen's strength, most vendor settings, or anything under `/d
 
 ## The architecture
 
-| File | Its one job |
-| --- | --- |
-| `adb.py` | the ONLY process call; an allowlist of read-only argv shapes checked before running |
-| `parse.py` | adb's text output into data, tolerant of noise |
-| `sanitize.py` | fail-safe redaction: allowlisted properties, identity-shaped keys dropped, a final scrubber |
-| `spec.py` | the host JSON plus the local overlay, validated |
-| `apps.py`, [`android-iac-seal`](../../../tools/android-iac/scripts/android-iac-seal.sh) | the phone's enabled third-party apps, sealed into sops as the overlay |
-| `state.py` | device selection, the reads, the inspect report |
-| `compare.py` | declared against observed, one status per check |
-| `managed.py`, `plan.py`, `apply.py` | phase 2: the managed block, validated, the plan and its rehearsal (read-only) |
-| `write.py` | phase 2: `apply` and `rollback`, the only writes, verified and journaled |
-| `session.py` | `audit`'s connect, pair and disconnect, with their own allowlist of host-side commands |
-| `doctor.py`, `cli.py` | the commands |
+| File                                                                                    | Its one job                                                                                 |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `adb.py`                                                                                | the ONLY process call; an allowlist of read-only argv shapes checked before running         |
+| `parse.py`                                                                              | adb's text output into data, tolerant of noise                                              |
+| `sanitize.py`                                                                           | fail-safe redaction: allowlisted properties, identity-shaped keys dropped, a final scrubber |
+| `spec.py`                                                                               | the host JSON plus the local overlay, validated                                             |
+| `apps.py`, [`android-iac-seal`](../../../tools/android-iac/scripts/android-iac-seal.sh) | the phone's enabled third-party apps, sealed into sops as the overlay                       |
+| `state.py`                                                                              | device selection, the reads, the inspect report                                             |
+| `compare.py`                                                                            | declared against observed, one status per check                                             |
+| `managed.py`, `plan.py`, `apply.py`                                                     | phase 2: the managed block, validated, the plan and its rehearsal (read-only)               |
+| `write.py`                                                                              | phase 2: `apply` and `rollback`, the only writes, verified and journaled                    |
+| `session.py`                                                                            | `audit`'s connect, pair and disconnect, with their own allowlist of host-side commands      |
+| `doctor.py`, `cli.py`                                                                   | the commands                                                                                |
 
 `audit` is the only command that changes anything, and only on THIS side: what the local adb
 server is connected to. `connect`, `disconnect` and `pair` pass a second allowlist (an
@@ -43,13 +43,13 @@ before anything runs. The tests prove it with a fake adb that records every call
 
 ## Reading the diff
 
-| Status | Meaning | What to do |
-| --- | --- | --- |
-| `in-sync` | observed equals declared | nothing |
-| `drift` | observed differs, with evidence | fix the phone, or change the declaration in a commit |
-| `unknown` | no evidence: the read failed, or the key is unset and its default is unreadable | never read it as a pass |
-| `unsupported` | the thing does not exist on this build (a package the vendor ships under another name) | fix the declaration |
-| `manual` | only a person can settle it | look at the phone |
+| Status        | Meaning                                                                                | What to do                                           |
+| ------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `in-sync`     | observed equals declared                                                               | nothing                                              |
+| `drift`       | observed differs, with evidence                                                        | fix the phone, or change the declaration in a commit |
+| `unknown`     | no evidence: the read failed, or the key is unset and its default is unreadable        | never read it as a pass                              |
+| `unsupported` | the thing does not exist on this build (a package the vendor ships under another name) | fix the declaration                                  |
+| `manual`      | only a person can settle it                                                            | look at the phone                                    |
 
 Exit codes, the same for `diff` and `verify`: `0` all in sync, `1` any drift, `3` no drift but
 something is unknown, manual or unsupported, `2` the environment blocks the run (no adb, no phone,

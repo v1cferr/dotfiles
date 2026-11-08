@@ -24,14 +24,14 @@ setting all of them changed nothing on screen. What paints each part was read wi
 `InspectorUtils.getMatchingCSSRules` in a throwaway profile under Marionette (the same client as
 Zen's lab, in [`theme.nix`](../../../modules/home/apps/zen/theme.nix), on port 2830):
 
-| Part | Variable | Palette |
-| --- | --- | --- |
-| nav bar | `--toolbar-background-color`, `--toolbar-text-color` | surface, text |
-| selected tab, hover | `--tab-background-color-selected`, `--tab-background-color-hover` | surface, track |
-| address bar | `--toolbar-field-background-color`, `-border-color`, `-text-color` | bg, border, text |
-| address bar focused | `--urlbar-background-color-focus`, `--toolbar-field-text-color-focus`, `--focus-outline-color` | bg, text, accent |
-| menus and popups | `--panel-background-color`, `--panel-text-color`, `--panel-border-color` | surface, text, border |
-| the frame behind the tabs | none: `#navigator-toolbox` itself | bg |
+| Part                      | Variable                                                                                       | Palette               |
+| ------------------------- | ---------------------------------------------------------------------------------------------- | --------------------- |
+| nav bar                   | `--toolbar-background-color`, `--toolbar-text-color`                                           | surface, text         |
+| selected tab, hover       | `--tab-background-color-selected`, `--tab-background-color-hover`                              | surface, track        |
+| address bar               | `--toolbar-field-background-color`, `-border-color`, `-text-color`                             | bg, border, text      |
+| address bar focused       | `--urlbar-background-color-focus`, `--toolbar-field-text-color-focus`, `--focus-outline-color` | bg, text, accent      |
+| menus and popups          | `--panel-background-color`, `--panel-text-color`, `--panel-border-color`                       | surface, text, border |
+| the frame behind the tabs | none: `#navigator-toolbox` itself                                                              | bg                    |
 
 The frame has no variable because Linux paints it with the system's `-moz-headerbar` color.
 

@@ -105,13 +105,13 @@ needs to lock by itself.
 Every binary in `cli.nix` filled a gap in a concrete debugging session on this machine, not a slot
 in an "awesome" list.
 
-| Tool | The gap it filled |
-| --- | --- |
-| `delta` | reading a diff is the most repeated operation here, and git's raw diff is monochrome |
-| `dust` | "what is taking space HERE", over SSH, with no graphical session |
-| `doggo` plus `dnsutils` | on 03/08, debugging the DDNS, `dig` did not exist and the query went out through `curl` against a DoH API |
-| `procs` | a whole day of `pgrep -a` / `ps -o` hunting Hyprland, hyprlock and sunshine |
-| `hyperfine` | nearly every comment in this repo starts with "MEASURED", and `time` measures one sample while hyperfine measures the distribution |
+| Tool                    | The gap it filled                                                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `delta`                 | reading a diff is the most repeated operation here, and git's raw diff is monochrome                                               |
+| `dust`                  | "what is taking space HERE", over SSH, with no graphical session                                                                   |
+| `doggo` plus `dnsutils` | on 03/08, debugging the DDNS, `dig` did not exist and the query went out through `curl` against a DoH API                          |
+| `procs`                 | a whole day of `pgrep -a` / `ps -o` hunting Hyprland, hyprlock and sunshine                                                        |
+| `hyperfine`             | nearly every comment in this repo starts with "MEASURED", and `time` measures one sample while hyperfine measures the distribution |
 
 **difftastic was passed over.** It solves another problem (a structural diff, for "I renamed and
 reindented and the diff exploded"), and the community uses both together with delta as the

@@ -20,14 +20,14 @@ maintained Raycast ones.
 
 ## What it replaced, and what stays independent
 
-| Was | Is now |
-| --- | --- |
-| rofi `drun` on SUPER+Q | Vicinae (`vicinae toggle`) |
-| rofi `run` on SUPER+R | gone: apps, script commands and file search on SUPER+Q cover it |
-| cliphist plus the rofi picker on SUPER+SHIFT+V | Vicinae's clipboard history (`vicinae://launch/clipboard/history`) |
-| the cheatsheet in rofi on SUPER+H | the same parser, shown in `vicinae dmenu` ([desktop-plumbing.md](desktop-plumbing.md)) |
-| the Zen guard's rofi password field | `zenity --password` ([zen.md](../apps/zen.md)); a searchable launcher is the wrong place to type a password |
-| rofi's drun cache in usage-audit | Vicinae's visit tracker ([usage-audit.md](../repo/usage-audit.md)) |
+| Was                                            | Is now                                                                                                      |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| rofi `drun` on SUPER+Q                         | Vicinae (`vicinae toggle`)                                                                                  |
+| rofi `run` on SUPER+R                          | gone: apps, script commands and file search on SUPER+Q cover it                                             |
+| cliphist plus the rofi picker on SUPER+SHIFT+V | Vicinae's clipboard history (`vicinae://launch/clipboard/history`)                                          |
+| the cheatsheet in rofi on SUPER+H              | the same parser, shown in `vicinae dmenu` ([desktop-plumbing.md](desktop-plumbing.md))                      |
+| the Zen guard's rofi password field            | `zenity --password` ([zen.md](../apps/zen.md)); a searchable launcher is the wrong place to type a password |
+| rofi's drun cache in usage-audit               | Vicinae's visit tracker ([usage-audit.md](../repo/usage-audit.md))                                          |
 
 Independent on purpose: `clipboard-push` and kitty's smart paste (putting the clipboard on ANOTHER
 machine is not a history feature), `wl-clip-persist` (Vicinae records the history but does not own
@@ -82,19 +82,19 @@ the next start, which is the point.
 
 What is declared, and why:
 
-| Setting | Value | Why |
-| --- | --- | --- |
-| `telemetry.system_info` | `false` | no report of my machine to anyone |
-| `favicon_service` | `google` | tab and shortcut icons; see [the browser](#the-browser) for what leaves |
-| `input_server.enabled` | `false` | see above |
-| `tray.enabled` | `false` | the bar's tray has no use for it |
-| `close_on_focus_loss` | `false` | see below: `true` closed it within 92 ms of opening |
-| `pop_to_root_on_close` | `true` | it reopens on the search, not on the last view |
-| `escape_key_behavior` | `close_window` | Esc closes, like rofi did |
-| `launcher_window.layer_shell.keyboard_interactivity` | `exclusive` | see below: `on_demand` lost the keyboard whenever the mouse moved |
-| `providers.calculator.preferences.backend` | `qalculate` | libqalculate: units, currencies, the GTK Qalculate! engine |
-| `search_files_in_root`, `fallbacks` | `true`, `shortcuts:dotfiles-google` then `files:search` | files show up in the main search; a query that matches nothing offers Google |
-| `launcher_window.size`, `font.normal.size` | 1000x620, 11.5 | the 770x480 default felt small on a 1440p panel |
+| Setting                                              | Value                                                   | Why                                                                          |
+| ---------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `telemetry.system_info`                              | `false`                                                 | no report of my machine to anyone                                            |
+| `favicon_service`                                    | `google`                                                | tab and shortcut icons; see [the browser](#the-browser) for what leaves      |
+| `input_server.enabled`                               | `false`                                                 | see above                                                                    |
+| `tray.enabled`                                       | `false`                                                 | the bar's tray has no use for it                                             |
+| `close_on_focus_loss`                                | `false`                                                 | see below: `true` closed it within 92 ms of opening                          |
+| `pop_to_root_on_close`                               | `true`                                                  | it reopens on the search, not on the last view                               |
+| `escape_key_behavior`                                | `close_window`                                          | Esc closes, like rofi did                                                    |
+| `launcher_window.layer_shell.keyboard_interactivity` | `exclusive`                                             | see below: `on_demand` lost the keyboard whenever the mouse moved            |
+| `providers.calculator.preferences.backend`           | `qalculate`                                             | libqalculate: units, currencies, the GTK Qalculate! engine                   |
+| `search_files_in_root`, `fallbacks`                  | `true`, `shortcuts:dotfiles-google` then `files:search` | files show up in the main search; a query that matches nothing offers Google |
+| `launcher_window.size`, `font.normal.size`           | 1000x620, 11.5                                          | the 770x480 default felt small on a 1440p panel                              |
 
 ## The clipboard
 
@@ -174,29 +174,29 @@ look I asked for on 14/10/2026: a 1 px outline at half strength instead of the 2
 and dividers in `track`, one step above the surface, so the panes separate without lines that
 draw the eye.
 
-| Vicinae key | Palette key |
-| --- | --- |
-| `core.background`, `core.secondary_background` | `bg`, `surface` |
-| `core.foreground`, `text.muted`, `text.placeholder` | `text`, `subtext`, `dim` |
-| `core.accent`, `input.border_focus` | `accent` |
-| `main_window.border` (1 px) | `border` at 50 % opacity |
-| `core.border` (the dividers), `input.border` | `track` |
-| `list.item.selection.background` | `track` |
-| `accents.*` | the palette's named colors |
-| `text.danger`, `text.success` | `red`, `green`, solid |
+| Vicinae key                                         | Palette key                |
+| --------------------------------------------------- | -------------------------- |
+| `core.background`, `core.secondary_background`      | `bg`, `surface`            |
+| `core.foreground`, `text.muted`, `text.placeholder` | `text`, `subtext`, `dim`   |
+| `core.accent`, `input.border_focus`                 | `accent`                   |
+| `main_window.border` (1 px)                         | `border` at 50 % opacity   |
+| `core.border` (the dividers), `input.border`        | `track`                    |
+| `list.item.selection.background`                    | `track`                    |
+| `accents.*`                                         | the palette's named colors |
+| `text.danger`, `text.success`                       | `red`, `green`, solid      |
 
 ## Shortcuts
 
-| Keys | What |
-| --- | --- |
-| SUPER+Q | toggle Vicinae (also the MX Master's gesture button click, which sends SUPER+Q) |
-| SUPER+SHIFT+V | the clipboard history, directly |
-| SUPER+H | the keybind cheatsheet |
-| SUPER+ALT+V | `clipboard-push` (unchanged) |
-| SUPER+R | Repositories |
-| SUPER+K | VS Code's recent projects |
-| SUPER+SHIFT+E | the emoji picker |
-| SUPER+SHIFT+P | the Bitwarden vault |
+| Keys          | What                                                                            |
+| ------------- | ------------------------------------------------------------------------------- |
+| SUPER+Q       | toggle Vicinae (also the MX Master's gesture button click, which sends SUPER+Q) |
+| SUPER+SHIFT+V | the clipboard history, directly                                                 |
+| SUPER+H       | the keybind cheatsheet                                                          |
+| SUPER+ALT+V   | `clipboard-push` (unchanged)                                                    |
+| SUPER+R       | Repositories                                                                    |
+| SUPER+K       | VS Code's recent projects                                                       |
+| SUPER+SHIFT+E | the emoji picker                                                                |
+| SUPER+SHIFT+P | the Bitwarden vault                                                             |
 
 Vicinae binds nothing globally itself: on Hyprland its global shortcuts need `ext-hotkey-v1`, a
 protocol Hyprland has not merged, so every key above is a `hl.bind` in `keybinds.lua`, and there is
@@ -243,18 +243,18 @@ text starts with Vicinae's `@vicinae.*` header, linked into `~/.local/share/vici
 directory Vicinae scans and watches. They call the existing CLIs by name, the same as
 `keybinds.lua` does, so nothing is reimplemented:
 
-| Group | Commands |
-| --- | --- |
-| VPN | Connect FAI, Connect UFSCar, Disconnect (`vpn connect`/`disconnect`, compact mode shows its answer) |
-| Desktop | SSH: FAI workstation (kitty), Restart Quickshell, Shuffle wallpapers, Lock session, Away screen, Show keybind cheatsheet, RGB lights on/off (`rgb-lights`), Reload Hyprland |
-| Screenshot | Select an area (`flameshot gui`), Main monitor, Second monitor (`flameshot-screen <monitor>`, to the clipboard), each 0.3 s after the window closes so Vicinae is not in the shot |
-| Night light | Toggle, Natural colors, 3000K, 2000K: the same commands SUPER+F9 and its modifiers run |
-| Notifications | Toggle do not disturb, Clear (`qs ipc call notif dnd`/`clear`) |
-| Hosts | Wake the FAI workstation, RDP: T480; both in a kitty that stays open, since they talk back (freerdp asks for the password there) |
-| Downloads | Download a MEGA link: an argument field for the link, then `mega-dl` in kitty |
-| System | NixOS rebuild: `needsConfirmation`, then a visible kitty running `rebuild`, so nh's sudo prompt and the log stay in front of me |
-| Links | FAI Dashboard, GitHub, dotfiles on GitHub, dotfiles in VS Code |
-| Services | one per `my.ingress` entry with a `launcher`, opening `https://<name>.<domain>`: GradRadar, Jellyfin, Immich, qBittorrent, Duolingo streak, CreditRadar ([caddy.md](../network/caddy.md)). The `lan` ones only answer at home or over WireGuard |
+| Group         | Commands                                                                                                                                                                                                                                        |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| VPN           | Connect FAI, Connect UFSCar, Disconnect (`vpn connect`/`disconnect`, compact mode shows its answer)                                                                                                                                             |
+| Desktop       | SSH: FAI workstation (kitty), Restart Quickshell, Shuffle wallpapers, Lock session, Away screen, Show keybind cheatsheet, RGB lights on/off (`rgb-lights`), Reload Hyprland                                                                     |
+| Screenshot    | Select an area (`flameshot gui`), Main monitor, Second monitor (`flameshot-screen <monitor>`, to the clipboard), each 0.3 s after the window closes so Vicinae is not in the shot                                                               |
+| Night light   | Toggle, Natural colors, 3000K, 2000K: the same commands SUPER+F9 and its modifiers run                                                                                                                                                          |
+| Notifications | Toggle do not disturb, Clear (`qs ipc call notif dnd`/`clear`)                                                                                                                                                                                  |
+| Hosts         | Wake the FAI workstation, RDP: T480; both in a kitty that stays open, since they talk back (freerdp asks for the password there)                                                                                                                |
+| Downloads     | Download a MEGA link: an argument field for the link, then `mega-dl` in kitty                                                                                                                                                                   |
+| System        | NixOS rebuild: `needsConfirmation`, then a visible kitty running `rebuild`, so nh's sudo prompt and the log stay in front of me                                                                                                                 |
+| Links         | FAI Dashboard, GitHub, dotfiles on GitHub, dotfiles in VS Code                                                                                                                                                                                  |
+| Services      | one per `my.ingress` entry with a `launcher`, opening `https://<name>.<domain>`: GradRadar, Jellyfin, Immich, qBittorrent, Duolingo streak, CreditRadar ([caddy.md](../network/caddy.md)). The `lan` ones only answer at home or over WireGuard |
 
 **Their icons are JetBrainsMono Nerd Font glyphs**, the UI font, cut out at build time as SVGs in
 the palette's `text` color (fonttools, one `runCommand` per glyph) and named in the header with
@@ -279,21 +279,21 @@ and the error for a bad one, and it exits 0 either way, so read its output. All 
 `importNpmLock`, which reads each extension's `package-lock.json`, so bumping the input needs no
 hash edit.
 
-| Extension | What it adds | Credentials |
-| --- | --- | --- |
-| nix | nixpkgs packages and options, Home Manager options | none |
-| systemd | list, start, stop and restart units | none |
-| bluetooth | power, scan, connect, battery | none; Blueman stays as the BlueZ pairing agent, which the extension does not register |
-| github | issues, PRs, workflow runs, repo search | a personal access token |
-| bitwarden | search the vault and copy a password, username, TOTP or URL, through `rbw` | my Bitwarden account, unlocked by `rbw` (below) |
-| ssh | the hosts of `~/.ssh/config` (`ssh.nix`), opened as `kitty ssh <host>` | none; the keys are the agent's |
-| zoxide-recent-directories | zoxide's directories by frecency; Enter opens VS Code, the alternative action Dolphin | none |
-| timer | timers in plain words ("25m Pomodoro"), each a transient `systemd-run --user` timer that ends in `notify-send` | none |
-| reminders | one-off and recurring reminders in plain English ("call the dentist tomorrow at 10"), with Complete and Snooze buttons on the notification | none |
-| ollama-wordsmith | Translate, Summarize, Explain, Enhance and Dictionary with the local Ollama: type or paste the text in the search bar | none; Ollama on localhost |
-| vscode-recents | VS Code's File > Open Recent list (folders, files, SSH remotes); Enter opens it in VS Code | none |
-| pulseaudio | output and input devices (default, mute, volume in 5% steps or exact), per-app playback and recording streams, card profiles | none |
-| repositories (mine) | my GitHub accounts and FAI's GitLab in one list | the GitHub token above, FAI's `read_api` token |
+| Extension                 | What it adds                                                                                                                               | Credentials                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| nix                       | nixpkgs packages and options, Home Manager options                                                                                         | none                                                                                  |
+| systemd                   | list, start, stop and restart units                                                                                                        | none                                                                                  |
+| bluetooth                 | power, scan, connect, battery                                                                                                              | none; Blueman stays as the BlueZ pairing agent, which the extension does not register |
+| github                    | issues, PRs, workflow runs, repo search                                                                                                    | a personal access token                                                               |
+| bitwarden                 | search the vault and copy a password, username, TOTP or URL, through `rbw`                                                                 | my Bitwarden account, unlocked by `rbw` (below)                                       |
+| ssh                       | the hosts of `~/.ssh/config` (`ssh.nix`), opened as `kitty ssh <host>`                                                                     | none; the keys are the agent's                                                        |
+| zoxide-recent-directories | zoxide's directories by frecency; Enter opens VS Code, the alternative action Dolphin                                                      | none                                                                                  |
+| timer                     | timers in plain words ("25m Pomodoro"), each a transient `systemd-run --user` timer that ends in `notify-send`                             | none                                                                                  |
+| reminders                 | one-off and recurring reminders in plain English ("call the dentist tomorrow at 10"), with Complete and Snooze buttons on the notification | none                                                                                  |
+| ollama-wordsmith          | Translate, Summarize, Explain, Enhance and Dictionary with the local Ollama: type or paste the text in the search bar                      | none; Ollama on localhost                                                             |
+| vscode-recents            | VS Code's File > Open Recent list (folders, files, SSH remotes); Enter opens it in VS Code                                                 | none                                                                                  |
+| pulseaudio                | output and input devices (default, mute, volume in 5% steps or exact), per-app playback and recording streams, card profiles               | none                                                                                  |
+| repositories (mine)       | my GitHub accounts and FAI's GitLab in one list                                                                                            | the GitHub token above, FAI's `read_api` token                                        |
 
 Not installed: everything the desktop already does (power profiles, wifi) and anything without a
 clear use. Audio was on that list until 15/10/2026: the bar and pavucontrol (SUPER+S) cover it, but
@@ -509,18 +509,18 @@ Two upstream quirks seen on 0.29.0, both harmless here:
 
 Measured on this machine (ex-b560m-v5, Hyprland 0.55.4, Vicinae 0.29.0), with my session in use:
 
-| Check | Result |
-| --- | --- |
-| `vicinae toggle` x10, open / close | 10 of 10 worked; open 11-21 ms in 8 runs and about 1 s twice; close 15-30 ms, once 940 ms |
-| memory, PSS | server 248 MiB, extension runtime (node) 73 MiB, file indexer 86 MiB, data-control 2 MiB |
-| idle CPU, 60 s | 66 ms, 0.11 % of one core |
-| first index | `~/Projects` in 66 s, 1493 directories watched; the cgroup held 696 MiB of reclaimable file cache after it |
-| encryption | `clipboard.db` and `vicinae.db` no longer start with the SQLite header |
-| image history | a PNG copied by a process that then exited was recorded and still pasted (wl-clip-persist) |
-| passwords | an offer with `x-kde-passwordManagerHint` was logged "Ignored password clipboard selection" |
-| commands | `vicinae cmd ls` lists the 13 scripts and the four extensions' commands |
-| cheatsheet | opened from the real `keybinds-cheatsheet` and exited 0 |
-| theme | Tokyo Night background and accent, JetBrains Mono and the Win11 icons, by screenshot |
+| Check                              | Result                                                                                                     |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `vicinae toggle` x10, open / close | 10 of 10 worked; open 11-21 ms in 8 runs and about 1 s twice; close 15-30 ms, once 940 ms                  |
+| memory, PSS                        | server 248 MiB, extension runtime (node) 73 MiB, file indexer 86 MiB, data-control 2 MiB                   |
+| idle CPU, 60 s                     | 66 ms, 0.11 % of one core                                                                                  |
+| first index                        | `~/Projects` in 66 s, 1493 directories watched; the cgroup held 696 MiB of reclaimable file cache after it |
+| encryption                         | `clipboard.db` and `vicinae.db` no longer start with the SQLite header                                     |
+| image history                      | a PNG copied by a process that then exited was recorded and still pasted (wl-clip-persist)                 |
+| passwords                          | an offer with `x-kde-passwordManagerHint` was logged "Ignored password clipboard selection"                |
+| commands                           | `vicinae cmd ls` lists the 13 scripts and the four extensions' commands                                    |
+| cheatsheet                         | opened from the real `keybinds-cheatsheet` and exited 0                                                    |
+| theme                              | Tokyo Night background and accent, JetBrains Mono and the Win11 icons, by screenshot                       |
 
 Not compared with rofi: rofi was not running as a server, so there is no fair "lighter" number,
 and this note does not claim one. Still to check by hand: the calculator and file search typed in

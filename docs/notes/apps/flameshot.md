@@ -61,12 +61,12 @@ VERIFIED on this machine's v14/Wayland: only `gui` opens the monitor picker; `fu
 `screen --number` capture DIRECTLY, with no picker. So the Arch aliases still hold; what does not
 hold is `--region`, which v14 ignores.
 
-| Alias | Command |
-| --- | --- |
-| `screenshot` | `flameshot gui`, an interactive selection |
-| `scfull` | both screens, to the clipboard |
-| `sc1` | the main one (`my.monitors.primary`), to the clipboard |
-| `sc2` | the secondary (`my.monitors.secondary`), to the clipboard |
+| Alias        | Command                                                   |
+| ------------ | --------------------------------------------------------- |
+| `screenshot` | `flameshot gui`, an interactive selection                 |
+| `scfull`     | both screens, to the clipboard                            |
+| `sc1`        | the main one (`my.monitors.primary`), to the clipboard    |
+| `sc2`        | the secondary (`my.monitors.secondary`), to the clipboard |
 
 The NixOS Center's Screenshot buttons run `shell-screenshot primary|secondary|all [copy|save]`, the
 same backend and the same `--number` derivation, after waiting for the Center to leave the frame;

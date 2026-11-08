@@ -88,13 +88,13 @@ the failure is soft (the keyring starts locked) and `keyring-tpm-seal` re-seals 
 A read-only root oneshot writes `/run/boot-trust.json` at boot and again whenever `limine.conf`
 changes, and the NixOS Center reads it ([nixos-center](../desktop/nixos-center.md#boot-22102026)):
 
-| Field | Source | Values |
-| --- | --- | --- |
-| `secureBoot`, `setupMode` | the `SecureBoot` and `SetupMode` efivars | on/off, user/setup, or unknown |
-| `loader.running` | the Boot Loader Interface's `LoaderInfo` (Limine sets it) | e.g. `Limine 12.9.3`, or unknown |
-| `loader.signed` | `sbverify --cert /var/lib/sbctl/keys/db/db.pem` on the installed binary | valid, invalid, missing, unknown |
-| `integrity` | the `b2sum` of `limine.conf` found inside `BOOTX64.EFI` | enrolled, mismatch, unknown |
-| `thisBoot` | taken once at boot, kept by later runs | verified only when every row above holds |
+| Field                     | Source                                                                  | Values                                   |
+| ------------------------- | ----------------------------------------------------------------------- | ---------------------------------------- |
+| `secureBoot`, `setupMode` | the `SecureBoot` and `SetupMode` efivars                                | on/off, user/setup, or unknown           |
+| `loader.running`          | the Boot Loader Interface's `LoaderInfo` (Limine sets it)               | e.g. `Limine 12.9.3`, or unknown         |
+| `loader.signed`           | `sbverify --cert /var/lib/sbctl/keys/db/db.pem` on the installed binary | valid, invalid, missing, unknown         |
+| `integrity`               | the `b2sum` of `limine.conf` found inside `BOOTX64.EFI`                 | enrolled, mismatch, unknown              |
+| `thisBoot`                | taken once at boot, kept by later runs                                  | verified only when every row above holds |
 
 It also covers a gap in the installer: `limine-install.py` runs `sbctl sign` without checking its
 exit code, so an unsigned loader would only show up as a refused boot. `boot-trust` re-checks after

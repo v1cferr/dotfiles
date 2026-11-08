@@ -18,10 +18,10 @@ A system module cannot read a home option without naming the user and reaching i
 a NixOS module and hands `osConfig` ready to every home module. So the option lives on the system
 side and EVERYBODY reads downward.
 
-| Consumer | Reads |
-| --- | --- |
-| `modules/nixos/` modules | `config.my.monitors.<n>` |
-| `modules/home/` modules | `osConfig.my.monitors.<n>` |
+| Consumer                          | Reads                                                           |
+| --------------------------------- | --------------------------------------------------------------- |
+| `modules/nixos/` modules          | `config.my.monitors.<n>`                                        |
+| `modules/home/` modules           | `osConfig.my.monitors.<n>`                                      |
 | hot-reload (Hyprland, Quickshell) | the data files generated in `modules/home/desktop/monitors.nix` |
 
 The hot-reload case exists because Nix does not write inside the symlinked trees. Same mechanics as

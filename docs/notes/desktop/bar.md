@@ -16,12 +16,12 @@ parallel 4 px slit and the whole bar mirrors about the logo. It replaced the 40 
 surface cut by 1 px dividers) after a bake-off of real renders: the owner wanted it "modern and
 harmonious, symmetric and pixel perfect".
 
-| Part | What it is |
-| --- | --- |
-| The surface | `colSurfaceBar` (the palette's surface at 72% over the blur), a 1 px `colSheen` row on top, a 1 px `colEdge` row at the foot |
-| A cell | `widgets/SlantCell.qml`: a parallelogram 24 px tall at y 5, leaning 8 px across it (an exact 1:3 slope) |
-| The center | `LogoSlot.qml`: the `\_/` compartment, rows 2 to 31 (3 px past the cells above and below), 72 px on the cells' top row, the 20 px logo with 5 px of air, and the 24 px accent line on the bar's foot under it |
-| Controls | `widgets/Pill.qml`, a `SlantCell` holding a glyph and a label |
+| Part        | What it is                                                                                                                                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The surface | `colSurfaceBar` (the palette's surface at 72% over the blur), a 1 px `colSheen` row on top, a 1 px `colEdge` row at the foot                                                                                  |
+| A cell      | `widgets/SlantCell.qml`: a parallelogram 24 px tall at y 5, leaning 8 px across it (an exact 1:3 slope)                                                                                                       |
+| The center  | `LogoSlot.qml`: the `\_/` compartment, rows 2 to 31 (3 px past the cells above and below), 72 px on the cells' top row, the 20 px logo with 5 px of air, and the 24 px accent line on the bar's foot under it |
+| Controls    | `widgets/Pill.qml`, a `SlantCell` holding a glyph and a label                                                                                                                                                 |
 
 **Every number is an integer.** A cell's width is its content plus 16 px on each side, rounded up to
 4 px (`Theme.barCellWidth`), so a changing value rarely moves a neighbor. Fills sit on whole-pixel
@@ -40,13 +40,13 @@ plain slit.
 The states (the set the bake-off called S1): neutral at rest and on hover, the accent only while a
 cell's panel is open.
 
-| State | Looks |
-| --- | --- |
-| rest | `colCellFill` and `colCellEdge`, the palette's text at 7% and 14% |
-| hover | the same, brighter (`colCellHoverFill`, `colCellHoverEdge`) |
-| open (`selected`) | `colCellOpenFill` and `colCellOpenEdge` (the accent) plus the 24 px accent line on the bar's foot, the same line the compartment has |
-| needs a look (`tint`) | the cell in that state's color at 16%, its edge at 50%: the CPU pegged, the disk, an operational chip |
-| off by choice (`off`) | a faded cell, content at 55%: muted, VPN down, hypridle off, no weather |
+| State                 | Looks                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| rest                  | `colCellFill` and `colCellEdge`, the palette's text at 7% and 14%                                                                    |
+| hover                 | the same, brighter (`colCellHoverFill`, `colCellHoverEdge`)                                                                          |
+| open (`selected`)     | `colCellOpenFill` and `colCellOpenEdge` (the accent) plus the 24 px accent line on the bar's foot, the same line the compartment has |
+| needs a look (`tint`) | the cell in that state's color at 16%, its edge at 50%: the CPU pegged, the disk, an operational chip                                |
+| off by choice (`off`) | a faded cell, content at 55%: muted, VPN down, hypridle off, no weather                                                              |
 
 **Measured on 04/11/2026**, from captures of the live bars: the accent line under the logo spans
 x 1268 to 1291 on the ASUS (center 1280.0) and 528 to 551 on the LG (center 540.0); the first cell
@@ -112,15 +112,15 @@ disappears with the monitor that held it, and is never shown twice.
 
 **Measured on 18/10/2026**, from captures of the live bars, before and after:
 
-| Check | Before | After |
-| --- | --- | --- |
-| The blue line under the logo, ASUS | 1257 to 1302, center 1280.0 | the same |
-| The same, LG | 517 to 562, center 540.0 | the same |
-| The last tray icon's right edge | 17 px from the ASUS edge (the clock was last) | 15 px: the 8 px margin plus 6 px inside the 28 px control |
-| Tray icons across six captures 2 s apart | | each on the same x (2402, 2435, 2468, 2499, 2530) |
-| The right group's left edge, same captures | | x 1892 every time |
-| `qs log` after the swap | | no binding loop, no error |
-| v2.3, the time and the date (ink of `16:05` and `18/10`) | | 1193 to 1226 and 1333 to 1366: 53 px from the center inside, 87 outside, on both sides |
+| Check                                                    | Before                                        | After                                                                                  |
+| -------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------- |
+| The blue line under the logo, ASUS                       | 1257 to 1302, center 1280.0                   | the same                                                                               |
+| The same, LG                                             | 517 to 562, center 540.0                      | the same                                                                               |
+| The last tray icon's right edge                          | 17 px from the ASUS edge (the clock was last) | 15 px: the 8 px margin plus 6 px inside the 28 px control                              |
+| Tray icons across six captures 2 s apart                 |                                               | each on the same x (2402, 2435, 2468, 2499, 2530)                                      |
+| The right group's left edge, same captures               |                                               | x 1892 every time                                                                      |
+| `qs log` after the swap                                  |                                               | no binding loop, no error                                                              |
+| v2.3, the time and the date (ink of `16:05` and `18/10`) |                                               | 1193 to 1226 and 1333 to 1366: 53 px from the center inside, 87 outside, on both sides |
 
 Not verified by hand: a long song or title, no player at all, many tray icons, a monitor unplugged,
 and opening each popover from its new place; the rules above are what bound those, and they are the
@@ -164,15 +164,15 @@ Every panel the bar opens on hover (weather, calendar, temperature, usage, netwo
 goes through ONE coordinator in `Bar.qml` and one window type, `bar/BarPanel.qml`. It replaced four
 separate hover machines that each kept their own "pill hovered", "popover hovered" and close timer.
 
-| Gesture | What it does |
-| --- | --- |
-| Hover | after 200 ms of rest (`Theme.hoverIntent`) the panel opens; a pointer only crossing the bar opens nothing |
-| Hover a neighbor | its panel takes over at once, with no new wait |
-| Leave | 300 ms of slack to cross the gap into the panel, then it closes |
-| Click | PINS it: it stays without the pointer, and its pill stays lit |
-| Click again, click outside, Escape | closes the pinned panel |
-| Click another pill | switches the pin to that panel |
-| Scroll | unchanged (volume, media) |
+| Gesture                            | What it does                                                                                              |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Hover                              | after 200 ms of rest (`Theme.hoverIntent`) the panel opens; a pointer only crossing the bar opens nothing |
+| Hover a neighbor                   | its panel takes over at once, with no new wait                                                            |
+| Leave                              | 300 ms of slack to cross the gap into the panel, then it closes                                           |
+| Click                              | PINS it: it stays without the pointer, and its pill stays lit                                             |
+| Click again, click outside, Escape | closes the pinned panel                                                                                   |
+| Click another pill                 | switches the pin to that panel                                                                            |
+| Scroll                             | unchanged (volume, media)                                                                                 |
 
 The logo's panel, the NixOS Center, is in the same coordinator under the key `center`, and opens on a
 CLICK only ([nixos-center.md](nixos-center.md)). EVERY bar is in a pinned panel's focus grab, so a
@@ -234,13 +234,13 @@ calls the function. The same trap is documented in `shell.qml`, in the vpn `IpcH
 (`01` to `04` on the ASUS, `05` to `08` on the LG) in ONE `\` cell, every number one width measured
 from `00`, under one sliding inner `\` of the cell's own slope (18 px tall, a 6 px lean).
 
-| State | Looks |
-| --- | --- |
-| active | accent bold number on the sliding inner shape (the accent at 22%) |
-| occupied | bold `text` number, and its apps' icons on the full bar |
-| empty | `dim` number |
-| a window opened there | a steady 8 px yellow tick under the number (`colWarn`) |
-| a window there asked for attention | the active shape in `colCrit`, the number in red |
+| State                              | Looks                                                             |
+| ---------------------------------- | ----------------------------------------------------------------- |
+| active                             | accent bold number on the sliding inner shape (the accent at 22%) |
+| occupied                           | bold `text` number, and its apps' icons on the full bar           |
+| empty                              | `dim` number                                                      |
+| a window opened there              | a steady 8 px yellow tick under the number (`colWarn`)            |
+| a window there asked for attention | the active shape in `colCrit`, the number in red                  |
 
 **The apps.** Each number carries its apps' icons, one per window class in
 Hyprland's order (`wsApps` in `Bar.qml`, read from the toplevels' IPC object), up to three (two on
@@ -290,16 +290,16 @@ the chips (`OpsIndicator.qml`) and their panel (`OpsPanel.qml`) read, so the two
 Each chip is a state icon, a short name and a count, in a width measured from `SVC · 00`, on the
 glass tinted by its state (`Pill.fill`).
 
-| State | Chip | Means |
-| --- | --- | --- |
-| healthy | nothing but a dim check | every source answered and nothing is wrong |
-| failing | `󰅚 CI · 2` red | two current failures across GitHub and the FAI GitLab |
-| running | `󰑮 CI · 1` neutral | nothing failing, one run in progress |
-| degraded | `󰀪 SVC · 1` orange | a service with fewer units running than expected |
-| failing | `󰅚 SVC · 1` red | a service down |
-| stale | `󰥔 CI · 2` dim | a forge answering only with old data: the count is its LAST KNOWN one |
-| unknown | `󰋗 CI · ?` dim | a forge never read, or the services meta silent for two minutes |
-| folded | `OPS · 3` | both sources, in the worse state's colors, when the room is too small for two |
+| State    | Chip                    | Means                                                                         |
+| -------- | ----------------------- | ----------------------------------------------------------------------------- |
+| healthy  | nothing but a dim check | every source answered and nothing is wrong                                    |
+| failing  | `󰅚 CI · 2` red          | two current failures across GitHub and the FAI GitLab                         |
+| running  | `󰑮 CI · 1` neutral      | nothing failing, one run in progress                                          |
+| degraded | `󰀪 SVC · 1` orange      | a service with fewer units running than expected                              |
+| failing  | `󰅚 SVC · 1` red         | a service down                                                                |
+| stale    | `󰥔 CI · 2` dim          | a forge answering only with old data: the count is its LAST KNOWN one         |
+| unknown  | `󰋗 CI · ?` dim          | a forge never read, or the services meta silent for two minutes               |
+| folded   | `OPS · 3`               | both sources, in the worse state's colors, when the room is too small for two |
 
 **"Current" is the latest run of each workflow (or each GitLab ref).** glance-feed keeps only the
 newest run per workflow in its 7-day window, so a failure a later run fixed is already gone from the
@@ -395,11 +395,11 @@ The temperature, usage and network pills opened the SAME popover: a title, a lis
 and a bar drawn at `value / 100`. It answered "how much" and stopped there, while the VPN panel
 right next to it answered "is this fine, and since when". The three now speak that same language:
 
-| Panel | Verdict | Graph | Provenance |
-| --- | --- | --- | --- |
-| `UsagePopover.qml` | idle to stalling | the CPU over 2 min, plus one bar per thread | the CPU model, cores/threads, uptime |
-| `TempsPopover.qml` | cool to critical | the hottest sensor over 2 min | how many sensors, and from which chips |
-| `NetPopover.qml` | offline to steady | throughput mirrored over 2 min (log), latency over 1 min | the interface, its type, who manages it |
+| Panel              | Verdict           | Graph                                                    | Provenance                              |
+| ------------------ | ----------------- | -------------------------------------------------------- | --------------------------------------- |
+| `UsagePopover.qml` | idle to stalling  | the CPU over 2 min, plus one bar per thread              | the CPU model, cores/threads, uptime    |
+| `TempsPopover.qml` | cool to critical  | the hottest sensor over 2 min                            | how many sensors, and from which chips  |
+| `NetPopover.qml`   | offline to steady | throughput mirrored over 2 min (log), latency over 1 min | the interface, its type, who manages it |
 
 The window is 60 samples at one every 2 s, so two minutes, and it accumulates whether the panel is
 open or not, because the snapshot that feeds it runs anyway. Opening the panel costs nothing extra,
@@ -621,10 +621,10 @@ NOT go into `status-json`, which runs every 5 s all day long just to paint the p
 
 MEASURED on 14/08/2026 on the FAI tunnel, and it is what condemned the first version:
 
-| Method | mdev | peak | loss resolution |
-| --- | --- | --- | --- |
-| 3 packets in 0.6 s | 0.4 ms | — | 33% (3 packets!) |
-| a 20 s window | 3.3 ms | 54.7 ms | — |
+| Method             | mdev   | peak    | loss resolution  |
+| ------------------ | ------ | ------- | ---------------- |
+| 3 packets in 0.6 s | 0.4 ms | —       | 33% (3 packets!) |
+| a 20 s window      | 3.3 ms | 54.7 ms | —                |
 
 The burst observed 3% of the time, so a 2 s hiccup was invisible in 97% of cases, and 1-3% of real
 loss showed up as "0%". **A pretty, false number is worse than an absent number.**

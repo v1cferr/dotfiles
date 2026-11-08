@@ -8,15 +8,15 @@ the band's bell and the power menu are gone; their functions are all here.
 
 ## What is in it
 
-| Part | Holds |
-| --- | --- |
-| Header | the title, a do-not-disturb toggle and a clear-all button, both as icons with a name |
-| Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen) |
-| Hardware | CPU and GPU temperature, RAM, disk: four cards (v2.3) |
-| Power | the Balanced/Gaming/Eco profile, what its last apply did, and five memory and GPU readings (18/10/2026) |
-| Boot | Secure Boot, the loader and the integrity check, as `boot-trust` proved them (22/10/2026) |
-| Screenshots | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3) |
-| Session | the six session actions, their commands exactly the old power menu's |
+| Part          | Holds                                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------------------- |
+| Header        | the title, a do-not-disturb toggle and a clear-all button, both as icons with a name                    |
+| Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen)        |
+| Hardware      | CPU and GPU temperature, RAM, disk: four cards (v2.3)                                                   |
+| Power         | the Balanced/Gaming/Eco profile, what its last apply did, and five memory and GPU readings (18/10/2026) |
+| Boot          | Secure Boot, the loader and the integrity check, as `boot-trust` proved them (22/10/2026)               |
+| Screenshots   | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3)                  |
+| Session       | the six session actions, their commands exactly the old power menu's                                    |
 
 The history scrolls by itself, so however long it grows, the three sections below it stay in reach.
 
@@ -119,12 +119,12 @@ Every control in the card carries a `widgets/KeyTarget.qml`: the header icons, e
 card and group, the four hardware cards, the three power profiles, the screenshot targets and the
 six session actions. One global bind opens the Center; inside it the keys are plain ones:
 
-| Key | Does |
-| --- | --- |
+| Key                        | Does                                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Tab, Shift+Tab, the arrows | walk the controls in reading order; from the panel an arrow starts at the first (Down) or the last (Up) |
-| Enter, Space | what a click does |
-| Delete, Backspace | dismisses the focused notification (a group: all of it) |
-| Escape | closes the Center from anywhere; inside a question it only answers no |
+| Enter, Space               | what a click does                                                                                       |
+| Delete, Backspace          | dismisses the focused notification (a group: all of it)                                                 |
+| Escape                     | closes the Center from anywhere; inside a question it only answers no                                   |
 
 **The arrows are linear**, like Tab, not a 2D grid: rows here have 1 to 6 items and change shape
 with the history, so "the item below" would be a guess, and a linear walk is predictable.

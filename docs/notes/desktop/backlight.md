@@ -18,10 +18,10 @@ Reading them the first time also settled an older complaint. The blue light filt
 was skipping the LG, and the CTM was reaching it the whole time (`drm_info` proved the matrix was
 on both CRTCs). The panels were simply starting from different places:
 
-| | brightness | white point |
-| --- | --- | --- |
-| ASUS XG27ACS | 45 | 6500 K |
-| LG UltraGear | 100 | **10000 K** |
+|              | brightness | white point |
+| ------------ | ---------- | ----------- |
+| ASUS XG27ACS | 45         | 6500 K      |
+| LG UltraGear | 100        | **10000 K** |
 
 10000 K is not even in the LG's own capabilities string, which lists 5000/6500/7500/8200 plus sRGB.
 It is an OSD picture mode reporting a value outside the MCCS set. A warm matrix applied on top of a

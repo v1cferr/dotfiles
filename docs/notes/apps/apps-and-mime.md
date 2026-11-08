@@ -31,11 +31,11 @@ from the CLI.
 
 An ALIAS does not match in the lookup and the entry dies in silence. Three cases hit here:
 
-| Wrong (alias) | Right (canonical) | What broke |
-| --- | --- | --- |
-| `image/heic` | `image/heif` | .heic never reached Gwenview |
-| `image/x-psd` | `image/vnd.adobe.photoshop` | Gwenview's own `.desktop` declares only the alias |
-| `video/x-msvideo` | `video/vnd.avi` | .avi fell into mpv instead of VLC |
+| Wrong (alias)     | Right (canonical)           | What broke                                        |
+| ----------------- | --------------------------- | ------------------------------------------------- |
+| `image/heic`      | `image/heif`                | .heic never reached Gwenview                      |
+| `image/x-psd`     | `image/vnd.adobe.photoshop` | Gwenview's own `.desktop` declares only the alias |
+| `video/x-msvideo` | `video/vnd.avi`             | .avi fell into mpv instead of VLC                 |
 
 Two more that are easy to miss: `image/vnd.microsoft.icon` (.ico) is read natively by Qt but is not
 declared in Gwenview's `.desktop`, and the AUDIO types all have to be listed explicitly, because

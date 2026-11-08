@@ -35,10 +35,10 @@ for. That is more than the requirement asked for.
 
 ## What is NOT covered
 
-| Path | Terms | Why |
-| --- | --- | --- |
-| `pkgs/openrgb/*.patch` | GPL-2.0-or-later | patches to OpenRGB's GPL code; one is by another author |
-| `modules/home/desktop/quickshell/assets/razer.svg` | CC0 icon data (simple-icons) | the mark is Razer's trademark |
+| Path                                               | Terms                        | Why                                                     |
+| -------------------------------------------------- | ---------------------------- | ------------------------------------------------------- |
+| `pkgs/openrgb/*.patch`                             | GPL-2.0-or-later             | patches to OpenRGB's GPL code; one is by another author |
+| `modules/home/desktop/quickshell/assets/razer.svg` | CC0 icon data (simple-icons) | the mark is Razer's trademark                           |
 
 Everything that comes in through a flake input (the skills, the packages) is not in
 the tree at all, so it keeps its own license without any note here. A new third-party file that DOES

@@ -89,11 +89,11 @@ routing with no kill-switch.
 So `AllowedIPs` is `0.0.0.0/0` MINUS the ranges that must stay local, expanded into the 62 blocks
 that survive. The exclusion list, and where each entry comes from:
 
-| Excluded | Why |
-| --- | --- |
-| `192.168.90.0/24`, `.100`, `.110`, `.130`, `.223` | The FAI ranges already listed in `modules/nixos/network/fai-gateway.nix` |
-| `200.136.209.128/25` | FAI too, and it contains the workstation `.229` and the DNS `.247`/`.252` |
-| `200.136.204.0/23` | The work PC's own subnet, from the RDAP query of 19/08/2026 |
+| Excluded                                          | Why                                                                       |
+| ------------------------------------------------- | ------------------------------------------------------------------------- |
+| `192.168.90.0/24`, `.100`, `.110`, `.130`, `.223` | The FAI ranges already listed in `modules/nixos/network/fai-gateway.nix`  |
+| `200.136.209.128/25`                              | FAI too, and it contains the workstation `.229` and the DNS `.247`/`.252` |
+| `200.136.204.0/23`                                | The work PC's own subnet, from the RDAP query of 19/08/2026               |
 
 Regenerate the list instead of hand editing it, because 62 blocks written by hand is a silent bug
 waiting to happen:
@@ -122,11 +122,11 @@ Today `packet_size = 1024` in `modules/nixos/services/sunshine.nix`. It was cali
 **1280** MTU of the old `tailscale0`, leaving 256 bytes of headroom. That MTU no longer exists
 anywhere, and with 1420 MEASURED the arithmetic is no longer a guess:
 
-| Candidate | Where it comes from |
-| --- | --- |
-| **1136** | The same proportion that worked, 1024/1280 = 80% of 1420 |
-| **1164** | The same ABSOLUTE headroom, 1420 minus 256 |
-| 1312 | Sunshine's own 1392-for-1500 default, 108 bytes of headroom. Do not start here |
+| Candidate | Where it comes from                                                            |
+| --------- | ------------------------------------------------------------------------------ |
+| **1136**  | The same proportion that worked, 1024/1280 = 80% of 1420                       |
+| **1164**  | The same ABSOLUTE headroom, 1420 minus 256                                     |
+| 1312      | Sunshine's own 1392-for-1500 default, 108 bytes of headroom. Do not start here |
 
 The tunnel is the ONLY path since 19/08/2026, so 1420 is the ceiling with nothing else to satisfy.
 It was left at 1024 anyway, because the ask that day was stability and the smaller packet is the

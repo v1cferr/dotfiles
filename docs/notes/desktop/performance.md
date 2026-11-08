@@ -10,35 +10,35 @@ changes the config: every proposal at the end waits for the owner's yes.
 MEASURED on 06/11/2026 with `hyprctl version`, `hyprctl monitors -j`, `hyprctl getoption`,
 `hyprctl plugin list` and sysfs:
 
-| Piece | State |
-| --- | --- |
-| Hyprland | 0.57.1 (`acc1aa0b`), Aquamarine 0.16.0, Lua config, DRM backend |
-| Kernel, driver, Mesa | 7.3.1, `xe`, Mesa 26.1.8 |
-| DP-1, ASUS XG27ACS | 2560x1440 at 180 Hz, XRGB8888, VRR on |
-| DP-2, LG UltraGear | 1920x1080 at 143.98 Hz, rotated, XRGB8888, VRR on |
-| `misc:vrr` / `general:allow_tearing` | 1 (always) / false |
-| `render:direct_scanout` | 0, the default: a fullscreen game is always composited |
-| `debug:damage_tracking` | 2 (full), the default |
-| Effects | native blur on, HyprGlass 1.1.1 on (`clear-gradient`), animations `subtle` |
-| GPU floor | `min_freq` 1200 MHz of 400 to 2850 under the `performance` and `balanced` profiles ([power](../hardware/power.md)) |
+| Piece                                | State                                                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Hyprland                             | 0.57.1 (`acc1aa0b`), Aquamarine 0.16.0, Lua config, DRM backend                                                    |
+| Kernel, driver, Mesa                 | 7.3.1, `xe`, Mesa 26.1.8                                                                                           |
+| DP-1, ASUS XG27ACS                   | 2560x1440 at 180 Hz, XRGB8888, VRR on                                                                              |
+| DP-2, LG UltraGear                   | 1920x1080 at 143.98 Hz, rotated, XRGB8888, VRR on                                                                  |
+| `misc:vrr` / `general:allow_tearing` | 1 (always) / false                                                                                                 |
+| `render:direct_scanout`              | 0, the default: a fullscreen game is always composited                                                             |
+| `debug:damage_tracking`              | 2 (full), the default                                                                                              |
+| Effects                              | native blur on, HyprGlass 1.1.1 on (`clear-gradient`), animations `subtle`                                         |
+| GPU floor                            | `min_freq` 1200 MHz of 400 to 2850 under the `performance` and `balanced` profiles ([power](../hardware/power.md)) |
 
 ## What can be measured here, and what cannot
 
-| Metric | Source | Root? |
-| --- | --- | --- |
-| CPU per process | `/proc/<pid>/stat` (utime + stime) | no |
-| CPU per logical core | `/proc/stat` | no |
-| RSS of every process | `/proc/<pid>/status` | no |
-| PSS of Quickshell, Xwayland | `/proc/<pid>/smaps_rollup` | no |
-| PSS of Hyprland | the same file | **yes** |
-| GPU render engine per client | xe `fdinfo` (`drm-cycles-rcs` over `drm-total-cycles-rcs`) | no for Quickshell, **yes** for Hyprland |
-| GPU busy, whole GT | 1 minus the RC6 residency (`tile0/gt0/gtidle/idle_residency_ms`) | no |
-| GPU frequency | `tile0/gt0/freq0/act_freq` | no |
-| GPU power | hwmon `xe`, `energy1` (card) and `energy2` (pkg) | no |
-| CPU package power | RAPL `energy_uj` | **yes** |
-| Frames composed per output | HyprGlass's own counter, `hyprctl -j hyprglass stats` | no |
-| Frame-to-frame intervals (pacing) | nothing in userspace; tracefs page-flip events | not done |
-| Input-to-photon latency | needs a camera or a photodiode on the panel | not done |
+| Metric                            | Source                                                           | Root?                                   |
+| --------------------------------- | ---------------------------------------------------------------- | --------------------------------------- |
+| CPU per process                   | `/proc/<pid>/stat` (utime + stime)                               | no                                      |
+| CPU per logical core              | `/proc/stat`                                                     | no                                      |
+| RSS of every process              | `/proc/<pid>/status`                                             | no                                      |
+| PSS of Quickshell, Xwayland       | `/proc/<pid>/smaps_rollup`                                       | no                                      |
+| PSS of Hyprland                   | the same file                                                    | **yes**                                 |
+| GPU render engine per client      | xe `fdinfo` (`drm-cycles-rcs` over `drm-total-cycles-rcs`)       | no for Quickshell, **yes** for Hyprland |
+| GPU busy, whole GT                | 1 minus the RC6 residency (`tile0/gt0/gtidle/idle_residency_ms`) | no                                      |
+| GPU frequency                     | `tile0/gt0/freq0/act_freq`                                       | no                                      |
+| GPU power                         | hwmon `xe`, `energy1` (card) and `energy2` (pkg)                 | no                                      |
+| CPU package power                 | RAPL `energy_uj`                                                 | **yes**                                 |
+| Frames composed per output        | HyprGlass's own counter, `hyprctl -j hyprglass stats`            | no                                      |
+| Frame-to-frame intervals (pacing) | nothing in userspace; tracefs page-flip events                   | not done                                |
+| Input-to-photon latency           | needs a camera or a photodiode on the panel                      | not done                                |
 
 Why the root-only rows: Hyprland runs with `CAP_SYS_NICE` (to raise its own priority), which makes
 the process non-dumpable, so the kernel hides its `fdinfo` and `smaps` from its own user. RAPL has
@@ -82,13 +82,13 @@ MEASURED on 06/11/2026 during normal use, not idle, so these are context, not re
 Each one is applied with `hyprctl eval` on top of a fresh `hyprctl reload config-only`, so a block
 never inherits the one before:
 
-| Scenario | Animations | Native blur | HyprGlass |
-| --- | --- | --- | --- |
-| A, baseline | on | on | on |
-| B, no animation | off | on | on |
-| C, no blur | on | off | off |
-| D, minimal | off | off | off |
-| E, native blur only | on | on, plus the shell-layer rule `appearance.lua` adds when the plugin is absent | off |
+| Scenario            | Animations | Native blur                                                                   | HyprGlass |
+| ------------------- | ---------- | ----------------------------------------------------------------------------- | --------- |
+| A, baseline         | on         | on                                                                            | on        |
+| B, no animation     | off        | on                                                                            | on        |
+| C, no blur          | on         | off                                                                           | off       |
+| D, minimal          | off        | off                                                                           | off       |
+| E, native blur only | on         | on, plus the shell-layer rule `appearance.lua` adds when the plugin is absent | off       |
 
 E answers whether HyprGlass costs more than the blur it replaced. `--shell-off` adds
 `qs ipc call bar hide` to every scenario, which stops the bar and the band from drawing while
@@ -101,13 +101,13 @@ The bench opens three named workspaces with static terminals of class `hypr-benc
 measurement, so no app start-up lands inside a block, and both screens show the same content in
 every scenario.
 
-| Workload | What happens | Default length |
-| --- | --- | --- |
-| idle | nothing | 45 s |
-| workspace | `bench-a` and `bench-b` alternate every 0.5 s | 20 s |
-| window | a terminal moves between `bench-a` and `bench-b` every 0.5 s, without following it | 20 s |
-| panel | the weather panel opens and closes once a second (`qs ipc call bar panel weather`) | 20 s |
-| fullscreen | `vkcube` fullscreen, FIFO, on the primary | 20 s |
+| Workload   | What happens                                                                       | Default length |
+| ---------- | ---------------------------------------------------------------------------------- | -------------- |
+| idle       | nothing                                                                            | 45 s           |
+| workspace  | `bench-a` and `bench-b` alternate every 0.5 s                                      | 20 s           |
+| window     | a terminal moves between `bench-a` and `bench-b` every 0.5 s, without following it | 20 s           |
+| panel      | the weather panel opens and closes once a second (`qs ipc call bar panel weather`) | 20 s           |
+| fullscreen | `vkcube` fullscreen, FIFO, on the primary                                          | 20 s           |
 
 Every block waits 5 s after the scenario changes. Three rounds by default, the order of the
 scenarios rotated each round so a slow drift (heat, a timer) spreads over all of them. The
@@ -154,11 +154,11 @@ run.
 
 Hypotheses only, ranked by what they would save if the bench confirms them; none is applied.
 
-| Proposal | Evidence so far | Risk | Effort |
-| --- | --- | --- | --- |
-| Stop the band from repainting every second when nothing changed (no seconds on the clock, page dots that step instead of growing) | the LG composed 55.6 fps on average over 11 h | low: visual only | low: QML |
-| Try `render:direct_scanout = 2` (games only) | it is off, so every fullscreen game frame is composited | medium: flicker or capture issues upstream warns about, Sunshine captures the output | low: one option, but needs its own test |
-| Lower the GPU floor at idle | 1200 MHz is held under `balanced`, the driver's own minimum is 400 | medium: the floor exists for a reason in [power](../hardware/power.md) | low |
+| Proposal                                                                                                                          | Evidence so far                                                    | Risk                                                                                 | Effort                                  |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------- |
+| Stop the band from repainting every second when nothing changed (no seconds on the clock, page dots that step instead of growing) | the LG composed 55.6 fps on average over 11 h                      | low: visual only                                                                     | low: QML                                |
+| Try `render:direct_scanout = 2` (games only)                                                                                      | it is off, so every fullscreen game frame is composited            | medium: flicker or capture issues upstream warns about, Sunshine captures the output | low: one option, but needs its own test |
+| Lower the GPU floor at idle                                                                                                       | 1200 MHz is held under `balanced`, the driver's own minimum is 400 | medium: the floor exists for a reason in [power](../hardware/power.md)               | low                                     |
 
 ## Rejected
 

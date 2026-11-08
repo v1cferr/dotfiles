@@ -77,11 +77,11 @@ The symlink deliberately sits where the launcher ALREADY looks, instead of reloc
 
 A copy is not a duplicate until it is proven to be one, and `du -sh` matching is not proof.
 
-| Game | Method | Result |
-| --- | --- | --- |
-| Diablo IV | every file compared by relative path and size | 1183 files, **zero** size mismatches |
-| Uncharted 3 | full sha256 of the 46 GiB ISO on both disks | `9c600ebb…04b2`, **identical** |
-| Overwatch | same file-by-file comparison | **76 files differ, 68.9 GiB.** NOT a duplicate |
+| Game        | Method                                        | Result                                         |
+| ----------- | --------------------------------------------- | ---------------------------------------------- |
+| Diablo IV   | every file compared by relative path and size | 1183 files, **zero** size mismatches           |
+| Uncharted 3 | full sha256 of the 46 GiB ISO on both disks   | `9c600ebb…04b2`, **identical**                 |
+| Overwatch   | same file-by-file comparison                  | **76 files differ, 68.9 GiB.** NOT a duplicate |
 
 Diablo IV's only differences were CASC indices (`.index` here, `.idx` there), which are local
 metadata the Battle.net agent rebuilds. The ISO got a full hash rather than a size check because it
@@ -174,11 +174,11 @@ to the exe, which is on the disk both systems read. The `UserId` is therefore th
 and here BY CONSTRUCTION, and nothing in the save has to be rewritten. The only thing that differs
 between the two systems is where `%APPDATA%` points.
 
-| What | Where it goes in the prefix |
-| --- | --- |
-| the 12 save blobs | `drive_c/users/steamuser/AppData/Roaming/Goldberg UplayEmu Saves/66088/` |
-| manifest and journal | `drive_c/users/steamuser/AppData/Local/Ubisoft/<game>/save/` |
-| language and graphics | `drive_c/users/steamuser/Documents/<game>/ACBlackFlag.ini` |
+| What                  | Where it goes in the prefix                                              |
+| --------------------- | ------------------------------------------------------------------------ |
+| the 12 save blobs     | `drive_c/users/steamuser/AppData/Roaming/Goldberg UplayEmu Saves/66088/` |
+| manifest and journal  | `drive_c/users/steamuser/AppData/Local/Ubisoft/<game>/save/`             |
+| language and graphics | `drive_c/users/steamuser/Documents/<game>/ACBlackFlag.ini`               |
 
 **`steamuser`, never `v1cferr`.** A GE-Proton prefix has no user named after the account, so a copy
 into `drive_c/users/v1cferr` lands in a directory the game will never open, and it looks exactly
@@ -290,12 +290,12 @@ attrset, `my.games.saves`, whose values are absolute.
 
 The rest of the profile sits right beside it and none of it crosses:
 
-| What | Why it stays per system |
-| --- | --- |
-| `shadercache` | compiled against the API in use, DX11 native on Windows against DXVK here |
-| `pdx_settings.json` | carries the other system's resolution and video adapter |
-| `logs`, `crashes`, `dumps` | churn, on a disk that takes none |
-| `continue_game.json` | points at a last-played path, the one thing that genuinely differs |
+| What                       | Why it stays per system                                                   |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `shadercache`              | compiled against the API in use, DX11 native on Windows against DXVK here |
+| `pdx_settings.json`        | carries the other system's resolution and video adapter                   |
+| `logs`, `crashes`, `dumps` | churn, on a disk that takes none                                          |
+| `continue_game.json`       | points at a last-played path, the one thing that genuinely differs        |
 
 The price is the Continue button, which reads that last file. The save itself comes back from the
 Load menu, so the cost is one extra click and never a lost campaign.

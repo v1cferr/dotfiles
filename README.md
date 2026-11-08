@@ -102,15 +102,15 @@ flowchart LR
 <details>
 <summary><b>What runs where</b></summary>
 
-| When | What | Fails the run? |
-| --- | --- | --- |
-| every commit | the pre-commit hooks: formatters, linters, gitleaks, the repo checkers, the commit message | yes |
-| every push | [`nix.yml`](.github/workflows/nix.yml): `nix flake check`, zero warnings, plus the packages build | yes |
-| every push | `eval-metrics`: the evaluation cost and the code size against [`tools/eval-metrics/budget.json`](tools/eval-metrics/budget.json) | no, it warns |
-| every push | [`docs.yml`](.github/workflows/docs.yml): the site and these stats, to GitHub Pages | yes |
-| every Monday | [`canary.yml`](.github/workflows/canary.yml): inputs at their heads, links, the whole history for secrets, the rulesets, exceptions past their date; a red run reaches my phone | yes |
-| every Monday | [`scorecard.yml`](.github/workflows/scorecard.yml): the OpenSSF supply-chain grade | no, it grades |
-| by hand | `nix run .#usage-audit`: which apps show any sign of being used | never, it reports |
+| When         | What                                                                                                                                                                            | Fails the run?    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| every commit | the pre-commit hooks: formatters, linters, gitleaks, the repo checkers, the commit message                                                                                      | yes               |
+| every push   | [`nix.yml`](.github/workflows/nix.yml): `nix flake check`, zero warnings, plus the packages build                                                                               | yes               |
+| every push   | `eval-metrics`: the evaluation cost and the code size against [`tools/eval-metrics/budget.json`](tools/eval-metrics/budget.json)                                                | no, it warns      |
+| every push   | [`docs.yml`](.github/workflows/docs.yml): the site and these stats, to GitHub Pages                                                                                             | yes               |
+| every Monday | [`canary.yml`](.github/workflows/canary.yml): inputs at their heads, links, the whole history for secrets, the rulesets, exceptions past their date; a red run reaches my phone | yes               |
+| every Monday | [`scorecard.yml`](.github/workflows/scorecard.yml): the OpenSSF supply-chain grade                                                                                              | no, it grades     |
+| by hand      | `nix run .#usage-audit`: which apps show any sign of being used                                                                                                                 | never, it reports |
 
 The reasoning behind each line is in [notes/repo/flake.md](docs/notes/repo/flake.md).
 

@@ -12,13 +12,13 @@ output is a list to argue with, and the decision to delete is a commit, like any
 
 ## The signals
 
-| Column | Source | What it catches |
-| --- | --- | --- |
-| Last typed | atuin's `history.db` (dated, since 09/09/2026) plus `~/.zsh_history` | a CLI I type |
-| Launched | Vicinae's `~/.local/share/vicinae/metadata.json`, `visit_count` per `applications:<id>` | a GUI I open from the launcher |
+| Column            | Source                                                                                       | What it catches                                    |
+| ----------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Last typed        | atuin's `history.db` (dated, since 09/09/2026) plus `~/.zsh_history`                         | a CLI I type                                       |
+| Launched          | Vicinae's `~/.local/share/vicinae/metadata.json`, `visit_count` per `applications:<id>`      | a GUI I open from the launcher                     |
 | Wired by `config` | the binary named in a `.lua`/`.qml`/`.json`, or `/bin/<name>` or `getExe <name>` in a `.nix` | a keybind, a bar widget, a unit, an editor setting |
-| Wired by `module` | an enabled `programs.<name>` in home-manager | shell integrations, used without typing the name |
-| Wired by `mime` | `xdg.mimeApps.defaultApplications` | what a double click in Dolphin opens |
+| Wired by `module` | an enabled `programs.<name>` in home-manager                                                 | shell integrations, used without typing the name   |
+| Wired by `mime`   | `xdg.mimeApps.defaultApplications`                                                           | what a double click in Dolphin opens               |
 
 **The launch counts restarted on 13/10/2026**, when Vicinae replaced rofi: rofi's drun cache is
 left on disk but never read, since stale counts from a launcher that is gone would read as current

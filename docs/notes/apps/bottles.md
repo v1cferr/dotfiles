@@ -8,10 +8,10 @@ Library tab. [games-disk.md](../boot-and-storage/games-disk.md) covers where the
 "The library" is two different things in Bottles, they live in two files, and declaring one does
 nothing for the other:
 
-| What you see | Where it lives | What it holds |
-| --- | --- | --- |
-| the program list on a bottle's own page | `bottles/<dir>/bottle.yml`, key `External_Programs` | the exe, its arguments, dxvk/vkd3d per program |
-| the tiles in the **Library** tab | `library.yml`, next to the `bottles/` folder | one entry per tile, pointing at a program by UUID |
+| What you see                            | Where it lives                                      | What it holds                                     |
+| --------------------------------------- | --------------------------------------------------- | ------------------------------------------------- |
+| the program list on a bottle's own page | `bottles/<dir>/bottle.yml`, key `External_Programs` | the exe, its arguments, dxvk/vkd3d per program    |
+| the tiles in the **Library** tab        | `library.yml`, next to the `bottles/` folder        | one entry per tile, pointing at a program by UUID |
 
 MEASURED the hard way on 08/09/2026: all eight programs were declared and registered, every one of
 them visible on its bottle's page, and the Library tab still showed THREE tiles. `library.yml` had
@@ -101,17 +101,17 @@ Nothing in the list was invented. The programs that already existed were read ba
 `bottle.yml`, and Overwatch, which was missing, came from the `.lnk` file Battle.net itself wrote
 inside the prefix, decoded from `drive_c/users/Public/Desktop`:
 
-| Program | What it runs | Evidence |
-| --- | --- | --- |
-| Battle.net | `Battle.net.exe` with its Chromium flags | the entry that was already there |
-| Hearthstone | `Battle.net.exe --exec="launch WTCG"` plus the same flags | the entry that was already there |
-| Overwatch | `Overwatch Launcher.exe --productcode=pro` | its shortcut in the prefix |
-| Cities Skylines II | `Cities2.exe` | the entry that was already there |
-| Black Flag Resynced | `ACBlackFlag.exe` | the entry that was already there |
-| Victoria 3 | `binaries/victoria3.exe` | the repack's own layout |
-| Warcraft III | `Warcraft III Launcher.exe --productcode=w3` | its shortcut in the prefix |
-| World of Warcraft | `World of Warcraft Launcher.exe --productcode=wowf` | `Battle.net.config`: no shortcut, and `wowf` (`_forever_`) is the only flavour installed |
-| Valheim | `Valheim/valheim.exe` in its own bottle | the entry the GUI had added as `valheim` |
+| Program             | What it runs                                              | Evidence                                                                                 |
+| ------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Battle.net          | `Battle.net.exe` with its Chromium flags                  | the entry that was already there                                                         |
+| Hearthstone         | `Battle.net.exe --exec="launch WTCG"` plus the same flags | the entry that was already there                                                         |
+| Overwatch           | `Overwatch Launcher.exe --productcode=pro`                | its shortcut in the prefix                                                               |
+| Cities Skylines II  | `Cities2.exe`                                             | the entry that was already there                                                         |
+| Black Flag Resynced | `ACBlackFlag.exe`                                         | the entry that was already there                                                         |
+| Victoria 3          | `binaries/victoria3.exe`                                  | the repack's own layout                                                                  |
+| Warcraft III        | `Warcraft III Launcher.exe --productcode=w3`              | its shortcut in the prefix                                                               |
+| World of Warcraft   | `World of Warcraft Launcher.exe --productcode=wowf`       | `Battle.net.config`: no shortcut, and `wowf` (`_forever_`) is the only flavour installed |
+| Valheim             | `Valheim/valheim.exe` in its own bottle                   | the entry the GUI had added as `valheim`                                                 |
 
 **Valheim was adopted, not added.** The GUI entry was named `valheim`, and the check is a
 case-sensitive `grep` (see the limits above), so declaring `Valheim` would have produced a twin.

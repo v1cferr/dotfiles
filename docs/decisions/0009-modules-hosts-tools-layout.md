@@ -20,16 +20,16 @@ single owner, and `flake.nix` carried seven jobs in 740 lines.
 
 One folder per question, and nothing is discovered: every import stays explicit.
 
-| Question | Answer |
-| --- | --- |
-| Where is one machine's configuration? | `hosts/<host>/`, NixOS or not (`ex-b560m-v5`, `cudy-wr3000`) |
-| Where is a reusable NixOS capability? | `modules/nixos/` |
-| Where is a reusable Home Manager capability? | `modules/home/` |
-| Where is software this repo packages? | `pkgs/` |
-| Where is what maintains the repo itself? | `tools/` (checkers, metrics, stats, bumps, the site's builder, the CI stub) |
-| Where is each flake output implemented? | `flake/`, wired one line per output in `flake.nix` |
-| Where are secrets, and the docs? | `secrets/`, `docs/`, unchanged |
-| Where is a tool's configuration? | `.config/`, after the [dot-config](https://github.com/dot-config/dot-config.github.io) convention |
+| Question                                     | Answer                                                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Where is one machine's configuration?        | `hosts/<host>/`, NixOS or not (`ex-b560m-v5`, `cudy-wr3000`)                                      |
+| Where is a reusable NixOS capability?        | `modules/nixos/`                                                                                  |
+| Where is a reusable Home Manager capability? | `modules/home/`                                                                                   |
+| Where is software this repo packages?        | `pkgs/`                                                                                           |
+| Where is what maintains the repo itself?     | `tools/` (checkers, metrics, stats, bumps, the site's builder, the CI stub)                       |
+| Where is each flake output implemented?      | `flake/`, wired one line per output in `flake.nix`                                                |
+| Where are secrets, and the docs?             | `secrets/`, `docs/`, unchanged                                                                    |
+| Where is a tool's configuration?             | `.config/`, after the [dot-config](https://github.com/dot-config/dot-config.github.io) convention |
 
 Three rules of placement come with it. A host is named after the BOARD it runs on, as the BIOS
 guide and the Drive backup folder already were. A module describing ONE device keeps a device name

@@ -35,24 +35,24 @@ uses is dead config (rule 16).
 
 Three curves, and every leaf names one of them:
 
-| Curve | Definition | Used for |
-| --- | --- | --- |
-| `settle` | spring, mass 1, stiffness 700, dampening 49 | what MOVES: `windows` (and `windowsMove` through it), `workspaces` |
-| `easeOutQuint` | bezier (0.23, 1), (0.32, 1) | entrances: `windowsIn`, `border`, `layers`, `fadeLayersIn`, `specialWorkspace` |
-| `almostLinear` | bezier (0.5, 0.5), (0.75, 1) | opacity and exits: `fade`, `fadeIn`, `fadeOut`, `windowsOut`, `layersOut`, `fadeLayersOut` |
+| Curve          | Definition                                  | Used for                                                                                   |
+| -------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `settle`       | spring, mass 1, stiffness 700, dampening 49 | what MOVES: `windows` (and `windowsMove` through it), `workspaces`                         |
+| `easeOutQuint` | bezier (0.23, 1), (0.32, 1)                 | entrances: `windowsIn`, `border`, `layers`, `fadeLayersIn`, `specialWorkspace`             |
+| `almostLinear` | bezier (0.5, 0.5), (0.75, 1)                | opacity and exits: `fade`, `fadeIn`, `fadeOut`, `windowsOut`, `layersOut`, `fadeLayersOut` |
 
-| Leaf | Before (until 17/10/2026) | Now |
-| --- | --- | --- |
-| `windows` / `windowsMove` | 479 ms easeOutQuint | `settle` spring (~310 ms to rest) |
-| `windowsIn` | 410 ms, `popin 87%` | 220 ms easeOutQuint, `popin 97%` |
-| `windowsOut` | 149 ms linear, `popin 87%` | 130 ms almostLinear, `popin 97%` |
-| `fade` (focus, dim, shadow, popups) | 303 ms `quick` | 200 ms almostLinear |
-| `fadeIn` / `fadeOut` | 173 / 146 ms | 180 / 120 ms |
-| `border` | 539 ms | 200 ms easeOutQuint |
-| `layers` (in) / `layersOut` | 400 / 150 ms, `fade` | 160 / 100 ms, `fade` |
-| `fadeLayersIn` / `fadeLayersOut` | 179 / 139 ms almostLinear | 150 ms easeOutQuint / 100 ms almostLinear |
-| `workspaces` | 121 to 194 ms almostLinear, `fade` | `settle` spring, `slidefade 8%` |
-| `specialWorkspace` | (inherited `fade`) | 180 ms easeOutQuint, `fade`, pinned so the slide does not reach it |
+| Leaf                                | Before (until 17/10/2026)          | Now                                                                |
+| ----------------------------------- | ---------------------------------- | ------------------------------------------------------------------ |
+| `windows` / `windowsMove`           | 479 ms easeOutQuint                | `settle` spring (~310 ms to rest)                                  |
+| `windowsIn`                         | 410 ms, `popin 87%`                | 220 ms easeOutQuint, `popin 97%`                                   |
+| `windowsOut`                        | 149 ms linear, `popin 87%`         | 130 ms almostLinear, `popin 97%`                                   |
+| `fade` (focus, dim, shadow, popups) | 303 ms `quick`                     | 200 ms almostLinear                                                |
+| `fadeIn` / `fadeOut`                | 173 / 146 ms                       | 180 / 120 ms                                                       |
+| `border`                            | 539 ms                             | 200 ms easeOutQuint                                                |
+| `layers` (in) / `layersOut`         | 400 / 150 ms, `fade`               | 160 / 100 ms, `fade`                                               |
+| `fadeLayersIn` / `fadeLayersOut`    | 179 / 139 ms almostLinear          | 150 ms easeOutQuint / 100 ms almostLinear                          |
+| `workspaces`                        | 121 to 194 ms almostLinear, `fade` | `settle` spring, `slidefade 8%`                                    |
+| `specialWorkspace`                  | (inherited `fade`)                 | 180 ms easeOutQuint, `fade`, pinned so the slide does not reach it |
 
 **Why a spring only for space.** A Hyprland spring IGNORES `speed`: its duration comes out of the
 physics (`hyprutils/src/animation/Spring.cpp`), and a retarget keeps the velocity it had. That is
@@ -64,11 +64,11 @@ is nothing to retarget, so a plain curve with a known duration is the honest cho
 is 0.93, just under critical. Integrated with the same model hyprutils uses (180 Hz steps, its
 0.001 value and velocity epsilons), REASONED and not measured on screen, on 17/10/2026:
 
-| Spring | zeta | 90% | 99% | at rest | overshoot |
-| --- | --- | --- | --- | --- | --- |
-| upstream example `easy` (238 / 24.2) | 0.78 | 194 ms | 450 ms | 650 ms | 1.85% |
-| critical (500 / 44.7) | 1.00 | 178 ms | 333 ms | 567 ms | 0 |
-| **`settle` (700 / 49)** | **0.93** | **133 ms** | **206 ms** | **306 ms** | **0.06%** |
+| Spring                               | zeta     | 90%        | 99%        | at rest    | overshoot |
+| ------------------------------------ | -------- | ---------- | ---------- | ---------- | --------- |
+| upstream example `easy` (238 / 24.2) | 0.78     | 194 ms     | 450 ms     | 650 ms     | 1.85%     |
+| critical (500 / 44.7)                | 1.00     | 178 ms     | 333 ms     | 567 ms     | 0         |
+| **`settle` (700 / 49)**              | **0.93** | **133 ms** | **206 ms** | **306 ms** | **0.06%** |
 
 Exactly critical looks right on paper and wrong on a compositor: its tail is exponential, so the
 window is visibly "still arriving" for half a second and Hyprland keeps drawing frames until the
@@ -93,10 +93,10 @@ horizontal motion. The direction follows the workspace id.
 **Measured, 17/10/2026, on the ASUS at 180 Hz** (scratch scripts, `/proc/<pid>/stat` utime plus
 stime over the run, old block restored from git for the comparison):
 
-| Test | Old curves | New curves |
-| --- | --- | --- |
-| 30 workspace switches 120 ms apart (3 runs) | 13.4 to 13.7% of a core | 13.4 to 14.1% |
-| 6 kitty open and close cycles on an empty workspace (2 runs) | 7.2 to 7.6% | 6.8 to 7.2% |
+| Test                                                         | Old curves              | New curves    |
+| ------------------------------------------------------------ | ----------------------- | ------------- |
+| 30 workspace switches 120 ms apart (3 runs)                  | 13.4 to 13.7% of a core | 13.4 to 14.1% |
+| 6 kitty open and close cycles on an empty workspace (2 runs) | 7.2 to 7.6%             | 6.8 to 7.2%   |
 
 The same within noise: the spring's longer settle tail is not a cost. Every run ended on the
 workspace it started on with no window left behind. What these numbers cannot say is how it LOOKS;
@@ -134,10 +134,10 @@ no animation setting (`vicinae config default` has none), so this rule is the on
 animation, so the first keystroke reaches the search field on the first frame, whatever the
 opacity is. Measured on 17/10/2026, `vicinae open` to the layer listed by Hyprland, 8 opens each:
 
-| Rule | exec to mapped |
-| --- | --- |
-| `no_anim` (before) | 12 to 14 ms |
-| `animation = "fade"` | 12 to 14 ms |
+| Rule                 | exec to mapped |
+| -------------------- | -------------- |
+| `no_anim` (before)   | 12 to 14 ms    |
+| `animation = "fade"` | 12 to 14 ms    |
 
 The fade starts on top of that, and easeOutQuint puts it past half opacity within roughly the
 first 20 ms, so the launcher reads as present on the same frame it would have before.
@@ -156,13 +156,13 @@ an instant launcher beats an animated one, and that was the condition this was a
 
 Durations live in `Theme.qml` as tokens, one per MEANING, and a consumer never holds a literal:
 
-| Token | Value | Meaning | Used by |
-| --- | --- | --- | --- |
-| `motionFast` | 90 ms | a direct answer to a key | the OSD's volume and brightness bars |
-| `motionHover` | 120 ms | a hover's color or border | pills, workspace buttons, menu rows, notification buttons |
-| `motionNormal` | 180 ms | something appearing or moving | popovers, the workspace indicator, a toast, page dots |
-| `motionSlow` | 300 ms | a value settling | meters, the media progress bar, the CPU cores |
-| `ms(d)` | `d` | a one-off that still obeys `off` | the glance band's own choreography (below) |
+| Token          | Value  | Meaning                          | Used by                                                   |
+| -------------- | ------ | -------------------------------- | --------------------------------------------------------- |
+| `motionFast`   | 90 ms  | a direct answer to a key         | the OSD's volume and brightness bars                      |
+| `motionHover`  | 120 ms | a hover's color or border        | pills, workspace buttons, menu rows, notification buttons |
+| `motionNormal` | 180 ms | something appearing or moving    | popovers, the workspace indicator, a toast, page dots     |
+| `motionSlow`   | 300 ms | a value settling                 | meters, the media progress bar, the CPU cores             |
+| `ms(d)`        | `d`    | a one-off that still obeys `off` | the glance band's own choreography (below)                |
 
 `Theme.hoverIntent` (200 ms) sits next to them and is NOT a motion token: it is how long the pointer
 rests on a bar pill before its panel opens ([bar.md](bar.md#contextual-expansion-one-panel-at-a-time-17102026)),
@@ -271,10 +271,10 @@ never lags its bar). Clocks and every text reading change in place.
 
 Idle, 30 s windows of `/proc/<pid>/stat` on 17/10/2026, the session at rest on its usual windows:
 
-| | Before | After |
-| --- | --- | --- |
+|            | Before          | After         |
+| ---------- | --------------- | ------------- |
 | Quickshell | 18.6% of a core | 17.4 to 18.3% |
-| Hyprland | 9.1% | 8.4 to 8.6% |
+| Hyprland   | 9.1%            | 8.4 to 8.6%   |
 
 No change, and no new process: everything here is configuration of the compositor and the shell
 that were already running. (The RSS figures moved with the many hot reloads of the test session and
@@ -296,26 +296,26 @@ Two methods, because the live session cannot run two configs side by side withou
 started fresh, 25 s to settle, then 20 s windows of `/proc/<pid>/stat`). Software rendering makes
 every repainted pixel cost CPU, so it exaggerates repaints; it is the right tool for comparing them.
 
-| Tree | Quickshell |
-| --- | --- |
-| before the redesign (57af8649) | 57 to 66% of a core |
-| the redesign, before the two fixes below | 71 to 81% |
-| the new bar on the old band | 57 to 66% (the bar costs nothing) |
-| the old Repeater sparkline put back | 76 to 85% (the canvas one is cheaper) |
-| the alert pulse stopped | 17% |
-| final, rain forced, the ambient looping | 72 to 83% |
-| final, rain forced, the ambient settling | 16% |
-| **final** | **16%** |
+| Tree                                     | Quickshell                            |
+| ---------------------------------------- | ------------------------------------- |
+| before the redesign (57af8649)           | 57 to 66% of a core                   |
+| the redesign, before the two fixes below | 71 to 81%                             |
+| the new bar on the old band              | 57 to 66% (the bar costs nothing)     |
+| the old Repeater sparkline put back      | 76 to 85% (the canvas one is cheaper) |
+| the alert pulse stopped                  | 17%                                   |
+| final, rain forced, the ambient looping  | 72 to 83%                             |
+| final, rain forced, the ambient settling | 16%                                   |
+| **final**                                | **16%**                               |
 
 RSS was 495 to 508 MB in every run, old and new alike (software buffers dominate it there).
 
 **Live, on this machine** (GPU rendering, the usual 30 s windows, the session at rest; the "before"
 was the 2 h old process, the "after" a fresh one with the fixes hot-reloaded):
 
-| | Before | After |
-| --- | --- | --- |
-| Quickshell | 18.7 to 20.2% of a core, 152 MB | 5.8 to 7.2%, 161 MB |
-| Hyprland, with the new layer blur | about 18% | 15.8 to 17.8% |
+|                                   | Before                          | After               |
+| --------------------------------- | ------------------------------- | ------------------- |
+| Quickshell                        | 18.7 to 20.2% of a core, 152 MB | 5.8 to 7.2%, 161 MB |
+| Hyprland, with the new layer blur | about 18%                       | 15.8 to 17.8%       |
 
 The blur on the shell's layers did not show up in Hyprland's CPU; GPU time was not measured.
 
@@ -324,10 +324,10 @@ The blur on the shell's layers did not show up in Hyprland's CPU; GPU time was n
 Same two methods. **Headless A/B** of the tree before v2 (`d39efa32`) against v2, each started fresh
 twice, three 20 s windows per run, software rendering:
 
-| Tree | Quickshell CPU | RSS |
-| --- | --- | --- |
+| Tree      | Quickshell CPU          | RSS           |
+| --------- | ----------------------- | ------------- |
 | before v2 | 16.2 to 16.9% of a core | 453 to 492 MB |
-| v2 | 15.9 to 16.8% | 500 to 510 MB |
+| v2        | 15.9 to 16.8%           | 500 to 510 MB |
 
 The same CPU, and 20 to 45 MB more resident under software rendering, where every window buffer is
 in the process; not attributed further.
@@ -335,11 +335,11 @@ in the process; not attributed further.
 **Live, on this machine** (the session at rest, 30 s windows; the "before" an hours-old process,
 the "after" a fresh one after `qs-restart` and 40 s to settle):
 
-| | Before v2 | After v2 |
-| --- | --- | --- |
-| Quickshell CPU | 5.9 to 6.4% of a core | 4.9 to 5.7% |
-| Quickshell child processes | 1 | 1 |
-| Quickshell RSS / PSS | 124 / 97 MB | 273 / 243 MB |
+|                            | Before v2             | After v2     |
+| -------------------------- | --------------------- | ------------ |
+| Quickshell CPU             | 5.9 to 6.4% of a core | 4.9 to 5.7%  |
+| Quickshell child processes | 1                     | 1            |
+| Quickshell RSS / PSS       | 124 / 97 MB           | 273 / 243 MB |
 
 The memory row is NOT a regression measured: a freshly started Quickshell sits near 270 MB and comes
 down over time (a fresh instance the same day read 276 MB and 112 MB an hour later), so a fresh
@@ -348,11 +348,11 @@ from 6 to 14% with what was on screen in both, so it is not claimed either way.
 
 **Interactions:**
 
-| Scenario | Method | Result |
-| --- | --- | --- |
-| open and close the NixOS Center | 20 cycles over IPC in the headless harness | about 5 cs of CPU (50 ms, software rendering) per cycle above idle |
-| a burst of notifications | 110 `notify-send` in 399 ms with DND on, live | 170 ms of Quickshell CPU, RSS unchanged, the history cap closing the oldest 11 |
-| a monitor plugged and unplugged | a headless output added and removed, live, the Center open on the main monitor | a bar created and destroyed with it, the Center untouched, nothing logged |
+| Scenario                        | Method                                                                         | Result                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| open and close the NixOS Center | 20 cycles over IPC in the headless harness                                     | about 5 cs of CPU (50 ms, software rendering) per cycle above idle             |
+| a burst of notifications        | 110 `notify-send` in 399 ms with DND on, live                                  | 170 ms of Quickshell CPU, RSS unchanged, the history cap closing the oldest 11 |
+| a monitor plugged and unplugged | a headless output added and removed, live, the Center open on the main monitor | a bar created and destroyed with it, the Center untouched, nothing logged      |
 
 **Not measured, and not claimed:** GPU time and frame pacing (no tool in the repo), a fullscreen
 game at 180 Hz with the shell running, overlapping translucent windows under HyprGlass (it is off,

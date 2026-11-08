@@ -92,11 +92,11 @@ makes a mirror worth having THERE.
 **And the symlink does not survive a write**, tested on 1.1.20 against the path their docs name,
 `~/.gemini/antigravity-cli/settings.json`:
 
-| Step | Result |
-| --- | --- |
-| Hand-written keys reached through a symlink | READ and honored: `colorScheme` and `showTips` both survived |
-| The same run, afterwards | the path is a REGULAR file, re-serialized pretty-printed by the app |
-| The mirror at the other end | untouched, still holding what I wrote |
+| Step                                        | Result                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------- |
+| Hand-written keys reached through a symlink | READ and honored: `colorScheme` and `showTips` both survived        |
+| The same run, afterwards                    | the path is a REGULAR file, re-serialized pretty-printed by the app |
+| The mirror at the other end                 | untouched, still holding what I wrote                               |
 
 `~/.gemini/config/config.json` behaves the same way: pointed at a mirror holding `{}`, the first
 write detaches the link and the mirror stays at `{}`. The key it rewrites there is
@@ -117,11 +117,11 @@ file under `~/.gemini` carries the credential.
 So the declaration is the PACKAGE and nothing else. Everything the tool keeps is state and belongs
 to restic (rule 6), which `paths = [ "/home/v1cferr" ]` already covers:
 
-| Path | What it holds |
-| --- | --- |
-| `~/.gemini/config/` | `config.json`, `mcp_config.json`, per-project files, a `.migrated` marker |
+| Path                         | What it holds                                                                                            |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `~/.gemini/config/`          | `config.json`, `mcp_config.json`, per-project files, a `.migrated` marker                                |
 | `~/.gemini/antigravity-cli/` | `settings.json` and `keybindings.json` once touched, plus conversations, knowledge, brain, logs, crashes |
-| `~/.cache/ms-playwright-go/` | the browser runtime it downloads on its own for the browser tools |
+| `~/.cache/ms-playwright-go/` | the browser runtime it downloads on its own for the browser tools                                        |
 
 **A correction worth keeping** (24/08/2026, same day): I first read the missing
 `settings.json` plus the `.migrated` marker next to `config.json` as the settings file having

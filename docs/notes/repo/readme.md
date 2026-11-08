@@ -14,11 +14,11 @@ through `flake.nix`. `.#pages` joins that output with `docs-site` under `/stats`
 
 Three ways were compared on 29/09/2026, and this one won on what lasts:
 
-| Option | Why it lost or won |
-| --- | --- |
-| **counted at build, served by the site** | WON. A commit and its stats cannot disagree, the history gets no bot commits, and nothing is drawn by a third party |
-| a workflow that commits the SVG | what the profile does, and cheap; but every change means a bot commit in the diary (rule 17) and a CI token that can write |
-| shields.io reading a JSON endpoint | the familiar look, but a third party renders it, and it does not look like the profile |
+| Option                                   | Why it lost or won                                                                                                         |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **counted at build, served by the site** | WON. A commit and its stats cannot disagree, the history gets no bot commits, and nothing is drawn by a third party        |
+| a workflow that commits the SVG          | what the profile does, and cheap; but every change means a bot commit in the diary (rule 17) and a CI token that can write |
+| shields.io reading a JSON endpoint       | the familiar look, but a third party renders it, and it does not look like the profile                                     |
 
 **The evaluation cost stays OUT of the card.** It needs `nix eval` of a host, which a build sandbox
 cannot run, so it lives where it already did: the gate's run summary, from

@@ -72,14 +72,14 @@ A shell sitting inside a game folder counts as use. That is deliberate: a human 
 The sampler and the trend log are the slow, automatic half. When the disk is full NOW, these are
 the interactive half, and each one answers a different question:
 
-| Question | Tool | Why that one |
-| --- | --- | --- |
-| Why does `df` show more than any `du` adds up to? | `sudo btdu /` | samples EXTENTS, so it sees what only the btrbk snapshots still hold |
-| Which folder is it, and can I delete it right here? | `dua i ~` | parallel scan, mark-and-delete in the TUI |
-| A quick tree of the biggest things | `dust` | one static screen, no interaction |
-| The same, as a sunburst | `filelight` | the GUI, from Dolphin |
-| Which PACKAGE weighs the most? | `nix-tree /run/current-system` | closures, not folders |
-| What does compression really save? | `sudo compsize -x /home` | the only one that reads the compressed size |
+| Question                                            | Tool                           | Why that one                                                         |
+| --------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------- |
+| Why does `df` show more than any `du` adds up to?   | `sudo btdu /`                  | samples EXTENTS, so it sees what only the btrbk snapshots still hold |
+| Which folder is it, and can I delete it right here? | `dua i ~`                      | parallel scan, mark-and-delete in the TUI                            |
+| A quick tree of the biggest things                  | `dust`                         | one static screen, no interaction                                    |
+| The same, as a sunburst                             | `filelight`                    | the GUI, from Dolphin                                                |
+| Which PACKAGE weighs the most?                      | `nix-tree /run/current-system` | closures, not folders                                                |
+| What does compression really save?                  | `sudo compsize -x /home`       | the only one that reads the compressed size                          |
 
 `btdu` is the one the others cannot replace. On 24/10/2026 the live tree added up to about
 670 GiB against 824 GiB used, and the likely home of the ~150 GiB gap is data rewritten inside

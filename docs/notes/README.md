@@ -22,11 +22,11 @@ does, that is rule 16 and the page is the bug.
 
 ## How it relates to the rest of docs/
 
-| Folder | Question it answers |
-| --- | --- |
+| Folder                       | Question it answers                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------- |
 | [`../history/`](../history/) | "What happened on that day, and what did I learn?" Chronological, append-only |
-| `notes/` (here) | "Why is THIS module like this, right now?" One page per module, kept current |
-| [`../guides/`](../guides/) | "What do I type to redo this by hand?" Steps outside Nix's reach |
+| `notes/` (here)              | "Why is THIS module like this, right now?" One page per module, kept current  |
+| [`../guides/`](../guides/)   | "What do I type to redo this by hand?" Steps outside Nix's reach              |
 
 The history is a diary and keeps its entries even when they go stale, because a diary that gets
 edited stops being evidence. These notes are the opposite: they describe the CURRENT state, and
@@ -57,149 +57,149 @@ rule 16 applies in full, so a note that stops being true is a bug.
 
 ### boot-and-storage
 
-| Page | What you would come here asking |
-| --- | --- |
-| [boot](boot-and-storage/boot.md) | Limine, the Secure Boot trust chain, and what it does NOT protect |
-| [disko](boot-and-storage/disko.md) | the subvolume layout, and why the swapfile belongs to the host |
-| [btrfs](boot-and-storage/btrfs.md) | the scrub, the alarm, the reclaim, and why fstrim is off |
-| [btrbk](boot-and-storage/btrbk.md) | the local snapshots, which are NOT a backup |
-| [restic](boot-and-storage/restic.md) | why the backup is gone, the frozen repos, and `~/Drive` |
-| [arch-legacy](boot-and-storage/arch-legacy.md) | the old Arch archive, permanently mounted, and `--no-lock` |
-| [disk-hygiene](boot-and-storage/disk-hygiene.md) | the space alarm that names the biggest consumers |
-| [downloads-tidy](boot-and-storage/downloads-tidy.md) | `~/Downloads` as an inbox, sorted by type every 30 min |
-| [disk-insight](boot-and-storage/disk-insight.md) | the size trend, the usage sampler, and why not atime |
-| [impermanence](boot-and-storage/impermanence.md) | the home persistence list written before the switch, and `persist-diff` |
-| [games-disk](boot-and-storage/games-disk.md) | one game install shared with Windows, and the `force` option that stays off |
-| [shutdown](boot-and-storage/shutdown.md) | why the machine takes that long to go down |
+| Page                                                 | What you would come here asking                                             |
+| ---------------------------------------------------- | --------------------------------------------------------------------------- |
+| [boot](boot-and-storage/boot.md)                     | Limine, the Secure Boot trust chain, and what it does NOT protect           |
+| [disko](boot-and-storage/disko.md)                   | the subvolume layout, and why the swapfile belongs to the host              |
+| [btrfs](boot-and-storage/btrfs.md)                   | the scrub, the alarm, the reclaim, and why fstrim is off                    |
+| [btrbk](boot-and-storage/btrbk.md)                   | the local snapshots, which are NOT a backup                                 |
+| [restic](boot-and-storage/restic.md)                 | why the backup is gone, the frozen repos, and `~/Drive`                     |
+| [arch-legacy](boot-and-storage/arch-legacy.md)       | the old Arch archive, permanently mounted, and `--no-lock`                  |
+| [disk-hygiene](boot-and-storage/disk-hygiene.md)     | the space alarm that names the biggest consumers                            |
+| [downloads-tidy](boot-and-storage/downloads-tidy.md) | `~/Downloads` as an inbox, sorted by type every 30 min                      |
+| [disk-insight](boot-and-storage/disk-insight.md)     | the size trend, the usage sampler, and why not atime                        |
+| [impermanence](boot-and-storage/impermanence.md)     | the home persistence list written before the switch, and `persist-diff`     |
+| [games-disk](boot-and-storage/games-disk.md)         | one game install shared with Windows, and the `force` option that stays off |
+| [shutdown](boot-and-storage/shutdown.md)             | why the machine takes that long to go down                                  |
 
 ### hardware
 
-| Page | What you would come here asking |
-| --- | --- |
-| [gpu](hardware/gpu.md) | the Arc B580 on `xe`, and why the driver stack must NOT go unstable |
-| [gpu-rgb](hardware/gpu-rgb.md) | the Steel Legend's LED, the bus everyone assumed wrong, and when to delete the patches |
-| [fans](hardware/fans.md) | the Arc's fan that was supposed to be uncontrollable, the PCODE path, and the firmware red herring |
-| [monitors](hardware/monitors.md) | the connector SSOT, and why it lives on the system side |
-| [fonts](hardware/fonts.md) | the UI font SSOT, and the fallback coverage |
-| [mouse](hardware/mouse.md) | the MX Master, the boot race, and the gestures |
-| [razer](hardware/razer.md) | the DeathAdder's DPI OSD, and why openrazer does not build on 7.x |
-| [android](hardware/android.md) | pairing the phone over wireless ADB, and why SFTP could not clean it |
-| [android-iac](hardware/android-iac.md) | the phone's posture read over ADB: what it can see, the statuses, what never enters the repo |
-| [oom](hardware/oom.md) | earlyoom, and the three traps in its regex |
-| [power-and-memory-baseline](hardware/power-and-memory-baseline.md) | the 18/10/2026 audit: where the RAM goes, what was kept and why, what is still unmeasured |
-| [power](hardware/power.md) | Balanced, Gaming and Eco: power-profiles-daemon, and GameMode's hold |
-| [webcam](hardware/webcam.md) | the UVC `-71`, everything it is NOT, and the one test left |
+| Page                                                               | What you would come here asking                                                                    |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| [gpu](hardware/gpu.md)                                             | the Arc B580 on `xe`, and why the driver stack must NOT go unstable                                |
+| [gpu-rgb](hardware/gpu-rgb.md)                                     | the Steel Legend's LED, the bus everyone assumed wrong, and when to delete the patches             |
+| [fans](hardware/fans.md)                                           | the Arc's fan that was supposed to be uncontrollable, the PCODE path, and the firmware red herring |
+| [monitors](hardware/monitors.md)                                   | the connector SSOT, and why it lives on the system side                                            |
+| [fonts](hardware/fonts.md)                                         | the UI font SSOT, and the fallback coverage                                                        |
+| [mouse](hardware/mouse.md)                                         | the MX Master, the boot race, and the gestures                                                     |
+| [razer](hardware/razer.md)                                         | the DeathAdder's DPI OSD, and why openrazer does not build on 7.x                                  |
+| [android](hardware/android.md)                                     | pairing the phone over wireless ADB, and why SFTP could not clean it                               |
+| [android-iac](hardware/android-iac.md)                             | the phone's posture read over ADB: what it can see, the statuses, what never enters the repo       |
+| [oom](hardware/oom.md)                                             | earlyoom, and the three traps in its regex                                                         |
+| [power-and-memory-baseline](hardware/power-and-memory-baseline.md) | the 18/10/2026 audit: where the RAM goes, what was kept and why, what is still unmeasured          |
+| [power](hardware/power.md)                                         | Balanced, Gaming and Eco: power-profiles-daemon, and GameMode's hold                               |
+| [webcam](hardware/webcam.md)                                       | the UVC `-71`, everything it is NOT, and the one test left                                         |
 
 ### network
 
-| Page | What you would come here asking |
-| --- | --- |
-| [network](network/network.md) | the firewall by SOURCE, the DDNS that moved to the router, fail2ban, the FAI gateway |
-| [exposure](network/exposure.md) | the house seen from outside: open ports and the sshd, weekly |
-| [router-log](network/router-log.md) | the router's syslog kept here 30 days: who may send it, and why the order matters |
-| [vpn](network/vpn.md) | FAI (nxBender) and UFSCar (openconnect), always split-tunnel |
-| [ssh](network/ssh.md) | the exposed SSH, the hosts, and reaching the FAI workstation |
-| [sunshine](network/sunshine.md) | remote access, the black screen, and why dpms is forbidden |
-| [caddy](network/caddy.md) | the reverse proxy, the auto-gate, `client_ip` vs `remote_ip` |
-| [tunnel](network/tunnel.md) | the Cloudflare Tunnel behind Access, the MCP portal, what is NOT in git |
-| [fai-workstation](network/fai-workstation.md) | the host SSOT, Wake-on-LAN, and the rclone mount |
-| [vps-mount](network/vps-mount.md) | `~/VPS`, the KingHost VPS' root over rclone SFTP |
+| Page                                          | What you would come here asking                                                      |
+| --------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [network](network/network.md)                 | the firewall by SOURCE, the DDNS that moved to the router, fail2ban, the FAI gateway |
+| [exposure](network/exposure.md)               | the house seen from outside: open ports and the sshd, weekly                         |
+| [router-log](network/router-log.md)           | the router's syslog kept here 30 days: who may send it, and why the order matters    |
+| [vpn](network/vpn.md)                         | FAI (nxBender) and UFSCar (openconnect), always split-tunnel                         |
+| [ssh](network/ssh.md)                         | the exposed SSH, the hosts, and reaching the FAI workstation                         |
+| [sunshine](network/sunshine.md)               | remote access, the black screen, and why dpms is forbidden                           |
+| [caddy](network/caddy.md)                     | the reverse proxy, the auto-gate, `client_ip` vs `remote_ip`                         |
+| [tunnel](network/tunnel.md)                   | the Cloudflare Tunnel behind Access, the MCP portal, what is NOT in git              |
+| [fai-workstation](network/fai-workstation.md) | the host SSOT, Wake-on-LAN, and the rclone mount                                     |
+| [vps-mount](network/vps-mount.md)             | `~/VPS`, the KingHost VPS' root over rclone SFTP                                     |
 
 ### desktop
 
-| Page | What you would come here asking |
-| --- | --- |
-| [desktop](desktop/desktop.md) | Hyprland, the autologin trade, the portals, the keyring |
-| [hypr](desktop/hypr.md) | the Lua config, the helper scripts, the remote-access safety net |
-| [keybinds](desktop/keybinds.md) | every bind, and why the cheatsheet is generated from them |
-| [quickshell](desktop/quickshell.md) | the shell in QML, and the 758 MiB XEmbed bridge |
-| [bar](desktop/bar.md) | the bar and its popovers, the VPN probe, the holiday table |
-| [hyprglass](desktop/hyprglass.md) | the Liquid Glass plugin: the pinned build, the presets, turning it on and off |
-| [performance](desktop/performance.md) | what the desktop costs, and the A/B bench of blur and animations that measures it |
-| [nixos-center](desktop/nixos-center.md) | the logo's panel: notifications, do-not-disturb, the session, the toasts |
-| [dash](desktop/dash.md) | the glance band on the standing monitor: vitals, month, CI pages |
-| [glance-feed](desktop/glance-feed.md) | the SQLite network cache: fetch only what changed, paint from disk at boot |
-| [lockscreen](desktop/lockscreen.md) | the QML lock (Quickshell), hyprlock as its fallback, hypridle, and the hardware lessons |
-| [away](desktop/away.md) | a black screen and dark LEDs while an agent works, and why not DDC or DPMS |
-| [vault](desktop/vault.md) | sensitive apps hide on session lock and ask for the password again after unlock |
-| [weather](desktop/weather.md) | one source for the bar and the lock, and the icon-by-regex trap |
-| [theme](desktop/theme.md) | dark mode, Kvantum, the Win11 icons, the palette SSOT |
-| [autostart](desktop/autostart.md) | what opens at login, and Spotify's 4145 restarts |
-| [hyprsunset](desktop/hyprsunset.md) | the blue light curve, and why 13 profiles |
-| [backlight](desktop/backlight.md) | DDC/CI on both panels, the 10000 K that faked a broken filter |
-| [desktop-plumbing](desktop/desktop-plumbing.md) | the polkit agent, XDG associations, the wallpaper, the cheatsheet, clipboard-push |
-| [vicinae](desktop/vicinae.md) | the launcher, the clipboard history, the command palette |
-| [spellcheck](desktop/spellcheck.md) | English and pt-BR in every app: one list, one layer per app family |
+| Page                                            | What you would come here asking                                                         |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [desktop](desktop/desktop.md)                   | Hyprland, the autologin trade, the portals, the keyring                                 |
+| [hypr](desktop/hypr.md)                         | the Lua config, the helper scripts, the remote-access safety net                        |
+| [keybinds](desktop/keybinds.md)                 | every bind, and why the cheatsheet is generated from them                               |
+| [quickshell](desktop/quickshell.md)             | the shell in QML, and the 758 MiB XEmbed bridge                                         |
+| [bar](desktop/bar.md)                           | the bar and its popovers, the VPN probe, the holiday table                              |
+| [hyprglass](desktop/hyprglass.md)               | the Liquid Glass plugin: the pinned build, the presets, turning it on and off           |
+| [performance](desktop/performance.md)           | what the desktop costs, and the A/B bench of blur and animations that measures it       |
+| [nixos-center](desktop/nixos-center.md)         | the logo's panel: notifications, do-not-disturb, the session, the toasts                |
+| [dash](desktop/dash.md)                         | the glance band on the standing monitor: vitals, month, CI pages                        |
+| [glance-feed](desktop/glance-feed.md)           | the SQLite network cache: fetch only what changed, paint from disk at boot              |
+| [lockscreen](desktop/lockscreen.md)             | the QML lock (Quickshell), hyprlock as its fallback, hypridle, and the hardware lessons |
+| [away](desktop/away.md)                         | a black screen and dark LEDs while an agent works, and why not DDC or DPMS              |
+| [vault](desktop/vault.md)                       | sensitive apps hide on session lock and ask for the password again after unlock         |
+| [weather](desktop/weather.md)                   | one source for the bar and the lock, and the icon-by-regex trap                         |
+| [theme](desktop/theme.md)                       | dark mode, Kvantum, the Win11 icons, the palette SSOT                                   |
+| [autostart](desktop/autostart.md)               | what opens at login, and Spotify's 4145 restarts                                        |
+| [hyprsunset](desktop/hyprsunset.md)             | the blue light curve, and why 13 profiles                                               |
+| [backlight](desktop/backlight.md)               | DDC/CI on both panels, the 10000 K that faked a broken filter                           |
+| [desktop-plumbing](desktop/desktop-plumbing.md) | the polkit agent, XDG associations, the wallpaper, the cheatsheet, clipboard-push       |
+| [vicinae](desktop/vicinae.md)                   | the launcher, the clipboard history, the command palette                                |
+| [spellcheck](desktop/spellcheck.md)             | English and pt-BR in every app: one list, one layer per app family                      |
 
 ### apps
 
-| Page | What you would come here asking |
-| --- | --- |
-| [dolphin](apps/dolphin.md) | the ViewMode enum trap, and the Windows Explorer parity |
-| [recoll](apps/recoll.md) | searching by content, and why the index must never see a secret |
-| [dropbox](apps/dropbox.md) | the tray icon's cost, and 10 days of syncing nothing |
-| [vscode](apps/vscode.md) | a versioned mirror and not an immutable source |
-| [claude-code](apps/claude-code.md) | two accounts, one archive, and the rules every project inherits |
-| [codex](apps/codex.md) | the declared config as the system layer, and why the settings option is left empty |
-| [antigravity-cli](apps/antigravity-cli.md) | why `agy` and not gemini-cli, and the symlink this one clobbers |
-| [basic-memory](apps/basic-memory.md) | two memory servers split at the FAI boundary, uv2nix, and why HTTP and not stdio |
-| [azure-mcp](apps/azure-mcp.md) | the Azure MCP server, FAI only |
-| [flameshot](apps/flameshot.md) | the v14 keyboard flow, and the duplicated bar |
-| [screenrec](apps/screenrec.md) | recording a monitor or a region by keyboard, MP4 with GIF on demand, and why not the portal |
-| [curseforge](apps/curseforge.md) | the repackaged AppImage, and why the schemes are declared |
-| [curseforge-fix-perms](apps/curseforge-fix-perms.md) | the `+x` the app loses, and why ELF magic and not names |
-| [wow-addons](apps/wow-addons.md) | WoW Forever add-ons as a versioned list, instawow, and the CurseForge key |
-| [fai-meet](apps/fai-meet.md) | the FAI's meeting recorder, on demand only (`fai-meet-latest`), never installed |
-| [hydralauncher](apps/hydralauncher.md) | the game launcher on upstream's latest, its download sources declared, and its login scheme |
-| [bottles](apps/bottles.md) | the library declared without owning the prefix, and the name that is not the directory |
-| [mega](apps/mega.md) | megatools, the quota, and why the loop waits |
-| [spotifast](apps/spotifast.md) | the native Spotify client, why the release binary, and the theme that must be a real file |
-| [apps-and-mime](apps/apps-and-mime.md) | media, office, MangoHud, OpenAL, and the CANONICAL mimetype |
-| [zen](apps/zen.md) | the launch guard, and the NSS check that had to be written backwards |
-| [web-apps](apps/web-apps.md) | sites lighter than their vendor app, one list, Chrome PWA or a Zen profile with tabs |
-| [crypto](apps/crypto.md) | Stack Wallet and Bisq 2, the threat model with no LUKS, and the first purchase |
-| [fastfetch](apps/fastfetch.md) | boxes drawn from the key, and a donut.c-style logo rendered at build time |
+| Page                                                 | What you would come here asking                                                             |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [dolphin](apps/dolphin.md)                           | the ViewMode enum trap, and the Windows Explorer parity                                     |
+| [recoll](apps/recoll.md)                             | searching by content, and why the index must never see a secret                             |
+| [dropbox](apps/dropbox.md)                           | the tray icon's cost, and 10 days of syncing nothing                                        |
+| [vscode](apps/vscode.md)                             | a versioned mirror and not an immutable source                                              |
+| [claude-code](apps/claude-code.md)                   | two accounts, one archive, and the rules every project inherits                             |
+| [codex](apps/codex.md)                               | the declared config as the system layer, and why the settings option is left empty          |
+| [antigravity-cli](apps/antigravity-cli.md)           | why `agy` and not gemini-cli, and the symlink this one clobbers                             |
+| [basic-memory](apps/basic-memory.md)                 | two memory servers split at the FAI boundary, uv2nix, and why HTTP and not stdio            |
+| [azure-mcp](apps/azure-mcp.md)                       | the Azure MCP server, FAI only                                                              |
+| [flameshot](apps/flameshot.md)                       | the v14 keyboard flow, and the duplicated bar                                               |
+| [screenrec](apps/screenrec.md)                       | recording a monitor or a region by keyboard, MP4 with GIF on demand, and why not the portal |
+| [curseforge](apps/curseforge.md)                     | the repackaged AppImage, and why the schemes are declared                                   |
+| [curseforge-fix-perms](apps/curseforge-fix-perms.md) | the `+x` the app loses, and why ELF magic and not names                                     |
+| [wow-addons](apps/wow-addons.md)                     | WoW Forever add-ons as a versioned list, instawow, and the CurseForge key                   |
+| [fai-meet](apps/fai-meet.md)                         | the FAI's meeting recorder, on demand only (`fai-meet-latest`), never installed             |
+| [hydralauncher](apps/hydralauncher.md)               | the game launcher on upstream's latest, its download sources declared, and its login scheme |
+| [bottles](apps/bottles.md)                           | the library declared without owning the prefix, and the name that is not the directory      |
+| [mega](apps/mega.md)                                 | megatools, the quota, and why the loop waits                                                |
+| [spotifast](apps/spotifast.md)                       | the native Spotify client, why the release binary, and the theme that must be a real file   |
+| [apps-and-mime](apps/apps-and-mime.md)               | media, office, MangoHud, OpenAL, and the CANONICAL mimetype                                 |
+| [zen](apps/zen.md)                                   | the launch guard, and the NSS check that had to be written backwards                        |
+| [web-apps](apps/web-apps.md)                         | sites lighter than their vendor app, one list, Chrome PWA or a Zen profile with tabs        |
+| [crypto](apps/crypto.md)                             | Stack Wallet and Bisq 2, the threat model with no LUKS, and the first purchase              |
+| [fastfetch](apps/fastfetch.md)                       | boxes drawn from the key, and a donut.c-style logo rendered at build time                   |
 
 ### services
 
-| Page | What you would come here asking |
-| --- | --- |
-| [service-toggles](services/service-toggles.md) | the optional-service list, and why it is centralized |
-| [jellyfin](services/jellyfin.md) | the media library, the UMask override, DLNA on the TV |
-| [immich](services/immich.md) | the photo library, why it lives in /srv, and why it is not a backup |
-| [ollama](services/ollama.md) | local models on the Arc through Vulkan |
-| [duo](services/duo.md) | the compose stack declared in Nix, and the three Docker traps |
-| [grad-radar](services/grad-radar.md) | the stack at boot, and the monitor chain's order |
-| [credit-radar](services/credit-radar.md) | why the most sensitive service never leaves the house |
-| [docker-prune](services/docker-prune.md) | the 11 GB with no ceiling, and the two options that destroy data |
-| [phone-sync](services/phone-sync.md) | why Syncthing for the phone's photos, and the Revert button that deletes |
-| [libvirt](services/libvirt.md) | the KVM sandbox, and the three wiki steps that are wrong on 26.05 |
-| [cockpit](services/cockpit.md) | start/stop from the browser, and stop versus toggle |
-| [beszel](services/beszel.md) | the resource history Cockpit cannot keep, and the pairing step |
+| Page                                           | What you would come here asking                                          |
+| ---------------------------------------------- | ------------------------------------------------------------------------ |
+| [service-toggles](services/service-toggles.md) | the optional-service list, and why it is centralized                     |
+| [jellyfin](services/jellyfin.md)               | the media library, the UMask override, DLNA on the TV                    |
+| [immich](services/immich.md)                   | the photo library, why it lives in /srv, and why it is not a backup      |
+| [ollama](services/ollama.md)                   | local models on the Arc through Vulkan                                   |
+| [duo](services/duo.md)                         | the compose stack declared in Nix, and the three Docker traps            |
+| [grad-radar](services/grad-radar.md)           | the stack at boot, and the monitor chain's order                         |
+| [credit-radar](services/credit-radar.md)       | why the most sensitive service never leaves the house                    |
+| [docker-prune](services/docker-prune.md)       | the 11 GB with no ceiling, and the two options that destroy data         |
+| [phone-sync](services/phone-sync.md)           | why Syncthing for the phone's photos, and the Revert button that deletes |
+| [libvirt](services/libvirt.md)                 | the KVM sandbox, and the three wiki steps that are wrong on 26.05        |
+| [cockpit](services/cockpit.md)                 | start/stop from the browser, and stop versus toggle                      |
+| [beszel](services/beszel.md)                   | the resource history Cockpit cannot keep, and the pairing step           |
 
 ### repo
 
-| Page | What you would come here asking |
-| --- | --- |
-| [flake](repo/flake.md) | the inputs, the overlays, and the quality gate |
-| [core](repo/core.md) | Nix settings, the GC, locale, and why each ceiling is that number |
-| [packages](repo/packages.md) | what is installed and why, per package |
-| [shell](repo/shell.md) | zsh, the aliases, and the `NH_FLAKE` trap |
-| [secrets](repo/secrets.md) | sops-nix, Bitwarden, and the two recipients |
-| [version-bumps](repo/version-bumps.md) | the three-layer version strategy, and the four bump scripts |
-| [nix-cache](repo/nix-cache.md) | the private R2 cache CI fills nightly, so `upgrade` downloads instead of compiling |
-| [link-checker](repo/link-checker.md) | what keeps these pointers from rotting |
-| [dead-config](repo/dead-config.md) | what is declared and never used, and the seven checks |
-| [rules-index](repo/rules-index.md) | every `rule N` points at a live rule, and which rules a check enforces |
-| [ownership](repo/ownership.md) | the long form of rules 11, 14 and 15: one source, one writer, one starter |
-| [hardening](repo/hardening.md) | the systemd sandbox baseline for this repo's own root services, with scores |
-| [router-ssot](repo/router-ssot.md) | the values the router repeats, and who guards them |
-| [prose-style](repo/prose-style.md) | rule 17's bans, and what counts as a literal instead of prose |
-| [vm-boot](repo/vm-boot.md) | whether this config still boots on a machine that is not this one |
-| [site](repo/site.md) | how docs/ becomes a site, and why the tree did not move to match it |
-| [site-sources](repo/site-sources.md) | which repo files each page is about, and what the site may publish of them |
-| [github-settings](repo/github-settings.md) | what protects the repo on GitHub, outside git |
-| [eval-metrics](repo/eval-metrics.md) | what evaluating the config costs, how big the code is, and the budgets |
-| [usage-audit](repo/usage-audit.md) | which apps show any sign of being used, and why it is not a gate |
-| [readme](repo/readme.md) | the README's header, the stats counted at build, and the two diagrams |
-| [license](repo/license.md) | MIT for the code, CC BY 4.0 for the docs, and what neither covers |
+| Page                                       | What you would come here asking                                                    |
+| ------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [flake](repo/flake.md)                     | the inputs, the overlays, and the quality gate                                     |
+| [core](repo/core.md)                       | Nix settings, the GC, locale, and why each ceiling is that number                  |
+| [packages](repo/packages.md)               | what is installed and why, per package                                             |
+| [shell](repo/shell.md)                     | zsh, the aliases, and the `NH_FLAKE` trap                                          |
+| [secrets](repo/secrets.md)                 | sops-nix, Bitwarden, and the two recipients                                        |
+| [version-bumps](repo/version-bumps.md)     | the three-layer version strategy, and the four bump scripts                        |
+| [nix-cache](repo/nix-cache.md)             | the private R2 cache CI fills nightly, so `upgrade` downloads instead of compiling |
+| [link-checker](repo/link-checker.md)       | what keeps these pointers from rotting                                             |
+| [dead-config](repo/dead-config.md)         | what is declared and never used, and the seven checks                              |
+| [rules-index](repo/rules-index.md)         | every `rule N` points at a live rule, and which rules a check enforces             |
+| [ownership](repo/ownership.md)             | the long form of rules 11, 14 and 15: one source, one writer, one starter          |
+| [hardening](repo/hardening.md)             | the systemd sandbox baseline for this repo's own root services, with scores        |
+| [router-ssot](repo/router-ssot.md)         | the values the router repeats, and who guards them                                 |
+| [prose-style](repo/prose-style.md)         | rule 17's bans, and what counts as a literal instead of prose                      |
+| [vm-boot](repo/vm-boot.md)                 | whether this config still boots on a machine that is not this one                  |
+| [site](repo/site.md)                       | how docs/ becomes a site, and why the tree did not move to match it                |
+| [site-sources](repo/site-sources.md)       | which repo files each page is about, and what the site may publish of them         |
+| [github-settings](repo/github-settings.md) | what protects the repo on GitHub, outside git                                      |
+| [eval-metrics](repo/eval-metrics.md)       | what evaluating the config costs, how big the code is, and the budgets             |
+| [usage-audit](repo/usage-audit.md)         | which apps show any sign of being used, and why it is not a gate                   |
+| [readme](repo/readme.md)                   | the README's header, the stats counted at build, and the two diagrams              |
+| [license](repo/license.md)                 | MIT for the code, CC BY 4.0 for the docs, and what neither covers                  |

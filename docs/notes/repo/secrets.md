@@ -32,10 +32,10 @@ the module stays inert until `sync-secrets` has run.
 
 The public keys in `secrets/.sops.yaml` are who CAN decrypt; each private half lives outside git.
 
-| Recipient | Where the private key is | Why it exists |
-| --- | --- | --- |
-| host | `/var/lib/sops-nix/key.txt` on the machine | what sops-nix uses at boot to populate `/run/secrets`, and what you carry across a cutover |
-| backup | offline, generated 04/08/2026 | a SINGLE recipient means IRREVERSIBLE loss of every secret the day that key disappears |
+| Recipient | Where the private key is                   | Why it exists                                                                              |
+| --------- | ------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| host      | `/var/lib/sops-nix/key.txt` on the machine | what sops-nix uses at boot to populate `/run/secrets`, and what you carry across a cutover |
+| backup    | offline, generated 04/08/2026              | a SINGLE recipient means IRREVERSIBLE loss of every secret the day that key disappears     |
 
 sops has no recovery. Before the offline key, the only backup of the host key was Bitwarden, which
 made Bitwarden the SPOF of everything. With two, losing one is an annoyance; losing both is the
@@ -55,19 +55,19 @@ The regex only catches `secrets/*.yaml`. `bitwarden-secrets.json` is plain text 
 
 Most secrets are root-only. These are not, and each has a reason:
 
-| Secret | Owner | Why |
-| --- | --- | --- |
-| `rclone_gdrive_conf` | v1cferr 0400 | the `~/Drive` mount is a `--user` service and has to read it without sudo |
-| `restic_password`, `restic_password_arch_kingston` | v1cferr 0400 | `restic mount` is only browsable by WHOEVER MOUNTED IT |
-| `ntfy_topic` | v1cferr 0400 | consumed by user tooling and `--user` timers |
-| `gmail_app_password` | v1cferr 0400 | `git send-email` runs as the user; a credential helper in `modules/home/shell/git.nix` reads it |
-| `soloist_api_key` | v1cferr 0400, as the `soloist.env` template | Soloist is a `--user` service; the EnvironmentFile keeps it out of the store, and systemd expands it into `--api-key`, the only way the binary takes it |
-| `home_assistant_token` | v1cferr 0400 | a long-lived token for the Home Assistant API, used by the home-automation repo's tooling as the user; an admin token, so it never goes into a flag or an environment that `ps` shows |
-| `openrouter_api_key` | v1cferr 0400 | opencode reads it through `{file:}` in its generated config, and the claude wrapper exports it for the OpenRouter MCP's Bearer header, so the key never reaches the store |
-| `curseforge_api_key` | v1cferr 0400 | `wow-addons-bump` runs as the user from `update` and reads it at run time, so it never reaches the store |
-| `gitguardian_pat` | v1cferr 0400 | the `gitguardian-mcp` launcher reads it as the user when Claude Code starts the GitGuardian MCP |
-| `vault_password` | v1cferr 0400 | the app vault's own password; its `pam_exec` check runs inside the user's Quickshell, not as root ([`vault.md`](../desktop/vault.md)) |
-| `android_iac_local` | v1cferr 0400 | android-iac's overlay, the phone's app list: linked into `~/.config` so the audit and I read it without sudo |
+| Secret                                             | Owner                                       | Why                                                                                                                                                                                   |
+| -------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rclone_gdrive_conf`                               | v1cferr 0400                                | the `~/Drive` mount is a `--user` service and has to read it without sudo                                                                                                             |
+| `restic_password`, `restic_password_arch_kingston` | v1cferr 0400                                | `restic mount` is only browsable by WHOEVER MOUNTED IT                                                                                                                                |
+| `ntfy_topic`                                       | v1cferr 0400                                | consumed by user tooling and `--user` timers                                                                                                                                          |
+| `gmail_app_password`                               | v1cferr 0400                                | `git send-email` runs as the user; a credential helper in `modules/home/shell/git.nix` reads it                                                                                       |
+| `soloist_api_key`                                  | v1cferr 0400, as the `soloist.env` template | Soloist is a `--user` service; the EnvironmentFile keeps it out of the store, and systemd expands it into `--api-key`, the only way the binary takes it                               |
+| `home_assistant_token`                             | v1cferr 0400                                | a long-lived token for the Home Assistant API, used by the home-automation repo's tooling as the user; an admin token, so it never goes into a flag or an environment that `ps` shows |
+| `openrouter_api_key`                               | v1cferr 0400                                | opencode reads it through `{file:}` in its generated config, and the claude wrapper exports it for the OpenRouter MCP's Bearer header, so the key never reaches the store             |
+| `curseforge_api_key`                               | v1cferr 0400                                | `wow-addons-bump` runs as the user from `update` and reads it at run time, so it never reaches the store                                                                              |
+| `gitguardian_pat`                                  | v1cferr 0400                                | the `gitguardian-mcp` launcher reads it as the user when Claude Code starts the GitGuardian MCP                                                                                       |
+| `vault_password`                                   | v1cferr 0400                                | the app vault's own password; its `pam_exec` check runs inside the user's Quickshell, not as root ([`vault.md`](../desktop/vault.md))                                                 |
+| `android_iac_local`                                | v1cferr 0400                                | android-iac's overlay, the phone's app list: linked into `~/.config` so the audit and I read it without sudo                                                                          |
 
 The restic one is the least obvious and the most defensible: a FUSE mount is private by default,
 which this config already proved inside out, since restic as ROOT could not even `lstat` the
@@ -90,11 +90,11 @@ public and the apps a person banks with are not.
 Decided in [ADR 0016](../../decisions/0016-bitwarden-is-the-secrets-source.md): Bitwarden is the
 single source for the home too, and the kind of secret decides where it lives.
 
-| Kind | Examples | Where it lives |
-| --- | --- | --- |
-| **config**: the machine needs the value | API tokens, VPN passwords, the Drive remote | Bitwarden, then this pipeline, then `/run/secrets` |
-| **session**: an app logs in and refreshes it | gh (in the keyring), vercel, azure, docker, browsers | the app's state, kept by `my.persist`; never copied into sops |
-| **cold**: recovery material nothing reads | the age key backup, recovery codes, old WireGuard and router configs | only in Bitwarden (secure note or attachment), no copy in `~` |
+| Kind                                         | Examples                                                             | Where it lives                                                |
+| -------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **config**: the machine needs the value      | API tokens, VPN passwords, the Drive remote                          | Bitwarden, then this pipeline, then `/run/secrets`            |
+| **session**: an app logs in and refreshes it | gh (in the keyring), vercel, azure, docker, browsers                 | the app's state, kept by `my.persist`; never copied into sops |
+| **cold**: recovery material nothing reads    | the age key backup, recovery codes, old WireGuard and router configs | only in Bitwarden (secure note or attachment), no copy in `~` |
 
 `.google_authenticator` is the exception that stays a file: the PAM module rewrites it, so it
 cannot live in the read-only `/run/secrets`. Bitwarden keeps a copy as a cold secret.

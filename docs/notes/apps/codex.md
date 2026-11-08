@@ -145,11 +145,11 @@ one hash and nothing to assemble by hand.
 
 Only `bin/` is installed. What is deliberately left behind:
 
-| Dropped | Why |
-| --- | --- |
-| `codex-path/rg` | nixpkgs' ripgrep goes on the PATH instead, and it gets security updates |
-| `codex-resources/bwrap` | same, and Codex takes a system `bwrap` from the PATH by its own message |
-| `codex-resources/zsh` | the ONE dynamically linked file in the tarball, so it could not run here |
+| Dropped                 | Why                                                                      |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `codex-path/rg`         | nixpkgs' ripgrep goes on the PATH instead, and it gets security updates  |
+| `codex-resources/bwrap` | same, and Codex takes a system `bwrap` from the PATH by its own message  |
+| `codex-resources/zsh`   | the ONE dynamically linked file in the tarball, so it could not run here |
 
 Dropping the zsh is verified and not a hope: with it gone Codex ran its command through
 `/run/current-system/sw/bin/zsh -lc`, the system shell.
@@ -159,10 +159,10 @@ straight out of the tarball: no interpreter, `codex-cli 0.148.0`, clean `codex d
 
 Two things still have to be added, and they are the two nixpkgs also adds:
 
-| PATH entry | What breaks without it |
-| --- | --- |
-| `ripgrep` | the search, which reports `Install ripgrep or repair the bundled Codex package` |
-| `bubblewrap` | the sandbox; Codex says it takes either a PATH `bwrap` or the bundled one |
+| PATH entry   | What breaks without it                                                          |
+| ------------ | ------------------------------------------------------------------------------- |
+| `ripgrep`    | the search, which reports `Install ripgrep or repair the bundled Codex package` |
+| `bubblewrap` | the sandbox; Codex says it takes either a PATH `bwrap` or the bundled one       |
 
 `--inherit-argv0` on the wrapper, and NOT a plain shell wrapper, because Codex re-executes itself
 as its own sandbox helper. Verified with `env -i`, where `rg` can only come from the wrapper:

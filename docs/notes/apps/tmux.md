@@ -106,15 +106,15 @@ way, outside the `ct` / `ca` contract the phone depends on.
 
 ## What the config changes, and why
 
-| Setting | Value | Why |
-| --- | --- | --- |
-| `escapeTime` | 10 | Home Manager's module defaults to 500 ms, which lags every Esc in Claude Code; 10 is tmux's own default |
-| `terminal` | `tmux-256color` | the module defaults to `screen`, which drops italics and truecolor |
-| `historyLimit` | 50000 | a long Claude run outgrows the 2000-line default |
-| `mouse` | on | so a swipe in Termius scrolls and a tap picks a session |
-| `focusEvents` | on | Claude Code reacts to focus the same way it does outside tmux |
-| `extended-keys` | on, `csi-u` | Shift+Enter reaches Claude Code as a newline instead of an Enter that submits |
-| `terminal-features` | `xterm-kitty:RGB:extkeys` | tmux only uses what the outer terminal declares |
+| Setting             | Value                     | Why                                                                                                     |
+| ------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `escapeTime`        | 10                        | Home Manager's module defaults to 500 ms, which lags every Esc in Claude Code; 10 is tmux's own default |
+| `terminal`          | `tmux-256color`           | the module defaults to `screen`, which drops italics and truecolor                                      |
+| `historyLimit`      | 50000                     | a long Claude run outgrows the 2000-line default                                                        |
+| `mouse`             | on                        | so a swipe in Termius scrolls and a tap picks a session                                                 |
+| `focusEvents`       | on                        | Claude Code reacts to focus the same way it does outside tmux                                           |
+| `extended-keys`     | on, `csi-u`               | Shift+Enter reaches Claude Code as a newline instead of an Enter that submits                           |
+| `terminal-features` | `xterm-kitty:RGB:extkeys` | tmux only uses what the outer terminal declares                                                         |
 
 **`window-size` is left at its default**, `latest`: the window takes the size of the client that
 was used last. Typing on the phone narrows Claude to the phone, and typing on the PC widens it back.

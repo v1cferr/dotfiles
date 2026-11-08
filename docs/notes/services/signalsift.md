@@ -32,11 +32,11 @@ used, so a reinstall needs no manual download (rule 3). On 16/10/2026 they were 
 from the copies already on disk (`nix-store --add-fixed sha256`), so the first build fetched
 nothing. The other models in `~/.local/share/signalsift/models` were only for the benchmarks.
 
-| File | Use | Size (MEASURED 16/10/2026) |
-| --- | --- | --- |
-| `ggml-large-v3-turbo-q5_0.bin` | speech recognition | 547 MiB |
-| `ggml-silero-v5.1.2.bin` | voice activity detection | 0.8 MiB |
-| `gemma-4-E4B_q4_0-it.gguf` | summaries and relevance | 4.8 GiB (4916 MiB) |
+| File                           | Use                      | Size (MEASURED 16/10/2026) |
+| ------------------------------ | ------------------------ | -------------------------- |
+| `ggml-large-v3-turbo-q5_0.bin` | speech recognition       | 547 MiB                    |
+| `ggml-silero-v5.1.2.bin`       | voice activity detection | 0.8 MiB                    |
+| `gemma-4-E4B_q4_0-it.gguf`     | summaries and relevance  | 4.8 GiB (4916 MiB)         |
 
 ## The interest profile is here
 

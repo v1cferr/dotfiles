@@ -56,14 +56,14 @@ It speaks the same HID protocol openrazer's driver speaks, from userspace, over 
 report is 90 bytes and goes through `HIDIOCSFEATURE` / `HIDIOCGFEATURE` with a leading report
 number byte, so the ioctl length is 91.
 
-| Field | Offset | Value used here |
-| --- | --- | --- |
-| `transaction_id` | 1 | `0x3f`, which is what openrazer uses for THIS model |
-| `data_size` | 5 | `0x07` |
-| `command_class` | 6 | `0x04` (misc) |
-| `command_id` | 7 | `0x85` (`get_dpi_xy`) |
-| `arguments[0]` | 8 | `0x00` = NOSTORE |
-| `crc` | 88 | a plain xor of bytes 2 through 87 |
+| Field            | Offset | Value used here                                     |
+| ---------------- | ------ | --------------------------------------------------- |
+| `transaction_id` | 1      | `0x3f`, which is what openrazer uses for THIS model |
+| `data_size`      | 5      | `0x07`                                              |
+| `command_class`  | 6      | `0x04` (misc)                                       |
+| `command_id`     | 7      | `0x85` (`get_dpi_xy`)                               |
+| `arguments[0]`   | 8      | `0x00` = NOSTORE                                    |
+| `crc`            | 88     | a plain xor of bytes 2 through 87                   |
 
 The answer carries `status` at byte 0 (`0x02` means success) and the DPI big-endian inside
 `arguments`: x at `[1][2]`, y at `[3][4]`.

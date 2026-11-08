@@ -18,12 +18,12 @@ There is no central list. `my.backup.paths`, `exclude`, `prepare` and `postgres`
 each module adds its OWN state under its own toggle, so a service that leaves takes its backup
 lines with it (rule 16):
 
-| Source | What | How |
-| --- | --- | --- |
-| `restic.nix` | `~` (minus caches, Wine prefixes, Downloads, FUSE mounts) | files |
-| `restic.nix` | `/var/lib/sbctl`, `/etc/ssh/ssh_host_*`, NM profiles, `/var/lib/bluetooth`, `/var/lib/nixos` | files, the IDENTITY set |
-| `immich.nix` | `/srv/photos`, which holds Immich's own daily database dumps | files, plus a check that the newest dump is under 8 days old |
-| `duo.nix`, `credit-radar.nix`, `grad-radar.nix` | their Postgres | `pg_dump -Fc` into `/var/backup/postgres` before each snapshot |
+| Source                                          | What                                                                                         | How                                                            |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `restic.nix`                                    | `~` (minus caches, Wine prefixes, Downloads, FUSE mounts)                                    | files                                                          |
+| `restic.nix`                                    | `/var/lib/sbctl`, `/etc/ssh/ssh_host_*`, NM profiles, `/var/lib/bluetooth`, `/var/lib/nixos` | files, the IDENTITY set                                        |
+| `immich.nix`                                    | `/srv/photos`, which holds Immich's own daily database dumps                                 | files, plus a check that the newest dump is under 8 days old   |
+| `duo.nix`, `credit-radar.nix`, `grad-radar.nix` | their Postgres                                                                               | `pg_dump -Fc` into `/var/backup/postgres` before each snapshot |
 
 `/var/lib/nixos` is the quiet one: it maps names to uid/gid, and without it a restored file can
 land owned by whichever user took that number on the new install.
@@ -63,14 +63,14 @@ directory and diffs it against the live machine.
 
 MEASURED on 24/09/2026, with the account on the free tier:
 
-| what | GiB | note |
-| --- | ---: | --- |
-| `BACKUPS_EX-B560M-V5/HOME` | 55.08 | the daily backup, 591 objects |
-| `BACKUPS_EX-B560M-V5/ARCH-KINGSTON` | 23.67 | the Arch archive, a different repo |
-| restic packs IN THE TRASH | 30.62 | 577 objects, 100% of the trash |
-| `César/` (a Minecraft world plus saves) | 17.77 | byte-identical copies existed in `~/Downloads` |
-| everything personal, all of it together | ~2.8 | |
-| **total in use** | **130.02** | against a quota of **15** |
+| what                                    | GiB        | note                                           |
+| --------------------------------------- | ---------: | ---------------------------------------------- |
+| `BACKUPS_EX-B560M-V5/HOME`              | 55.08      | the daily backup, 591 objects                  |
+| `BACKUPS_EX-B560M-V5/ARCH-KINGSTON`     | 23.67      | the Arch archive, a different repo             |
+| restic packs IN THE TRASH               | 30.62      | 577 objects, 100% of the trash                 |
+| `César/` (a Minecraft world plus saves) | 17.77      | byte-identical copies existed in `~/Downloads` |
+| everything personal, all of it together | ~2.8       |                                                |
+| **total in use**                        | **130.02** | against a quota of **15**                      |
 
 restic alone was **109.37 GiB, or 84% of the usage**. Nothing else came close, and no amount of
 tidying the personal files was ever going to fix it.

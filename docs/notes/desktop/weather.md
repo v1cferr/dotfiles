@@ -8,10 +8,10 @@ lock screen's `modules/home/desktop/quickshell/data/Weather.qml`, both from glan
 
 Until 22/08/2026 there were TWO sources, each with its own coordinates:
 
-| Surface | Source | Coordinates |
-| --- | --- | --- |
-| the bar | Open-Meteo (JSON, WMO codes) | -21.9977, -47.8827 |
-| the lock screen | wttr.in (`?format=%C,+%t`) | -22.0087, -47.8909 |
+| Surface         | Source                       | Coordinates        |
+| --------------- | ---------------------------- | ------------------ |
+| the bar         | Open-Meteo (JSON, WMO codes) | -21.9977, -47.8827 |
+| the lock screen | wttr.in (`?format=%C,+%t`)   | -22.0087, -47.8909 |
 
 MEASURED on 22/08/2026 at 10:45, the same minute: the bar said **22°C** and the lock said
 **18°C**. Two surfaces of the same desktop, 4 degrees apart, and both of them "working". That is

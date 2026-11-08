@@ -131,13 +131,13 @@ be needed for the HTTP-01 of a domain without DNS-01.
 
 A new project picks a free one and WRITES IT DOWN here, otherwise the next collision is silent.
 
-| Port | Service | Port | Service |
-| --- | --- | --- | --- |
-| 3006 | GRAD-RADAR (front) | 8006 | GRAD-RADAR (api) |
-| 3007 | CREDIT-RADAR (front) | 8007 | CREDIT-RADAR (api) |
-| 3010 | duo-web | 8010 | duo-api |
-| 8080 | qbittorrent | 8096 | jellyfin |
-| 8123 | home-assistant (host network, all interfaces) | 11434 | ollama |
+| Port | Service                                       | Port  | Service            |
+| ---- | --------------------------------------------- | ----- | ------------------ |
+| 3006 | GRAD-RADAR (front)                            | 8006  | GRAD-RADAR (api)   |
+| 3007 | CREDIT-RADAR (front)                          | 8007  | CREDIT-RADAR (api) |
+| 3010 | duo-web                                       | 8010  | duo-api            |
+| 8080 | qbittorrent                                   | 8096  | jellyfin           |
+| 8123 | home-assistant (host network, all interfaces) | 11434 | ollama             |
 
 ## Turning it on, once
 

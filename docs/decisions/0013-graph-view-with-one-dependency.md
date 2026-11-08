@@ -22,12 +22,12 @@ and the one most likely to be subtly wrong.
 
 Take `react-force-graph-2d` 1.29.2 (MIT), pinned exactly, and nothing else:
 
-| Option | Verdict |
-| --- | --- |
-| `react-force-graph-2d` | **chosen**: canvas, d3-force underneath, the library Fumadocs' own Graph View recipe uses |
-| a hand-written SVG simulation | rejected: a physics engine to maintain for one page |
-| Fumadocs' Graph View component as copied in | rejected: the same library, plus a copy of code to keep in sync |
-| no graph | rejected: the trigger in 0010 was met |
+| Option                                      | Verdict                                                                                   |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `react-force-graph-2d`                      | **chosen**: canvas, d3-force underneath, the library Fumadocs' own Graph View recipe uses |
+| a hand-written SVG simulation               | rejected: a physics engine to maintain for one page                                       |
+| Fumadocs' Graph View component as copied in | rejected: the same library, plus a copy of code to keep in sync                           |
+| no graph                                    | rejected: the trigger in 0010 was met                                                     |
 
 0010 still holds for everything else: the diagram viewer added the same week was written on a
 native `<dialog>` and pointer events, with no dependency.

@@ -11,13 +11,13 @@ declares the client, the server is another system's territory.
 
 ## Fixed context
 
-| what | value |
-| --- | --- |
-| Host / IP | `CESAR` / `192.168.1.40` (DHCP, see the trap at the end) |
-| My account there | `v1cferr`, **a member of Administrators** |
+| what                | value                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| Host / IP           | `CESAR` / `192.168.1.40` (DHCP, see the trap at the end)                                           |
+| My account there    | `v1cferr`, **a member of Administrators**                                                          |
 | The owner's account | `drakk` (linked to a Microsoft account), [never operate as them](../../modules/home/shell/ssh.nix) |
-| sshd | `OpenSSH_for_Windows_9.5`, on `22` (LAN) and `2223` (exposed on the WAN) |
-| Session shell | Windows PowerShell 5.1, through `DefaultShell` (step 6) |
+| sshd                | `OpenSSH_for_Windows_9.5`, on `22` (LAN) and `2223` (exposed on the WAN)                           |
+| Session shell       | Windows PowerShell 5.1, through `DefaultShell` (step 6)                                            |
 
 **An admin's SSH session on Windows already comes with an ELEVATED token.** That is why
 the commands below write to `C:\ProgramData` and to the machine PATH with no UAC, and also
@@ -148,13 +148,13 @@ ssh drakk@cesar-ssh.v1cferr.dev -p 2223
 
 Five legs, and only the last three needed any work:
 
-| leg | where it lives |
-| --- | --- |
-| the name resolving from outside | already done: the `*.v1cferr.dev` wildcard CNAME points at the zone's anchor |
-| the anchor tracking the public IP | already done: `ddns-scripts` on the OpenWrt, [`hosts/cudy-wr3000/uci/ddns.conf`](../../hosts/cudy-wr3000/uci/ddns.conf) |
-| WAN `2223` reaching `192.168.1.40` | `firewall.ssh_cesar`, mirrored in [`hosts/cudy-wr3000/uci/firewall.conf`](../../hosts/cudy-wr3000/uci/firewall.conf) |
-| the name working INSIDE the house | `dhcp.@dnsmasq[0].address`, in [`hosts/cudy-wr3000/uci/dhcp.conf`](../../hosts/cudy-wr3000/uci/dhcp.conf) |
-| Windows answering on `2223` | the three steps below |
+| leg                                | where it lives                                                                                                          |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| the name resolving from outside    | already done: the `*.v1cferr.dev` wildcard CNAME points at the zone's anchor                                            |
+| the anchor tracking the public IP  | already done: `ddns-scripts` on the OpenWrt, [`hosts/cudy-wr3000/uci/ddns.conf`](../../hosts/cudy-wr3000/uci/ddns.conf) |
+| WAN `2223` reaching `192.168.1.40` | `firewall.ssh_cesar`, mirrored in [`hosts/cudy-wr3000/uci/firewall.conf`](../../hosts/cudy-wr3000/uci/firewall.conf)    |
+| the name working INSIDE the house  | `dhcp.@dnsmasq[0].address`, in [`hosts/cudy-wr3000/uci/dhcp.conf`](../../hosts/cudy-wr3000/uci/dhcp.conf)               |
+| Windows answering on `2223`        | the three steps below                                                                                                   |
 
 **`2222` was not available**: it is already forwarded to `192.168.1.10`, my
 machine. One public IP means one port per host.

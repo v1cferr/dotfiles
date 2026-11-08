@@ -16,16 +16,16 @@ Machine: Intel i5-11400 + Arc B580 (Battlemage). BIOS **2803** (2025/12/26).
 
 Access: `Del` at POST, then `F7` (Advanced Mode).
 
-| Setting | Value | Where | Status |
-| --- | --- | --- | --- |
-| Launch CSM | Disabled | Boot → CSM | confirmed (OS) |
-| Above 4G Decoding | Enabled | Advanced → PCI Subsystem | confirmed (OS) |
-| Re-Size BAR Support | Enabled | Advanced → PCI Subsystem | confirmed (OS) |
-| Primary Display | PCIE | Advanced → System Agent / Graphics | hidden in BIOS 2803 (see below) |
-| Secure Boot → OS Type | Other OS | Boot → Secure Boot | recommended |
-| Fast Boot | Disabled | Boot | recommended |
-| Ai Overclock Tuner (XMP) | XMP I (3200 MT/s) | Ai Tweaker | confirmed (3200 MT/s) |
-| Native ASPM, PEG - ASPM, PCH ASPM | (wanted: Enabled, L1, L1) | NOT in the menus: hidden by ASUS | see below |
+| Setting                           | Value                     | Where                              | Status                          |
+| --------------------------------- | ------------------------- | ---------------------------------- | ------------------------------- |
+| Launch CSM                        | Disabled                  | Boot → CSM                         | confirmed (OS)                  |
+| Above 4G Decoding                 | Enabled                   | Advanced → PCI Subsystem           | confirmed (OS)                  |
+| Re-Size BAR Support               | Enabled                   | Advanced → PCI Subsystem           | confirmed (OS)                  |
+| Primary Display                   | PCIE                      | Advanced → System Agent / Graphics | hidden in BIOS 2803 (see below) |
+| Secure Boot → OS Type             | Other OS                  | Boot → Secure Boot                 | recommended                     |
+| Fast Boot                         | Disabled                  | Boot                               | recommended                     |
+| Ai Overclock Tuner (XMP)          | XMP I (3200 MT/s)         | Ai Tweaker                         | confirmed (3200 MT/s)           |
+| Native ASPM, PEG - ASPM, PCH ASPM | (wanted: Enabled, L1, L1) | NOT in the menus: hidden by ASUS   | see below                       |
 
 - **Confirmed (OS):** measured from Linux. CSM off (the Arc is UEFI-only and it booted),
   Above 4G + ReBAR active (a 16G VRAM BAR mapped above 4G, through `lspci`).
@@ -64,12 +64,12 @@ The B580 drew **45 W on the board with the desktop idle** (its own `xe` sensor, 
 Center). The usual cause on Arc is a link that never enters ASPM L1, and `lspci -vv` (as root)
 showed exactly where it stops:
 
-| Link | `LnkCap` | `LnkCtl` |
-| --- | --- | --- |
+| Link                                                                   | `LnkCap`                                    | `LnkCtl`     |
+| ---------------------------------------------------------------------- | ------------------------------------------- | ------------ |
 | CPU root port `00:01.0` (PEG, Gen4) → the card's bridge `01:00.0` (x8) | root port: **ASPM not supported**; card: L1 | **Disabled** |
-| The card's internal bridges → GPU `03:00.0` and its audio `04:00.0` | L1 | L1 Enabled |
-| CPU root port `00:06.0` → the Kingston NVMe | root port: not supported | Disabled |
-| PCH root port `00:1c.7` → the Realtek NIC | root port: not supported | Disabled |
+| The card's internal bridges → GPU `03:00.0` and its audio `04:00.0`    | L1                                          | L1 Enabled   |
+| CPU root port `00:06.0` → the Kingston NVMe                            | root port: not supported                    | Disabled     |
+| PCH root port `00:1c.7` → the Realtek NIC                              | root port: not supported                    | Disabled     |
 
 The card is ready; it is the CPU's PEG port that ADVERTISES no ASPM, and Linux honors the
 advertisement. So the fix is the firmware's, NOT a kernel parameter: `pcie_aspm=force` would
@@ -90,12 +90,12 @@ being hidden also means the `Primary Display` row above cannot be set from the m
 The live values agree (read from efivarfs, 4-byte attribute header first; `Setup` is 2698 bytes
 = the IFR's 0xA86 plus 4, so the offsets match this BIOS):
 
-| Option | Variable + offset (BIOS 2803 only) | Value now | Wanted |
-| --- | --- | --- | --- |
-| PCI Express Native Power Management | `Setup` 0x51 | 0 (Disabled) | 1 |
-| Native ASPM | `Setup` 0x52 | 0 (Disabled) | 1 (Enabled) |
-| CPU PCIe Root Port 1 ASPM (the x16 slot, `00:01.0`) | `SaSetup` 0x35D | 0 (Disabled) | 2 (L1) |
-| PCH ASPM (left alone: the Realtek NIC lives there) | `PchSetup` 0x113 | 0 (Disabled) | unchanged |
+| Option                                              | Variable + offset (BIOS 2803 only) | Value now    | Wanted      |
+| --------------------------------------------------- | ---------------------------------- | ------------ | ----------- |
+| PCI Express Native Power Management                 | `Setup` 0x51                       | 0 (Disabled) | 1           |
+| Native ASPM                                         | `Setup` 0x52                       | 0 (Disabled) | 1 (Enabled) |
+| CPU PCIe Root Port 1 ASPM (the x16 slot, `00:01.0`) | `SaSetup` 0x35D                    | 0 (Disabled) | 2 (L1)      |
+| PCH ASPM (left alone: the Realtek NIC lives there)  | `PchSetup` 0x113                   | 0 (Disabled) | unchanged   |
 
 There are TWO `PEG - ASPM` questions. The form picks one by the CPU: `SaSetup` 0x52 is suppressed
 when `CpuSetupVolatileData` reads `0x670` (CPUID `A0671` masked, Rocket Lake), and `SaSetup`

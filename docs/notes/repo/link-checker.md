@@ -24,13 +24,13 @@ way to know that landed was to check all 274 afterwards.
 
 ## What it checks, and what it deliberately does not
 
-| Where | What counts |
-| --- | --- |
-| code (`.nix`, `.lua`, `.qml`, `.sh`, `.toml`, `.yaml`, `.yml`, `.ts`, `.tsx`, `.mjs`) | a bare `docs/…md` path, which is the form the headers use |
-| markdown | only a real `](target)` link, resolved against the file's own directory |
-| markdown outside `docs/history/` | a repo path quoted in prose, like `` `modules/nixos/hardware/intel-arc-b580.nix` `` |
-| a markdown link LEAVING `docs/` | the target must ALSO be git-tracked, because the site publishes it as a blob URL |
-| a `.nix` module under `modules/nixos/` or `modules/home/` (not `default.nix`) | its header: at most 2 comment lines, with a `docs/` pointer or a plain "No note" |
+| Where                                                                                 | What counts                                                                         |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| code (`.nix`, `.lua`, `.qml`, `.sh`, `.toml`, `.yaml`, `.yml`, `.ts`, `.tsx`, `.mjs`) | a bare `docs/…md` path, which is the form the headers use                           |
+| markdown                                                                              | only a real `](target)` link, resolved against the file's own directory             |
+| markdown outside `docs/history/`                                                      | a repo path quoted in prose, like `` `modules/nixos/hardware/intel-arc-b580.nix` `` |
+| a markdown link LEAVING `docs/`                                                       | the target must ALSO be git-tracked, because the site publishes it as a blob URL    |
+| a `.nix` module under `modules/nixos/` or `modules/home/` (not `default.nix`)         | its header: at most 2 comment lines, with a `docs/` pointer or a plain "No note"    |
 
 ### The header check: rule 2, enforced (30/09/2026)
 

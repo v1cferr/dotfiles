@@ -11,11 +11,11 @@ was. History is append-only, so those stay; what this stops is the fourth.
 
 ## The three checks
 
-| Check | Where it looks | Why it is silent otherwise |
-| --- | --- | --- |
-| em dash | markdown prose and code COMMENTS | nothing breaks, the paragraph just flattens into the same shape as every other one |
-| emoji | the same two places, plus the commit message | a warning sign is a claim that THIS paragraph matters more, and when every trap has one the marker means nothing |
-| `Co-Authored-By` | the commit message only | git accepts it, GitHub renders it, and the authorship of this repo is not shared |
+| Check            | Where it looks                               | Why it is silent otherwise                                                                                       |
+| ---------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| em dash          | markdown prose and code COMMENTS             | nothing breaks, the paragraph just flattens into the same shape as every other one                               |
+| emoji            | the same two places, plus the commit message | a warning sign is a claim that THIS paragraph matters more, and when every trap has one the marker means nothing |
+| `Co-Authored-By` | the commit message only                      | git accepts it, GitHub renders it, and the authorship of this repo is not shared                                 |
 
 The grammar of the message itself (`feat|fix|docs(scope): subject`) is NOT here: that is `convco`,
 a hook that already exists (see [`flake.md`](flake.md)).

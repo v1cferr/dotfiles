@@ -16,12 +16,12 @@ theme switch would skip them. Stylix (nix-community) has a target for each of th
 The obvious use of Stylix is a stock scheme from `pkgs.base16-schemes`. Measured, that is the
 argument 0001 already made: the shipped `tokyo-night-dark.yaml` is not folke's Tokyo Night.
 
-| Slot | `tokyo-night-dark.yaml` | `palette.nix` (folke) |
-| --- | --- | --- |
-| base05, the text | `#a9b1d6` | `#c0caf5` |
-| base08, "red" | `#c0caf5`, the text color | `#f7768e` |
-| base0A, "yellow" | `#0db9d7`, a cyan | `#e0af68` |
-| base0D, "blue", the accent | `#2ac3de`, a cyan | `#7aa2f7` |
+| Slot                       | `tokyo-night-dark.yaml`   | `palette.nix` (folke) |
+| -------------------------- | ------------------------- | --------------------- |
+| base05, the text           | `#a9b1d6`                 | `#c0caf5`             |
+| base08, "red"              | `#c0caf5`, the text color | `#f7768e`             |
+| base0A, "yellow"           | `#0db9d7`, a cyan         | `#e0af68`             |
+| base0D, "blue", the accent | `#2ac3de`, a cyan         | `#7aa2f7`             |
 
 ## Decision
 

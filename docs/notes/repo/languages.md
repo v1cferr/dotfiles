@@ -39,14 +39,14 @@ called per file), the local WoL paths (`socat`).
 
 **4. Python**, when ANY of these signals shows. One is enough:
 
-| Signal | What it looks like | Why shell loses |
-| --- | --- | --- |
-| Structured state | maps of lists, sets, a graph, a state machine | bash has one flat associative array |
-| Math past counting integers | dates and time zones, IPs and masks, floats, statistics, number formatting | integer-only, and every formatting rule is hand-written |
-| A format no one-line command reads | binary data, ioctls, a library API | there is no tool to call |
-| Edge cases worth a unit test | a parser, a calculation with boundaries | no test runner, so the cases go unpinned |
-| A filter that grew | `jq` or `awk` with `def`, `reduce`, or more than about 5 lines | it is a fifth language hidden in a string |
-| Size | more than **100 lines of logic**, comments and blank lines excluded | see below |
+| Signal                             | What it looks like                                                         | Why shell loses                                         |
+| ---------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Structured state                   | maps of lists, sets, a graph, a state machine                              | bash has one flat associative array                     |
+| Math past counting integers        | dates and time zones, IPs and masks, floats, statistics, number formatting | integer-only, and every formatting rule is hand-written |
+| A format no one-line command reads | binary data, ioctls, a library API                                         | there is no tool to call                                |
+| Edge cases worth a unit test       | a parser, a calculation with boundaries                                    | no test runner, so the cases go unpinned                |
+| A filter that grew                 | `jq` or `awk` with `def`, `reduce`, or more than about 5 lines             | it is a fifth language hidden in a string               |
+| Size                               | more than **100 lines of logic**, comments and blank lines excluded        | see below                                               |
 
 Examples: the calendar registry (dates and the computus, with tests), `razer-dpi` (ioctls),
 Vicinae's icons (fontTools' pen API), `eval-metrics` (number formatting and budgets).
@@ -107,16 +107,16 @@ limit or a `jq` program, so by step 4 or 5 it is a program in the wrong language
 the day its file is touched for a real change, the way rule 17 handles en-US, never in a separate
 sweep:
 
-| Script | Logic | Reading |
-| --- | ---: | --- |
-| `modules/home/desktop/glance-feed/scripts/feed.sh` | 630 | a program: HTTP, state in SQLite, JSON |
-| `vpn` in `modules/nixos/network/vpn.nix` | 201 | long glue, a CLI with subcommands: simplify, else Python |
-| `bios-aspm` in `hosts/ex-b560m-v5/bios-aspm.nix` | 193 | it edits bytes of an EFI variable: a program |
-| `tools/router-ssot/` | 139 | a `jq` program (step 5) |
-| `tools/dead-config/` | 122 | a `jq` program (step 5) |
-| `modules/nixos/core/sync-secrets.sh` | 103 | borderline: simplify first |
-| `router-sync` in `modules/nixos/network/router.nix` | 102 | borderline: ported from Python on 22/10/2026, and back to it if it grows |
-| `mega-dl` in `modules/home/network/mega.nix` | 102 | borderline: simplify first |
+| Script                                              | Logic | Reading                                                                  |
+| --------------------------------------------------- | ----: | ------------------------------------------------------------------------ |
+| `modules/home/desktop/glance-feed/scripts/feed.sh`  | 630   | a program: HTTP, state in SQLite, JSON                                   |
+| `vpn` in `modules/nixos/network/vpn.nix`            | 201   | long glue, a CLI with subcommands: simplify, else Python                 |
+| `bios-aspm` in `hosts/ex-b560m-v5/bios-aspm.nix`    | 193   | it edits bytes of an EFI variable: a program                             |
+| `tools/router-ssot/`                                | 139   | a `jq` program (step 5)                                                  |
+| `tools/dead-config/`                                | 122   | a `jq` program (step 5)                                                  |
+| `modules/nixos/core/sync-secrets.sh`                | 103   | borderline: simplify first                                               |
+| `router-sync` in `modules/nixos/network/router.nix` | 102   | borderline: ported from Python on 22/10/2026, and back to it if it grows |
+| `mega-dl` in `modules/home/network/mega.nix`        | 102   | borderline: simplify first                                               |
 
 ## What was migrated, and stays shell
 

@@ -31,11 +31,11 @@ So the three coverage fonts go in to make the fallback a CHOICE and not an accid
 DECLARED even the ones that already came for free, otherwise the rendering depends on a NixOS
 default nobody here asked for.
 
-| Package | Covers |
-| --- | --- |
-| `noto-fonts` | proportional Sans/Serif plus Symbols/Symbols2, the broadest general coverage |
-| `noto-fonts-color-emoji` | COLOR emoji (CBDT); monochrome-emoji is the opposite of what we want |
-| `noto-fonts-cjk-sans` | Japanese/Chinese/Korean (a stream name, Twitch chat) |
+| Package                  | Covers                                                                       |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| `noto-fonts`             | proportional Sans/Serif plus Symbols/Symbols2, the broadest general coverage |
+| `noto-fonts-color-emoji` | COLOR emoji (CBDT); monochrome-emoji is the opposite of what we want         |
+| `noto-fonts-cjk-sans`    | Japanese/Chinese/Korean (a stream name, Twitch chat)                         |
 
 ## The Microsoft metrics
 

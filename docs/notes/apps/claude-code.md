@@ -12,11 +12,11 @@ MCP servers and the settings in a single config directory. Running both in the s
 would mean logging in again on every switch. The way out is `CLAUDE_CONFIG_DIR`: one directory per
 account, and switching accounts means switching the variable.
 
-| Path | What it is |
-| --- | --- |
-| `~/.claude-fai` | FAI / nonprofit, and the DEFAULT |
-| `~/.claude-pessoal` | personal |
-| `~/.claude` | NOT an account: the shared ARCHIVE (`projects/`) |
+| Path                | What it is                                       |
+| ------------------- | ------------------------------------------------ |
+| `~/.claude-fai`     | FAI / nonprofit, and the DEFAULT                 |
+| `~/.claude-pessoal` | personal                                         |
+| `~/.claude`         | NOT an account: the shared ARCHIVE (`projects/`) |
 
 **There are two accounts and not three**, which is a correction from 11/08/2026. The first version
 of this module created an EMPTY `~/.claude-fai` next to `~/.claude`, which already WAS the FAI

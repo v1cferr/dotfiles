@@ -12,12 +12,12 @@ me, by hand, every time.
 
 ## What each piece does
 
-| Piece | Job | Where it comes from |
-| --- | --- | --- |
-| Stack Wallet | holds the keys; makes the receiving address; later spends | `pkgs.stack-wallet`, the official AppImage, pinned |
-| Bisq 2 (Bisq Easy) | finds a seller and runs the trade chat; it holds NO coins | `pkgs.unstable.bisq2`, from nixpkgs |
-| Pix | the BRL leg, paid from my bank app, outside both programs | |
-| Bitcoin mainnet | the seller's on-chain transaction to my Stack Wallet address | |
+| Piece              | Job                                                          | Where it comes from                                |
+| ------------------ | ------------------------------------------------------------ | -------------------------------------------------- |
+| Stack Wallet       | holds the keys; makes the receiving address; later spends    | `pkgs.stack-wallet`, the official AppImage, pinned |
+| Bisq 2 (Bisq Easy) | finds a seller and runs the trade chat; it holds NO coins    | `pkgs.unstable.bisq2`, from nixpkgs                |
+| Pix                | the BRL leg, paid from my bank app, outside both programs    |                                                    |
+| Bitcoin mainnet    | the seller's on-chain transaction to my Stack Wallet address |                                                    |
 
 The flow is `BRL/Pix -> Bisq Easy seller -> on-chain BTC -> Stack Wallet`. Bisq Easy has no wallet
 of its own: the buyer pastes a receiving address into the trade chat, which is why the two apps
@@ -35,16 +35,16 @@ Compared on 10/10/2026 (rule 1).
   sides agree on (so Pix works), and built for exactly the first-time buyer: no security deposit,
   no fee, no BSQ, a limit per trade of 6 to 600 USD equivalent ([Bisq Easy](https://web.archive.org/web/20261014003500/https://bisq.wiki/Bisq_Easy)).
 
-| Rejected | Why |
-| --- | --- |
-| Sparrow, Electrum | excellent and in nixpkgs, but Bitcoin only, and the goal covers other chains later. Sparrow is the natural second wallet for a hardware wallet one day |
-| Exodus, Trust Wallet desktop | not open source |
-| Bisq 1 | security deposits and BSQ fees; meant for larger trades |
-| RoboSats, Peach, HodlHodl | Lightning-first, mobile-first, or escrow I would have to learn on top of the first purchase |
-| an exchange (Binance, Mercado Bitcoin) | KYC, and the coins sit with a custodian until withdrawn |
-| building Stack Wallet from source | Flutter plus about ten native libraries (Monero, Epic Cash, MWC, Firo Spark, Xelis, FROST), each with its own Rust or C++ toolchain; a project of its own |
-| Stack Wallet's Flatpak | a second package system next to Nix |
-| a third-party Stack Wallet flake | none worth trusting existed, and the AppImage is verifiable directly |
+| Rejected                               | Why                                                                                                                                                       |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sparrow, Electrum                      | excellent and in nixpkgs, but Bitcoin only, and the goal covers other chains later. Sparrow is the natural second wallet for a hardware wallet one day    |
+| Exodus, Trust Wallet desktop           | not open source                                                                                                                                           |
+| Bisq 1                                 | security deposits and BSQ fees; meant for larger trades                                                                                                   |
+| RoboSats, Peach, HodlHodl              | Lightning-first, mobile-first, or escrow I would have to learn on top of the first purchase                                                               |
+| an exchange (Binance, Mercado Bitcoin) | KYC, and the coins sit with a custodian until withdrawn                                                                                                   |
+| building Stack Wallet from source      | Flutter plus about ten native libraries (Monero, Epic Cash, MWC, Firo Spark, Xelis, FROST), each with its own Rust or C++ toolchain; a project of its own |
+| Stack Wallet's Flatpak                 | a second package system next to Nix                                                                                                                       |
+| a third-party Stack Wallet flake       | none worth trusting existed, and the AppImage is verifiable directly                                                                                      |
 
 ## Installation, verification and upgrades
 
@@ -108,14 +108,14 @@ Delete them: `sudo rm /var/lib/systemd/coredump/core.stack_wallet.*`.
 
 All of it is runtime state (rule 6): nothing here is declared.
 
-| Path | What it holds |
-| --- | --- |
-| `~/.stackwallet/isar/` | the wallets, the seeds included, encrypted with the password I choose at first launch |
-| `~/.stackwallet/` (`hive/`, `sqlite/`, `themes/`) | preferences, node list, caches |
-| `~/Stack_Logs/` | Stack Wallet's log; may contain addresses and txids. Path and level are in its settings |
-| `~/.local/share/Bisq2/` | the Bisq profile (nickname, reputation keys), trade history and chats, its own `backups/` |
-| `~/.local/share/Bisq2/bisq.log` | **records the onion service's PRIVATE key** (the `ADD_ONION` line, seen 10/10/2026). Never post it in a bug report unedited |
-| `~/.local/share/Bisq2/tor/` | deleted by the nixpkgs launcher on every start |
+| Path                                              | What it holds                                                                                                               |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `~/.stackwallet/isar/`                            | the wallets, the seeds included, encrypted with the password I choose at first launch                                       |
+| `~/.stackwallet/` (`hive/`, `sqlite/`, `themes/`) | preferences, node list, caches                                                                                              |
+| `~/Stack_Logs/`                                   | Stack Wallet's log; may contain addresses and txids. Path and level are in its settings                                     |
+| `~/.local/share/Bisq2/`                           | the Bisq profile (nickname, reputation keys), trade history and chats, its own `backups/`                                   |
+| `~/.local/share/Bisq2/bisq.log`                   | **records the onion service's PRIVATE key** (the `ADD_ONION` line, seen 10/10/2026). Never post it in a bug report unedited |
+| `~/.local/share/Bisq2/tor/`                       | deleted by the nixpkgs launcher on every start                                                                              |
 
 ## Tor: each app brings its own
 
@@ -204,17 +204,17 @@ Written for this machine on 10/10/2026: a desktop at home, no LUKS
 ([0011](../../decisions/0011-local-disk-backup.md)), no offsite copy yet
 ([0008](../../decisions/0008-no-offsite-backup-yet.md)).
 
-| Risk | What it means here | What holds it back |
-| --- | --- | --- |
-| malware in my session | anything running as `v1cferr` can read `~/.stackwallet`, log keys, swap the clipboard; the `docker` group makes my session root-equivalent anyway | the app password protects the file at rest, NOT a live session. Keep amounts small; a hardware wallet is the real answer |
-| theft or loss of the NVMe | no LUKS, so `~` is readable | the wallet store is encrypted by the app password; the seed on paper restores everything on new hardware |
-| seed exposure | the seed IS the money | paper only, never digital, never typed into anything but the wallet's restore screen |
-| a compromised upstream binary | Stack Wallet has no signature, only a hash from the same account | the hash pins ONE artifact, so a later swap fails the build; the first trust is still upstream's GitHub. Bisq is GPG-verified |
+| Risk                                  | What it means here                                                                                                                                                                                                                                                 | What holds it back                                                                                                                         |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| malware in my session                 | anything running as `v1cferr` can read `~/.stackwallet`, log keys, swap the clipboard; the `docker` group makes my session root-equivalent anyway                                                                                                                  | the app password protects the file at rest, NOT a live session. Keep amounts small; a hardware wallet is the real answer                   |
+| theft or loss of the NVMe             | no LUKS, so `~` is readable                                                                                                                                                                                                                                        | the wallet store is encrypted by the app password; the seed on paper restores everything on new hardware                                   |
+| seed exposure                         | the seed IS the money                                                                                                                                                                                                                                              | paper only, never digital, never typed into anything but the wallet's restore screen                                                       |
+| a compromised upstream binary         | Stack Wallet has no signature, only a hash from the same account                                                                                                                                                                                                   | the hash pins ONE artifact, so a later swap fails the build; the first trust is still upstream's GitHub. Bisq is GPG-verified              |
 | logs, history, clipboard, screenshots | `~/Stack_Logs` and `bisq.log` hold addresses and keys of the network identity; **Vicinae's clipboard history keeps copied text** (encrypted, 30 days, password-manager offers skipped; [vicinae.md](../desktop/vicinae.md)); Flameshot and Sunshine see the screen | never copy a seed; after copying an address, delete it from the history (SUPER+SHIFT+V) if it bothers me; no screenshots of wallet screens |
-| an AI agent's transcript | anything an agent reads or prints stays in its logs | never ask an agent to read wallet files, logs or screenshots of them; this module was written without touching any |
-| RPC privacy | by default Stack Wallet asks Cypher Stack's Electrum server (`bitcoin.stackwallet.com`), which sees my IP and all my addresses | Tor ON hides the IP, not the address set. A node of my own is the full fix, later |
-| Pix identity | the seller and the bank tie the BTC amount and time to my CPF | accepted; it is the price of buying with BRL. Do not reuse the receiving address |
-| publishing wallet metadata | an address, txid or balance in this public repo, in a commit message, in `docs/` | none goes here; `gitleaks` does NOT catch an address, so this is on review |
+| an AI agent's transcript              | anything an agent reads or prints stays in its logs                                                                                                                                                                                                                | never ask an agent to read wallet files, logs or screenshots of them; this module was written without touching any                         |
+| RPC privacy                           | by default Stack Wallet asks Cypher Stack's Electrum server (`bitcoin.stackwallet.com`), which sees my IP and all my addresses                                                                                                                                     | Tor ON hides the IP, not the address set. A node of my own is the full fix, later                                                          |
+| Pix identity                          | the seller and the bank tie the BTC amount and time to my CPF                                                                                                                                                                                                      | accepted; it is the price of buying with BRL. Do not reuse the receiving address                                                           |
+| publishing wallet metadata            | an address, txid or balance in this public repo, in a commit message, in `docs/`                                                                                                                                                                                   | none goes here; `gitleaks` does NOT catch an address, so this is on review                                                                 |
 
 ### Hardening later, as its own plan
 
@@ -270,7 +270,7 @@ snapshot keeps the text this note cites.
 
 ## Tested versions
 
-| App | Version | Checked | How |
-| --- | --- | --- | --- |
+| App          | Version                               | Checked    | How                                                             |
+| ------------ | ------------------------------------- | ---------- | --------------------------------------------------------------- |
 | Stack Wallet | 2.7.1 (`build_316`, commit `f920c36`) | 10/10/2026 | sha256 against digest and notes; launched with a scratch `HOME` |
-| Bisq 2 | 2.1.13 (nixpkgs-unstable) | 10/10/2026 | GPG at fetch; signer fingerprint against bisq.network; launched |
+| Bisq 2       | 2.1.13 (nixpkgs-unstable)             | 10/10/2026 | GPG at fetch; signer fingerprint against bisq.network; launched |

@@ -13,18 +13,18 @@ folders were fine. The root was a pile, because sorting by hand only happens whe
 The root is an INBOX, a place things land and leave. Every 30 min a user timer moves each loose
 file that sat untouched for an hour into one folder per type, inside `~/Downloads` itself:
 
-| Folder | Extensions |
-| --- | --- |
-| `Archives` | zip rar 7z tar gz xz zst bz2 |
-| `Audio` | mp3 opus flac ogg wav m4a |
-| `Code` | json xml html yml yaml toml sh py nix |
-| `Disk-images` | iso img qcow2, plus the `.iso.sha256` and `.iso.sig` that verify them |
-| `Documents` | pdf doc docx odt rtf txt md epub |
-| `Images` | png jpg jpeg webp gif svg heic avif |
-| `Installers` | deb rpm apk appimage exe msi |
-| `Spreadsheets` | xls xlsx ods csv |
-| `Video` | mp4 mkv webm mov avi |
-| `Other` | anything unmatched |
+| Folder         | Extensions                                                            |
+| -------------- | --------------------------------------------------------------------- |
+| `Archives`     | zip rar 7z tar gz xz zst bz2                                          |
+| `Audio`        | mp3 opus flac ogg wav m4a                                             |
+| `Code`         | json xml html yml yaml toml sh py nix                                 |
+| `Disk-images`  | iso img qcow2, plus the `.iso.sha256` and `.iso.sig` that verify them |
+| `Documents`    | pdf doc docx odt rtf txt md epub                                      |
+| `Images`       | png jpg jpeg webp gif svg heic avif                                   |
+| `Installers`   | deb rpm apk appimage exe msi                                          |
+| `Spreadsheets` | xls xlsx ods csv                                                      |
+| `Video`        | mp4 mkv webm mov avi                                                  |
+| `Other`        | anything unmatched                                                    |
 
 The table lives in `my.downloads.buckets`; a new extension is one word there.
 

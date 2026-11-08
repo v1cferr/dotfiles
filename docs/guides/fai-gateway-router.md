@@ -97,11 +97,11 @@ stay here for reflash and rollback.
 **ONLY THE AD ZONE NEEDS IT.** Measured on 12/08/2026, comparing the public answer
 (1.1.1.1) with the FAI DC's (200.136.209.252):
 
-| zone | public | FAI | split-DNS? |
-| --- | --- | --- | --- |
-| `fai2008.ufscar.br` | **nothing** | `.252`, `192.168.130.2/.3` | **yes** |
-| `sup.fai.ufscar.br` | `200.136.209.236` | the same | no |
-| `fai.ufscar.br` | `200.136.209.236` | the same | no |
+| zone                | public            | FAI                        | split-DNS? |
+| ------------------- | ----------------- | -------------------------- | ---------- |
+| `fai2008.ufscar.br` | **nothing**       | `.252`, `192.168.130.2/.3` | **yes**    |
+| `sup.fai.ufscar.br` | `200.136.209.236` | the same                   | no         |
+| `fai.ufscar.br`     | `200.136.209.236` | the same                   | no         |
 
 That is why `dashboard.sup.fai.ufscar.br` worked with none of this: the zone is public, only
 the route was missing. The split-DNS below serves the names that **only exist inside**: a

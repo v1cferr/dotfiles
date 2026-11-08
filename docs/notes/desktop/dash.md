@@ -121,14 +121,14 @@ photo shows between the cells:
 **The geometry is computed, in whole pixels, from the window.** With W and H the band's size and
 g = 8 (`Theme.sp2`):
 
-| Cell | Rule | On the LG (1056 x 624) |
-| --- | --- | --- |
-| left column | `floor((W - g) / 2)` | 524 |
-| right column | `W - g - left`, so a spare pixel goes right | 524 |
-| tile | `floor((column - 2g) / 3)`, a column's spare pixels to its last tiles | 169, 169, 170 |
-| top row | `H - 104 - 100 - 2g`: whatever the share leaves | 404 |
-| vitals row | 104 | y 412 to 515 |
-| services row | 100 | y 524 to 623 |
+| Cell         | Rule                                                                  | On the LG (1056 x 624) |
+| ------------ | --------------------------------------------------------------------- | ---------------------- |
+| left column  | `floor((W - g) / 2)`                                                  | 524                    |
+| right column | `W - g - left`, so a spare pixel goes right                           | 524                    |
+| tile         | `floor((column - 2g) / 3)`, a column's spare pixels to its last tiles | 169, 169, 170          |
+| top row      | `H - 104 - 100 - 2g`: whatever the share leaves                       | 404                    |
+| vitals row   | 104                                                                   | y 412 to 515           |
+| services row | 100                                                                   | y 524 to 623           |
 
 **Three tiles plus their two gutters are exactly one column**, so every vertical line in the grid is
 shared by the cells above and below it. Only the top row grows or shrinks with the share; the vitals

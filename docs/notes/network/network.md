@@ -88,12 +88,12 @@ and RTT instead, hence `net.core.default_qdisc = fq`, the qdisc that executes th
 That was the hypothesis, and the first A/B seemed to confirm it. It did not survive the control.
 Four batteries of 4 downloads of 60 MB each, over ssh to the workstation, on 19/09/2026:
 
-| Battery | RTT to the portal | Download | Mean |
-| --- | --- | --- | --- |
-| cubic, 00h15 | 33.3ms | 55, 55, 56, 56 | 55.5 |
-| BBR, 22h | 35.7ms | 59, 61, 58, 60 | 59.5 |
-| BBR, 06h09 | 35.8ms | 54, 56, 56, 56 | 55.5 |
-| BBR, 06h15 | 33.0ms | 56, 56, 56, 54 | 55.5 |
+| Battery      | RTT to the portal | Download       | Mean |
+| ------------ | ----------------- | -------------- | ---- |
+| cubic, 00h15 | 33.3ms            | 55, 55, 56, 56 | 55.5 |
+| BBR, 22h     | 35.7ms            | 59, 61, 58, 60 | 59.5 |
+| BBR, 06h09   | 35.8ms            | 54, 56, 56, 56 | 55.5 |
+| BBR, 06h15   | 33.0ms            | 56, 56, 56, 54 | 55.5 |
 
 The +7% of the second line was **the hour, not the algorithm**: BBR measured again in the morning
 lands exactly on cubic's number, and the three later batteries agree with each other within 2%.
@@ -104,9 +104,9 @@ What DOES hold is the tail under load, which is the metric that matters here, si
 ssh freezing while rclone moves a file. Pinging the portal with a 60 MB upload running through the
 tunnel, at an idle baseline of ~30.5ms:
 
-| | avg | max | mdev |
-| --- | --- | --- | --- |
-| cubic, loaded | 30.3ms | **36.5ms** | 1.78 |
+|                     | avg                  | max                  | mdev               |
+| ------------------- | -------------------- | -------------------- | ------------------ |
+| cubic, loaded       | 30.3ms               | **36.5ms**           | 1.78               |
 | BBR, loaded, 3 runs | 30.8 / 29.8 / 30.2ms | 32.0 / 31.1 / 32.4ms | 0.74 / 0.96 / 1.09 |
 
 The average is flat in both, so neither bloats the queue in the usual sense. The difference is the
@@ -133,13 +133,13 @@ ALREADY in place: MEASURED on the running kernel before any change, `dmesg_restr
 `accept_source_route` 0, `unprivileged_bpf_disabled` 2, `yama.ptrace_scope` 1 and
 `tcp_syncookies` 1. So `boot.kernel.sysctl` only closes what was open:
 
-| sysctl | Before | Now | Why |
-| --- | ---: | ---: | --- |
-| `net.ipv4.conf.{all,default}.accept_redirects` | 0 / 1 | 0 | an ICMP redirect is a way to reroute this host |
-| `net.ipv4.conf.{all,default}.secure_redirects` | 1 | 0 | the same, from a "gateway" |
-| `net.ipv6.conf.{all,default}.accept_redirects` | 1 | 0 | the IPv6 half of the same |
-| `net.ipv4.conf.{all,default}.send_redirects` | 1 | 0 | this host forwards (the FAI gateway), and has no reason to steer its neighbours |
-| `kernel.kptr_restrict` | 1 | 2 | kernel addresses hidden from root as well |
+| sysctl                                         | Before | Now | Why                                                                             |
+| ---------------------------------------------- | -----: | --: | ------------------------------------------------------------------------------- |
+| `net.ipv4.conf.{all,default}.accept_redirects` | 0 / 1  | 0   | an ICMP redirect is a way to reroute this host                                  |
+| `net.ipv4.conf.{all,default}.secure_redirects` | 1      | 0   | the same, from a "gateway"                                                      |
+| `net.ipv6.conf.{all,default}.accept_redirects` | 1      | 0   | the IPv6 half of the same                                                       |
+| `net.ipv4.conf.{all,default}.send_redirects`   | 1      | 0   | this host forwards (the FAI gateway), and has no reason to steer its neighbours |
+| `kernel.kptr_restrict`                         | 1      | 2   | kernel addresses hidden from root as well                                       |
 
 **`rp_filter` stays 0 on purpose**: `networking.firewall.checkReversePath` is `true` (evaluated),
 so the firewall already drops spoofed sources, and a kernel strict mode on top would be a second
@@ -172,13 +172,13 @@ lands at 100 with no error surfaced above the driver.
 It is recent, and it is getting worse. The journal reaches back to 01/08 and the FIRST downshift
 is **15/09 19:50**:
 
-| day | downshifts |
-| --- | ---: |
-| 15/09 | 1 |
-| 21/09 | 1 |
-| 22/09 | 1 |
-| 23/09 | 2 |
-| 24/09 | 1 |
+| day   | downshifts |
+| ----- | ---------: |
+| 15/09 | 1          |
+| 21/09 | 1          |
+| 22/09 | 1          |
+| 23/09 | 2          |
+| 24/09 | 1          |
 
 Six weeks with none, then six in nine days, and one or more on each of the last four. That shape
 is a cable or a connector degrading, not a setting that changed.
@@ -642,11 +642,11 @@ The note above used to say the site cannot work without the VPN, "measured: neit
 public site.** FAI filters by COUNTRY, so a probe from abroad times out on everything; from a
 Brazilian vantage (check-host.net `br1`, 29/09/2026) the split is clean:
 
-| host | from a Brazilian IP, no VPN |
-| --- | --- |
+| host                                                    | from a Brazilian IP, no VPN             |
+| ------------------------------------------------------- | --------------------------------------- |
 | `.236`, every `*.fai.ufscar.br` name (it is a wildcard) | 80 and 443 OPEN, `sistemas` answers 200 |
-| `.229` workstation, `.248` fai-vm | refused |
-| `.247`, `.252` AD DNS | timed out |
+| `.229` workstation, `.248` fai-vm                       | refused                                 |
+| `.247`, `.252` AD DNS                                   | timed out                               |
 
 So the router's old `fai_r6` (the whole /25 to this host) was taking `sistemas.fai.ufscar.br`
 down with the VPN for EVERY device in the house, this one included: this host's own packet goes

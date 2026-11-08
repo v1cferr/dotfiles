@@ -10,10 +10,10 @@ What covers that is [restic](restic.md), daily, onto the Seagate backup disk sin
 ([decision 0008](../../decisions/0008-no-offsite-backup-yet.md)), so theft, fire or a surge that
 takes both disks is the remaining accepted risk. The two tools answer different questions:
 
-| | answers | cadence |
-| --- | --- | --- |
-| restic | "the NVMe died" | daily, other disk, encrypted |
-| btrbk | "I overwrote the file 20 minutes ago" | hourly, instant, local |
+|        | answers                               | cadence                      |
+| ------ | ------------------------------------- | ---------------------------- |
+| restic | "the NVMe died"                       | daily, other disk, encrypted |
+| btrbk  | "I overwrote the file 20 minutes ago" | hourly, instant, local       |
 
 restic alone leaves a hole of up to 24 h and a restore that takes minutes. btrbk closes that hole
 for ~zero cost, because a CoW snapshot copies nothing: it only starts taking space to the EXTENT

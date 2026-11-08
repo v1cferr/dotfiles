@@ -8,14 +8,14 @@ is written down rather than left to be re-derived.
 `flake.nix` holds the description, the inputs and the WIRING: one line per output, importing its
 implementation from `flake/`. It used to hold all of it, 740 lines with seven responsibilities.
 
-| File | What it builds |
-| --- | --- |
-| `flake/overlays.nix` | the overlays every host gets, in order: unstable, the patched builds, `./pkgs`, `./tools` |
-| `flake/hosts.nix` | `commonModules` and `mkHost`; the hosts themselves are listed in `flake.nix` |
-| `flake/packages.nix` | `packages.<system>`, the facts, the stats, the Pages bundle, `disko-vm` |
-| `flake/vm-boot.nix` | the boot test, a package for the reason in [vm-boot](vm-boot.md) |
-| `flake/checks.nix` | the quality gate: the hooks, `repo-audit`, `checks.packages` |
-| `flake/dev-shell.nix` | the devShell |
+| File                  | What it builds                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| `flake/overlays.nix`  | the overlays every host gets, in order: unstable, the patched builds, `./pkgs`, `./tools` |
+| `flake/hosts.nix`     | `commonModules` and `mkHost`; the hosts themselves are listed in `flake.nix`              |
+| `flake/packages.nix`  | `packages.<system>`, the facts, the stats, the Pages bundle, `disko-vm`                   |
+| `flake/vm-boot.nix`   | the boot test, a package for the reason in [vm-boot](vm-boot.md)                          |
+| `flake/checks.nix`    | the quality gate: the hooks, `repo-audit`, `checks.packages`                              |
+| `flake/dev-shell.nix` | the devShell                                                                              |
 
 Plain `import`s with explicit arguments, and no flake-parts: the split is for reading, and a
 framework would add a second way to define an output without removing the first. Proven a pure
@@ -77,13 +77,13 @@ the hm-module, so that side never gets evaluated.
 
 ### The rest, in one line each
 
-| Input | Why it exists |
-| --- | --- |
+| Input               | Why it exists                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `duo-streak-daemon` | the app lives in ITS OWN repo; here it is only DEPLOY, the commit pinned in the lock and compose building from the store path. `flake = false`, since it is a plain code repo with no Nix outputs. It is PRIVATE, so `git+ssh`: it reuses the SSH key with no token in sops, `nix flake update` runs as the USER who has the key, and the rebuild as root reuses the already-pinned store path with no re-fetch |
-| `quickshell` | a shell/bar in QML (outfoxxed), NOT in nixpkgs. See [`quickshell.md`](../desktop/quickshell.md) |
-| `browser-previews` | nixpkgs only packages Chrome stable; this maintained nix-community flake keeps `google-chrome-dev` fresh |
-| `stylix` | APPLIES `my.theme.palette` to every app it has a target for (GTK, kitty, bat, mpv...). The palette stays the owner of the hexes, because the stock base16 Tokyo Night is not folke's. Pinned to `release-26.05`, the same release as the base, since Stylix warns on a mismatch. See [decision 0012](../../decisions/0012-stylix-applies-the-palette.md) |
-| `git-hooks.nix` | pre-commit managed by Nix, so the lint catches things BEFORE the commit instead of after the push. `cachix/git-hooks.nix` is the current name; the old `pre-commit-hooks.nix` repo redirects |
+| `quickshell`        | a shell/bar in QML (outfoxxed), NOT in nixpkgs. See [`quickshell.md`](../desktop/quickshell.md)                                                                                                                                                                                                                                                                                                                 |
+| `browser-previews`  | nixpkgs only packages Chrome stable; this maintained nix-community flake keeps `google-chrome-dev` fresh                                                                                                                                                                                                                                                                                                        |
+| `stylix`            | APPLIES `my.theme.palette` to every app it has a target for (GTK, kitty, bat, mpv...). The palette stays the owner of the hexes, because the stock base16 Tokyo Night is not folke's. Pinned to `release-26.05`, the same release as the base, since Stylix warns on a mismatch. See [decision 0012](../../decisions/0012-stylix-applies-the-palette.md)                                                        |
+| `git-hooks.nix`     | pre-commit managed by Nix, so the lint catches things BEFORE the commit instead of after the push. `cachix/git-hooks.nix` is the current name; the old `pre-commit-hooks.nix` repo redirects                                                                                                                                                                                                                    |
 
 ### claude-desktop
 

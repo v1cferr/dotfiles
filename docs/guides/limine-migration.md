@@ -9,13 +9,13 @@ GRUB's reserve left the ESP and the firmware the same day (D2). The page stays a
 
 ## What changes on the ESP, and what does not
 
-| Path on `/boot` | GRUB today | After the Limine install |
-| --- | --- | --- |
-| `EFI/NixOS-boot/grubx64.efi`, `grub/`, `kernels/` | written, signed | **left as is** (Limine's cleanup only walks `limine/`) |
-| `EFI/limine/BOOTX64.EFI` | absent | written, config hash enrolled, signed by `sbctl sign` |
-| `limine/limine.conf`, `limine/kernels/`, `limine/wallpapers/` | absent | written on every install |
-| `EFI/BOOT/BOOTX64.EFI` (the removable fallback) | whatever is there | **untouched**: `efiInstallAsRemovable` stays false |
-| NVRAM | `NixOS-boot`, `Windows Boot Manager` | plus `Limine`, created at the FRONT of BootOrder on the first install |
+| Path on `/boot`                                               | GRUB today                           | After the Limine install                                              |
+| ------------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------- |
+| `EFI/NixOS-boot/grubx64.efi`, `grub/`, `kernels/`             | written, signed                      | **left as is** (Limine's cleanup only walks `limine/`)                |
+| `EFI/limine/BOOTX64.EFI`                                      | absent                               | written, config hash enrolled, signed by `sbctl sign`                 |
+| `limine/limine.conf`, `limine/kernels/`, `limine/wallpapers/` | absent                               | written on every install                                              |
+| `EFI/BOOT/BOOTX64.EFI` (the removable fallback)               | whatever is there                    | **untouched**: `efiInstallAsRemovable` stays false                    |
+| NVRAM                                                         | `NixOS-boot`, `Windows Boot Manager` | plus `Limine`, created at the FRONT of BootOrder on the first install |
 
 The Windows ESP (`sdb1`) is only read, by the firmware, when you pick Windows. Measured on
 21/10/2026: the NixOS ESP holds 140 MiB of 1022 MiB under GRUB; Limine adds one copy of each
@@ -121,12 +121,12 @@ from the menu. Promoted on 02/11; the first boot by BootOrder read `BootCurrent:
 
 ## If it goes wrong
 
-| What you see | What to do |
-| --- | --- |
-| The firmware refuses Limine (Secure Boot violation) | Reboot; without BootNext it is GRUB. Then `boot-trust` tells you why |
-| Limine panics on a hash mismatch | Reboot into GRUB (F8 for the firmware menu), or an older generation in Limine |
-| Windows does not chainload | F8 and pick Windows Boot Manager; the firmware entry was never touched |
-| Nothing boots | an older generation in Limine's menu; else the USB stick (Secure Boot off for it), mount the root subvolume and `/boot`, `nixos-enter`, an older generation's `bin/switch-to-configuration boot`; or untar the ESP snapshot |
+| What you see                                        | What to do                                                                                                                                                                                                                  |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The firmware refuses Limine (Secure Boot violation) | Reboot; without BootNext it is GRUB. Then `boot-trust` tells you why                                                                                                                                                        |
+| Limine panics on a hash mismatch                    | Reboot into GRUB (F8 for the firmware menu), or an older generation in Limine                                                                                                                                               |
+| Windows does not chainload                          | F8 and pick Windows Boot Manager; the firmware entry was never touched                                                                                                                                                      |
+| Nothing boots                                       | an older generation in Limine's menu; else the USB stick (Secure Boot off for it), mount the root subvolume and `/boot`, `nixos-enter`, an older generation's `bin/switch-to-configuration boot`; or untar the ESP snapshot |
 
 Going back on purpose, after D: revert the stage D commit (it brings the selector back), set
 `my.boot.loader = "grub"`, `nixos-rebuild boot`, check GRUB boots, then

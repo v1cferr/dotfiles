@@ -11,11 +11,11 @@ procedure below.
 
 ## Versions, and why this build matches
 
-| Piece | Version | Where it comes from |
-| --- | --- | --- |
-| Hyprland (the session) | 0.56.2, commit `efb50993` | `programs.hyprland.package = pkgs.unstable.hyprland` |
-| HyprGlass | 0.10.0, commit `84c1a5ab` | `fetchFromGitHub`, the commit pinned with its hash |
-| hyprutils / hyprlang / aquamarine / glibc | 0.14.2 / 0.6.8 / 0.15.1 / 2.44 | the same store paths in both closures |
+| Piece                                     | Version                        | Where it comes from                                  |
+| ----------------------------------------- | ------------------------------ | ---------------------------------------------------- |
+| Hyprland (the session)                    | 0.56.2, commit `efb50993`      | `programs.hyprland.package = pkgs.unstable.hyprland` |
+| HyprGlass                                 | 0.10.0, commit `84c1a5ab`      | `fetchFromGitHub`, the commit pinned with its hash   |
+| hyprutils / hyprlang / aquamarine / glibc | 0.14.2 / 0.6.8 / 0.15.1 / 2.44 | the same store paths in both closures                |
 
 **v0.10.0 is the release upstream pins to this exact Hyprland.** Upstream's `hyprpm.toml` on `main`
 maps Hyprland 0.56.2's commit `efb50993` to HyprGlass `84c1a5ab`, v0.10.0 (the v0.10.0 tag's own
@@ -92,11 +92,11 @@ the glass PROFILE (`my.theme.glass`): the `V` table at the top of `glass.lua` ho
 that differ between `perceptible` and `clear-gradient`, both listed in
 [theme.md](theme.md#the-two-profiles-18102026). The values below are `perceptible`'s.
 
-| Preset | Used by | What it changes |
-| --- | --- | --- |
+| Preset   | Used by                                                                                                        | What it changes                                                                                                                                                                                                                                                       |
+| -------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `window` | every window that is not opaque; under `clear-gradient`, every shell layer too, so the desktop is one material | `xray = 0` (the windows behind stay visible: that is the depth), no self sampling, blur 1.2, refraction 0.3 kept to the rim (`refraction_spread = 0.2`), no lens dome, no chromatic aberration, specular 0.15, fresnel 0.2, the palette's bg as tint at about a third |
-| `ui` | the bar and the band, under `perceptible` | more blur (1.6), almost no refraction (0.12), a thin edge, since text runs across the whole surface |
-| `panel` | panels, the NixOS Center, toasts, under `perceptible` | the most blur (2.0) and a darker tint, since they are read the longest |
+| `ui`     | the bar and the band, under `perceptible`                                                                      | more blur (1.6), almost no refraction (0.12), a thin edge, since text runs across the whole surface                                                                                                                                                                   |
+| `panel`  | panels, the NixOS Center, toasts, under `perceptible`                                                          | the most blur (2.0) and a darker tint, since they are read the longest                                                                                                                                                                                                |
 
 **Every window, except fullscreen and games** (since 18/10/2026; before, only kitty and floating
 windows had it, by tag). The global switch is on and the plugin skips what is opaque
@@ -124,13 +124,13 @@ inside a temporary headless output of the live one (`hyprctl output create headl
 after each run; a nested Hyprland needs `xdg_wm_base` v6, which a headless sway 1.12 does not offer.
 Inside it, a translucent kitty over colored rows and a floating translucent kitty on top.
 
-| Check | Result (17/10/2026) |
-| --- | --- |
-| `hyprctl plugin list` | `hyprglass 0.10.0` loaded |
-| `hyprctl hyprglass status` | `active`, `version check: match`, `shaders: ready`, windows on, layers on |
-| `hyprctl configerrors` with the repo's `glass.lua` | empty: every option and preset name accepted |
-| `hyprctl hyprglass stats` over 3 s | 1 window draw per frame for 181 frames, all 181 from the background cache, 0.299 glass Mpx per frame |
-| the live session after each run | one instance, DP-1 and DP-2 only, `no plugins loaded` |
+| Check                                              | Result (17/10/2026)                                                                                  |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `hyprctl plugin list`                              | `hyprglass 0.10.0` loaded                                                                            |
+| `hyprctl hyprglass status`                         | `active`, `version check: match`, `shaders: ready`, windows on, layers on                            |
+| `hyprctl configerrors` with the repo's `glass.lua` | empty: every option and preset name accepted                                                         |
+| `hyprctl hyprglass stats` over 3 s                 | 1 window draw per frame for 181 frames, all 181 from the background cache, 0.299 glass Mpx per frame |
+| the live session after each run                    | one instance, DP-1 and DP-2 only, `no plugins loaded`                                                |
 
 **Do not repeat this method on 0.57.** On 06/11/2026 a nested Hyprland 0.57.1 run the same way
 took the live session's units down when it exited: its shutdown runs

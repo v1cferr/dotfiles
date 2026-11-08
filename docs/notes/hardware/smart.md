@@ -25,14 +25,14 @@ Seagate, spun down most of the day.
 A Momentus 7200.4 laptop disk from 2009, now the backup's home
 ([decision 0011](../../decisions/0011-local-disk-backup.md)):
 
-| Attribute | Value | Reading |
-| --- | ---: | --- |
-| Reallocated, Pending, Offline Uncorrectable, Reported Uncorrect | 0 | the media is clean |
-| SMART error log | empty | |
-| UDMA CRC errors | 348 | the same count as months ago, and 0 ICRC in this boot's SATA PHY log: old cabling, not now |
-| Load Cycle Count | 850,316 | ~1.4x the spec, normalized 001; it was ~840k when last noted |
-| Head flying hours | ~37,800 | |
-| Lifetime max temperature | 59 C | over the 43 C spec at some point; 36 C now |
+| Attribute                                                       | Value   | Reading                                                                                    |
+| --------------------------------------------------------------- | ------: | ------------------------------------------------------------------------------------------ |
+| Reallocated, Pending, Offline Uncorrectable, Reported Uncorrect | 0       | the media is clean                                                                         |
+| SMART error log                                                 | empty   |                                                                                            |
+| UDMA CRC errors                                                 | 348     | the same count as months ago, and 0 ICRC in this boot's SATA PHY log: old cabling, not now |
+| Load Cycle Count                                                | 850,316 | ~1.4x the spec, normalized 001; it was ~840k when last noted                               |
+| Head flying hours                                               | ~37,800 |                                                                                            |
+| Lifetime max temperature                                        | 59 C    | over the 43 C spec at some point; 36 C now                                                 |
 
 The verdict: the media is healthy and the MECHANICS are worn, so the likely failure is sudden (heads,
 ramp) rather than a slow rot of sectors. That is acceptable for a backup, whose loss is the backup

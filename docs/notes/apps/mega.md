@@ -5,11 +5,11 @@ PATIENT loop, resuming on its own until the file finishes, quota crossings inclu
 
 ## Why megatools, after looking at the three alternatives
 
-| Alternative | Why not |
-| --- | --- |
-| rclone | the `mega` backend talks to an ACCOUNT, not to a public link (rclone#7088 still open). A `/file/<id>#<key>` link is not a remote path, it is a URL with the key in the fragment, and rclone has nowhere to fit that |
-| MEGAcmd (official) | a huge closure for a one-off download, and its `proxy` is HTTP(S) only, since SOCKS5 is issue #204, open since 2019 |
-| megabasterd | a Java GUI whose central feature is slicing the file across a LIST of proxies to get around the per-IP quota, which is not what this module does |
+| Alternative        | Why not                                                                                                                                                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| rclone             | the `mega` backend talks to an ACCOUNT, not to a public link (rclone#7088 still open). A `/file/<id>#<key>` link is not a remote path, it is a URL with the key in the fragment, and rclone has nowhere to fit that |
+| MEGAcmd (official) | a huge closure for a one-off download, and its `proxy` is HTTP(S) only, since SOCKS5 is issue #204, open since 2019                                                                                                 |
+| megabasterd        | a Java GUI whose central feature is slicing the file across a LIST of proxies to get around the per-IP quota, which is not what this module does                                                                    |
 
 megatools is **139 KiB** of closure, maintained (1.11.5, jul/2025, and the MEGA protocol changes so
 upstream keeping up matters), and it brings `--proxy socks5h://` NATIVELY: its own man page uses

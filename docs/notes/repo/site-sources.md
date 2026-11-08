@@ -15,11 +15,11 @@ browser half lives in `tools/docs-site/components/source/`. Build the snapshot w
 Every relation is READ, never guessed from a file name. Three strengths, and the strongest one wins
 when a file is reached more than one way:
 
-| Relation | Read from | What it means |
-| --- | --- | --- |
-| `direct` | a markdown link to a repo file, or inline code that is a repo path | the page cites the file |
-| `declared` | the file's own header pointing at the page (rule 2) | the file says the page explains it |
-| `module` | the folder a cited `<name>.nix` keeps beside it, or a folder the page names | context, not a citation |
+| Relation   | Read from                                                                   | What it means                      |
+| ---------- | --------------------------------------------------------------------------- | ---------------------------------- |
+| `direct`   | a markdown link to a repo file, or inline code that is a repo path          | the page cites the file            |
+| `declared` | the file's own header pointing at the page (rule 2)                         | the file says the page explains it |
+| `module`   | the folder a cited `<name>.nix` keeps beside it, or a folder the page names | context, not a citation            |
 
 **The markdown is read as a syntax tree**, with the same parser family Fumadocs compiles it with
 (`mdast-util-from-markdown` and the GFM extension). A link inside a fenced block is not a `link`
@@ -186,24 +186,24 @@ when either list drifts from its owner, and when a grammar does not load.
 
 The index, from the sandbox:
 
-| Measure | Value |
-| --- | --- |
-| index time, inside `build-sources.ts` | 1.8 to 2.3s |
-| `nix build .#docs-sources --rebuild`, the store already fetched | 13.1s, byte-identical to the first build |
-| pages with related files | 123 of 135 |
-| relations | 691: 458 direct, 41 declared, 192 module |
-| files published | 323, 1.5 MiB |
-| manifests, all pages together | 183 KiB, one small file per page |
-| unresolved references | 10, all of them in `docs/history/`, a diary that names deleted files on purpose |
+| Measure                                                         | Value                                                                           |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| index time, inside `build-sources.ts`                           | 1.8 to 2.3s                                                                     |
+| `nix build .#docs-sources --rebuild`, the store already fetched | 13.1s, byte-identical to the first build                                        |
+| pages with related files                                        | 123 of 135                                                                      |
+| relations                                                       | 691: 458 direct, 41 declared, 192 module                                        |
+| files published                                                 | 323, 1.5 MiB                                                                    |
+| manifests, all pages together                                   | 183 KiB, one small file per page                                                |
+| unresolved references                                           | 10, all of them in `docs/history/`, a diary that names deleted files on purpose |
 
 The site, against the build right before the browser half (`2e7c0caf`), on `/notes/desktop/hypr/`:
 
-| Measure | Before | After |
-| --- | --- | --- |
-| JS a page loads up front, gzipped | 294.2 KiB | 302.7 KiB |
-| the page's HTML, gzipped | 35.1 KiB | 35.8 KiB |
-| chunk files in the export | 112, 6.3 MiB | 139, 7.5 MiB |
-| the whole published output | 62.2 MiB | 66.2 MiB, `/_source/` included |
+| Measure                           | Before       | After                          |
+| --------------------------------- | ------------ | ------------------------------ |
+| JS a page loads up front, gzipped | 294.2 KiB    | 302.7 KiB                      |
+| the page's HTML, gzipped          | 35.1 KiB     | 35.8 KiB                       |
+| chunk files in the export         | 112, 6.3 MiB | 139, 7.5 MiB                   |
+| the whole published output        | 62.2 MiB     | 66.2 MiB, `/_source/` included |
 
 **What the first preview fetches**, in a headless Chromium: the page's manifest on load, and nothing
 else until a file opens. Then 64.4 KiB gzipped of JS (the viewer, shiki's core, the engine, one
@@ -244,17 +244,17 @@ landed on another row. A finger would have done the same. The line's height is r
 
 ## What was rejected
 
-| Option | Why not |
-| --- | --- |
-| building the previews inside `docs-site` | its src would have to take `modules/`, and every module commit would rebuild the site |
-| the GitHub API or an embed at read time | a third party in the reader's browser, which [rule 20](../../rules.md#20-the-docs-are-a-product) forbids, plus rate limits |
-| copying the repo into the export | publishes what no page shows, and what the policy exists to keep out |
-| relating files by name similarity | a guess shown as a fact; the index only relates what the markdown or the file says |
-| an override file for relations | rule 2's header already is one, and the gate already guards it |
-| Monaco or CodeMirror | an editor for a read-only view; the site's own code block already highlights, numbers and copies |
-| Fumadocs' `<Folder>` and `<File>` | uncontrolled and not keyboard-reachable in 16.17.2 (above) |
-| patching the TOC in the DOM | `slots.toc` is the documented way in |
-| shiki's full bundle | 330 chunk files nobody can request |
+| Option                                   | Why not                                                                                                                    |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| building the previews inside `docs-site` | its src would have to take `modules/`, and every module commit would rebuild the site                                      |
+| the GitHub API or an embed at read time  | a third party in the reader's browser, which [rule 20](../../rules.md#20-the-docs-are-a-product) forbids, plus rate limits |
+| copying the repo into the export         | publishes what no page shows, and what the policy exists to keep out                                                       |
+| relating files by name similarity        | a guess shown as a fact; the index only relates what the markdown or the file says                                         |
+| an override file for relations           | rule 2's header already is one, and the gate already guards it                                                             |
+| Monaco or CodeMirror                     | an editor for a read-only view; the site's own code block already highlights, numbers and copies                           |
+| Fumadocs' `<Folder>` and `<File>`        | uncontrolled and not keyboard-reachable in 16.17.2 (above)                                                                 |
+| patching the TOC in the DOM              | `slots.toc` is the documented way in                                                                                       |
+| shiki's full bundle                      | 330 chunk files nobody can request                                                                                         |
 
 ## Extending it, and when it misbehaves
 

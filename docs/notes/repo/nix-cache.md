@@ -48,10 +48,10 @@ The bucket is private on purpose: many pushed packages are unfree (VS Code, Code
 CurseForge, Steam's FHS root), and a public cache would redistribute them. Two R2 tokens, scoped
 to the bucket:
 
-| Token | Lives in | Used by |
-| --- | --- | --- |
-| Object Read & Write | GitHub secrets `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | the nightly push |
-| Object Read | Bitwarden "Nix Cache R2 Read", synced to sops | the nix-daemon at home |
+| Token               | Lives in                                                  | Used by                |
+| ------------------- | --------------------------------------------------------- | ---------------------- |
+| Object Read & Write | GitHub secrets `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | the nightly push       |
+| Object Read         | Bitwarden "Nix Cache R2 Read", synced to sops             | the nix-daemon at home |
 
 The signing key's private half is the GitHub secret `NIX_CACHE_SIGNING_KEY`, backed up in
 Bitwarden as "Nix Cache Signing Key"; the public half is

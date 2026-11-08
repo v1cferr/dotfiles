@@ -36,12 +36,12 @@ It is not in nixpkgs, in any channel, and the dependency tree says why nobody bo
 and logfire. Packaging that by hand would mean vendoring dozens of derivations and fighting an
 exact pin nixpkgs will never carry.
 
-| Path | Why not |
-| --- | --- |
-| nixpkgs / by hand | the beta pin alone kills it, and 173 packages is not a weekend |
-| `uvx basic-memory` | a fetch with no hash at runtime, which is rule 13 |
+| Path                   | Why not                                                            |
+| ---------------------- | ------------------------------------------------------------------ |
+| nixpkgs / by hand      | the beta pin alone kills it, and 173 packages is not a weekend     |
+| `uvx basic-memory`     | a fetch with no hash at runtime, which is rule 13                  |
 | the official container | a Docker daemon in the loop and a digest to chase, for a local CLI |
-| the paid cloud | the entire point is that the files stay here |
+| the paid cloud         | the entire point is that the files stay here                       |
 
 uv2nix builds a Nix package set FROM a `uv.lock`, so the exact resolution is the pin and every
 wheel carries its hash. Measured on 24/08/2026: 173 packages, a 712 MiB closure, and `bm --version`
@@ -83,10 +83,10 @@ its own SQLite, and the general server never indexes a FAI file. That holds even
 rule around it fails, because the general server has nothing FAI to return. The reasoning, on the
 content side, is the context repo's ADR 0006.
 
-| Server | Port | Projects | Clients |
-| --- | --- | --- | --- |
-| `basic-memory-general` | 8765 | `personal`, `study`, `projects` | codex, agy |
-| `basic-memory-fai` | 8766 | `fai` | Claude Code, FAI account |
+| Server                 | Port | Projects                        | Clients                  |
+| ---------------------- | ---- | ------------------------------- | ------------------------ |
+| `basic-memory-general` | 8765 | `personal`, `study`, `projects` | codex, agy               |
+| `basic-memory-fai`     | 8766 | `fai`                           | Claude Code, FAI account |
 
 **The personal Claude account gets NO memory server**, which is a decision and not an omission
 (25/09/2026). The FAI account sees only the FAI server, so my personal context never goes through
@@ -132,14 +132,14 @@ Overridden by $BASIC_MEMORY_AUTO_UPDATE = false
 
 What is declared, and why:
 
-| Variable | Why |
-| --- | --- |
-| `BASIC_MEMORY_CONFIG_DIR` | `~/.basic-memory/<server>`, so each server has its own config file and SQLite |
-| `BASIC_MEMORY_PROJECTS` | the server's projects, one per scope directory, as JSON |
-| `BASIC_MEMORY_PROJECT_ROOT` | `knowledge/`: every project stays under it, so an agent cannot index some other corner of my home |
-| `BASIC_MEMORY_DEFAULT_PROJECT` | the server's first project, the one a client gets when it names none |
-| `BASIC_MEMORY_AUTO_UPDATE` | the store is read-only, so its updater could only nag |
-| `BASIC_MEMORY_INDEX_CHANGES` | what I edit in Obsidian reaches the index; pinned because a default is upstream's to change |
+| Variable                       | Why                                                                                               |
+| ------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `BASIC_MEMORY_CONFIG_DIR`      | `~/.basic-memory/<server>`, so each server has its own config file and SQLite                     |
+| `BASIC_MEMORY_PROJECTS`        | the server's projects, one per scope directory, as JSON                                           |
+| `BASIC_MEMORY_PROJECT_ROOT`    | `knowledge/`: every project stays under it, so an agent cannot index some other corner of my home |
+| `BASIC_MEMORY_DEFAULT_PROJECT` | the server's first project, the one a client gets when it names none                              |
+| `BASIC_MEMORY_AUTO_UPDATE`     | the store is read-only, so its updater could only nag                                             |
+| `BASIC_MEMORY_INDEX_CHANGES`   | what I edit in Obsidian reaches the index; pinned because a default is upstream's to change       |
 
 ## Traps measured on the way in
 
@@ -167,11 +167,11 @@ import is the context repo's own tooling; what stays here is getting the export 
 
 Measured after the first switch, 24/08/2026, when one server served all three:
 
-| Client | What it says | What it means |
-| --- | --- | --- |
-| `agy` | `/mcp` prints `Restarted server: basic-memory` | connected |
-| codex | `codex mcp list` shows `enabled`, `auth_status: unsupported` | connected; the server advertises no OAuth, which is what a local one should do |
-| Claude Code | `claude mcp list` does NOT show it | expected: that command lists CONFIGURED scopes, and both this and the Azure MCP arrive through `--mcp-config` |
+| Client      | What it says                                                 | What it means                                                                                                 |
+| ----------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `agy`       | `/mcp` prints `Restarted server: basic-memory`               | connected                                                                                                     |
+| codex       | `codex mcp list` shows `enabled`, `auth_status: unsupported` | connected; the server advertises no OAuth, which is what a local one should do                                |
+| Claude Code | `claude mcp list` does NOT show it                           | expected: that command lists CONFIGURED scopes, and both this and the Azure MCP arrive through `--mcp-config` |
 
 The Claude one is worth spelling out because it reads like a bug. The proof it is not: a fresh
 session answered `Permission required for mcp__basic-memory__recent_activity`, so the tool was
@@ -207,11 +207,11 @@ is completed, and that is the intended gate.
 
 ## What is state, and where it lives
 
-| Path | What it is |
-| --- | --- |
-| `my.memory.dir` | the Markdown. The source of truth, and the thing to keep if the index ever goes |
-| `~/.basic-memory/<server>/config.json` | the 88 settings, app-owned, overridden by the unit |
-| `~/.basic-memory/<server>/memory.db` | the SQLite index, DERIVED: it can be rebuilt with `bm reindex` |
+| Path                                   | What it is                                                                      |
+| -------------------------------------- | ------------------------------------------------------------------------------- |
+| `my.memory.dir`                        | the Markdown. The source of truth, and the thing to keep if the index ever goes |
+| `~/.basic-memory/<server>/config.json` | the 88 settings, app-owned, overridden by the unit                              |
+| `~/.basic-memory/<server>/memory.db`   | the SQLite index, DERIVED: it can be rebuilt with `bm reindex`                  |
 
 The index being derived is what makes a backup boring: what matters is the Markdown, which lives
 in git. There is no backup of this machine right now (rule 6), so the Markdown's only other copy

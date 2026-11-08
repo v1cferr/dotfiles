@@ -127,11 +127,11 @@ window out of a stack, `expel` (SUPER+O) first.
 
 SUPER+ALT+`,`/`.` cycles the width of ONLY the active column. The CTRL trio changes the WHOLE tape:
 
-| Bind | Message | What it does |
-| --- | --- | --- |
-| SUPER+CTRL+G | `fit all` | SEE EVERYTHING: resizes and repositions every column so they all fit |
-| SUPER+CTRL+`.` | `colresize all 1.0` | FOCUS: everything at 100%, one window per screen |
-| SUPER+CTRL+`,` | `colresize all 0.5` | everything at 50%, two side by side, fixed |
+| Bind           | Message             | What it does                                                         |
+| -------------- | ------------------- | -------------------------------------------------------------------- |
+| SUPER+CTRL+G   | `fit all`           | SEE EVERYTHING: resizes and repositions every column so they all fit |
+| SUPER+CTRL+`.` | `colresize all 1.0` | FOCUS: everything at 100%, one window per screen                     |
+| SUPER+CTRL+`,` | `colresize all 0.5` | everything at 50%, two side by side, fixed                           |
 
 `fit all` differs from `colresize all 0.5`, which forces 2-per-screen even with 5 windows open. And
 careful: `colresize all N` on its own does NOT bring the view along, since shrinking 2 columns to

@@ -94,19 +94,19 @@ does not stay on disk.
 None of this is in git, so this table is the record. Update it in the same commit as any change made
 in the dashboard or through the API.
 
-| Piece | Value |
-| --- | --- |
-| Tunnel | `basic-memory`, `3376a3fe-8193-489d-9cb2-8132ff65d74b` (created 25/09/2026) |
-| DNS | `memory.v1cferr.dev` CNAME `3376a3fe-...cfargotunnel.com`, proxied, created by `tunnel route dns`; it overrides the `*` wildcard |
-| Identity provider | GitHub, `2ca7e97c-46a5-46fa-8f4f-d3ed9c5286fd`, backed by the GitHub OAuth App "Cloudflare Access (v1cferr)"; client credentials in Bitwarden as "Cloudflare Access GitHub OAuth" |
-| Service token | `mcp-portal`, `1d72166b-14b0-4d96-b48c-f6f955cab886`, expires 2036-09-22. What the portal sends upstream, so the upstream never asks for a second login. Rotating it means a new token, the upstream app's `Service Auth` policy and the MCP server's headers, together |
-| Access app (upstream) | `basic-memory (general)`, `7bbdfbfb-...`, self-hosted on `memory.v1cferr.dev`: `only me` (email plus login method GitHub) and `Service Auth` (the token above) |
-| MCP server | `basic-memory-general` at `https://memory.v1cferr.dev/mcp`, bearer auth carrying the token's two `cf-access-client-*` headers. Its own Access app (`df5f0dab-...`, type `mcp`) holds `only me (GitHub)`, without which the server is hidden from me in the portal |
-| MCP portal | `mcp` at `mcp.v1cferr.dev`, managed OAuth (the default on a new portal), `code_mode: off` (a client could otherwise opt in through the URL; ChatGPT does not need it). Its Access app (`70ae5647-...`) holds ONLY `only me (GitHub)` |
-| Tool allowlist | `default_disabled: true`, then only the eleven tools below |
-| DNS (ci) | `ci.v1cferr.dev` CNAME `3376a3fe-...cfargotunnel.com`, proxied, record `c0df2c2d...` (created 06/10/2026 through the API, AFTER its Access app) |
-| Access app (ci) | `ci (FAI GitLab pipeline hook)`, `b96afa71-8b2e-463b-8053-72ffe32c2a33`, self-hosted on `ci.v1cferr.dev`: ONLY a `non_identity` policy with the token below, no human login |
-| Service token (ci) | `gitlab-webhook`, `3deac771-5b8d-44ae-93c0-1a3d7a407520`, expires 2036-10-03. Its client id and secret are in Bitwarden as "Cloudflare Access gitlab-webhook" and travel as custom headers on each FAI GitLab project's Pipeline Hook ([dash](../desktop/dash.md)) |
+| Piece                 | Value                                                                                                                                                                                                                                                                   |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tunnel                | `basic-memory`, `3376a3fe-8193-489d-9cb2-8132ff65d74b` (created 25/09/2026)                                                                                                                                                                                             |
+| DNS                   | `memory.v1cferr.dev` CNAME `3376a3fe-...cfargotunnel.com`, proxied, created by `tunnel route dns`; it overrides the `*` wildcard                                                                                                                                        |
+| Identity provider     | GitHub, `2ca7e97c-46a5-46fa-8f4f-d3ed9c5286fd`, backed by the GitHub OAuth App "Cloudflare Access (v1cferr)"; client credentials in Bitwarden as "Cloudflare Access GitHub OAuth"                                                                                       |
+| Service token         | `mcp-portal`, `1d72166b-14b0-4d96-b48c-f6f955cab886`, expires 2036-09-22. What the portal sends upstream, so the upstream never asks for a second login. Rotating it means a new token, the upstream app's `Service Auth` policy and the MCP server's headers, together |
+| Access app (upstream) | `basic-memory (general)`, `7bbdfbfb-...`, self-hosted on `memory.v1cferr.dev`: `only me` (email plus login method GitHub) and `Service Auth` (the token above)                                                                                                          |
+| MCP server            | `basic-memory-general` at `https://memory.v1cferr.dev/mcp`, bearer auth carrying the token's two `cf-access-client-*` headers. Its own Access app (`df5f0dab-...`, type `mcp`) holds `only me (GitHub)`, without which the server is hidden from me in the portal       |
+| MCP portal            | `mcp` at `mcp.v1cferr.dev`, managed OAuth (the default on a new portal), `code_mode: off` (a client could otherwise opt in through the URL; ChatGPT does not need it). Its Access app (`70ae5647-...`) holds ONLY `only me (GitHub)`                                    |
+| Tool allowlist        | `default_disabled: true`, then only the eleven tools below                                                                                                                                                                                                              |
+| DNS (ci)              | `ci.v1cferr.dev` CNAME `3376a3fe-...cfargotunnel.com`, proxied, record `c0df2c2d...` (created 06/10/2026 through the API, AFTER its Access app)                                                                                                                         |
+| Access app (ci)       | `ci (FAI GitLab pipeline hook)`, `b96afa71-8b2e-463b-8053-72ffe32c2a33`, self-hosted on `ci.v1cferr.dev`: ONLY a `non_identity` policy with the token below, no human login                                                                                             |
+| Service token (ci)    | `gitlab-webhook`, `3deac771-5b8d-44ae-93c0-1a3d7a407520`, expires 2036-10-03. Its client id and secret are in Bitwarden as "Cloudflare Access gitlab-webhook" and travel as custom headers on each FAI GitLab project's Pipeline Hook ([dash](../desktop/dash.md))      |
 
 The `ci` gate, checked from the edge on 06/10/2026 (resolving through 1.1.1.1, since the LAN's split
 DNS would land on Caddy): no token 403, a forged secret 403, the real token through to the tunnel.

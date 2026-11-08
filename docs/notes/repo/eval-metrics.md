@@ -17,13 +17,13 @@ whether the next one slips in.
 
 ## What it measures, and which numbers get a budget
 
-| Metric | Source | Budgeted |
-| --- | --- | --- |
-| `derivations` | the `.drv` files in the closure of the host's toplevel | yes |
-| `functionCalls` | `nrFunctionCalls` from the evaluator's own stats (`NIX_SHOW_STATS`) | yes |
-| `heapBytes` | `gc.totalBytes`, the bytes the evaluation ALLOCATED | yes |
-| `cpuSeconds` | `cpuTime` | no |
-| lock nodes | `flake.lock`, for the whole flake | yes |
+| Metric          | Source                                                              | Budgeted |
+| --------------- | ------------------------------------------------------------------- | -------- |
+| `derivations`   | the `.drv` files in the closure of the host's toplevel              | yes      |
+| `functionCalls` | `nrFunctionCalls` from the evaluator's own stats (`NIX_SHOW_STATS`) | yes      |
+| `heapBytes`     | `gc.totalBytes`, the bytes the evaluation ALLOCATED                 | yes      |
+| `cpuSeconds`    | `cpuTime`                                                           | no       |
+| lock nodes      | `flake.lock`, for the whole flake                                   | yes      |
 
 **Only what does not depend on the machine gets a budget.** The same commit gives the same count on
 the runner and here: three runs on 27/09/2026 differed by 49 function calls in 13.8 million and by
@@ -48,11 +48,11 @@ per-file numbers in its JSON, which the largest-file column needs.
 does, so a budget on the line count would be raised on every new service and would mean nothing.
 What gets a budget is what ties to a rule:
 
-| Budget | Measured on 29/09/2026 | Set at | Why |
-| --- | ---: | ---: | --- |
-| `nixCommentRatio` | 21.2% | 22% | rule 2: comments short, the reasoning in `docs/notes/` |
-| `languages` | 17 | 17 | a new language in the tree should arrive WITH its linter |
-| `maxFileLines` | Nix 691, QML 1978, TS 175, Lua 166, Python 162, Shell 147 | about 20% over | a file past it is asking to be split |
+| Budget            | Measured on 29/09/2026                                    | Set at         | Why                                                      |
+| ----------------- | --------------------------------------------------------: | -------------: | -------------------------------------------------------- |
+| `nixCommentRatio` | 21.2%                                                     | 22%            | rule 2: comments short, the reasoning in `docs/notes/`   |
+| `languages`       | 17                                                        | 17             | a new language in the tree should arrive WITH its linter |
+| `maxFileLines`    | Nix 691, QML 1978, TS 175, Lua 166, Python 162, Shell 147 | about 20% over | a file past it is asking to be split                     |
 
 **The comment ratio is scc's, and it is not the 12% of rule 2.** That number (16/08/2026) had no
 recorded method. Counting only whole-line `#` comments in the `.nix` files gives 15.6% at the end of
@@ -67,12 +67,12 @@ MEASURED on the warning path: with the three budgets lowered by hand, the run pr
 
 Set on 27/09/2026 at about 20% over what was measured that day:
 
-| Metric | Measured | Budget |
-| --- | ---: | ---: |
-| lock nodes | 24 | 30 |
-| derivations | 20,432 | 26,000 |
-| functionCalls | 13,845,642 | 16,500,000 |
-| heapBytes | 2,486,458,048 | 3,000,000,000 |
+| Metric        | Measured      | Budget        |
+| ------------- | ------------: | ------------: |
+| lock nodes    | 24            | 30            |
+| derivations   | 20,432        | 26,000        |
+| functionCalls | 13,845,642    | 16,500,000    |
+| heapBytes     | 2,486,458,048 | 3,000,000,000 |
 
 Crossing it is a QUESTION, not a bug: a new host service can be worth 10% more derivations. So the
 run stays green and carries the warning, and the answer is a commit, either the fix or a raised

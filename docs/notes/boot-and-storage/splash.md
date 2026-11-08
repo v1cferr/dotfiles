@@ -14,10 +14,10 @@ the boot; a curated preset does.
 
 `boot-theme` renders everything at build time, nothing at boot:
 
-| Output | What it is |
-| --- | --- |
-| `limine/wallpaper.png` | 1920x1080 in `bg`, the official NixOS logo (from `nixos-icons`) at 144 px, centered in the top third |
-| `share/plymouth/themes/nixos-minimal/` | a `script` theme: the logo, three dots, the per-mode title and the log pane |
+| Output                                 | What it is                                                                                           |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `limine/wallpaper.png`                 | 1920x1080 in `bg`, the official NixOS logo (from `nixos-icons`) at 144 px, centered in the top third |
+| `share/plymouth/themes/nixos-minimal/` | a `script` theme: the logo, three dots, the per-mode title and the log pane                          |
 
 288 KiB in all (22/10/2026). The logo comes from the pinned nixpkgs, so nothing is fetched.
 

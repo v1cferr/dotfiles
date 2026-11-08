@@ -8,12 +8,12 @@ stop arriving empty after every boot.
 
 ## What it cost before, measured
 
-| Source | Per fetch | How often | Per day, PC on |
-| --- | --- | --- | --- |
-| CI (GitHub REST) | ~2.3 MB (repo list 478 KB, ~300 KB per repo) | every 1 to 3 min | up to ~1 GB |
-| INMET (alerts + forecast) | ~1 MB (the alerts carry every polygon, the forecast base64 icons) | every 30 min | ~50 MB |
-| Open-Meteo (bar) | 2.4 KB | every 15 min | ~0.2 MB |
-| Open-Meteo (lock screen) | 0.5 KB | every 10 min | ~0.1 MB |
+| Source                    | Per fetch                                                         | How often        | Per day, PC on |
+| ------------------------- | ----------------------------------------------------------------- | ---------------- | -------------- |
+| CI (GitHub REST)          | ~2.3 MB (repo list 478 KB, ~300 KB per repo)                      | every 1 to 3 min | up to ~1 GB    |
+| INMET (alerts + forecast) | ~1 MB (the alerts carry every polygon, the forecast base64 icons) | every 30 min     | ~50 MB         |
+| Open-Meteo (bar)          | 2.4 KB                                                            | every 15 min     | ~0.2 MB        |
+| Open-Meteo (lock screen)  | 0.5 KB                                                            | every 10 min     | ~0.1 MB        |
 
 Everything lived in Quickshell's memory, so every boot and every shell restart started from
 nothing, and the CI page waited ~12 s for its first answer. Nothing asked "did it change?" before

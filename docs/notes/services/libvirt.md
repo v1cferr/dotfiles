@@ -25,11 +25,11 @@ The two pages I started from ([Virt-manager](https://wiki.nixos.org/wiki/Virt-ma
 [QEMU](https://wiki.nixos.org/wiki/QEMU)) are written against an older nixpkgs. Checked each one
 against the PINNED tree instead of trusting it, and three did not survive:
 
-| What the wiki says | What 26.05 actually does |
-| --- | --- |
-| `qemu.ovmf.packages = [ pkgs.OVMFFull.fd ]` | REMOVED. The submodule is `internal` and there is an assertion (`libvirtd.nix:415`) that FAILS the build if any of its fields is set |
-| `systemd.tmpfiles.rules = [ "L+ /var/lib/qemu/firmware ..." ]` | The module already emits that exact line itself (`libvirtd.nix:631`), so declaring it is dead config (rule 16) |
-| `environment.systemPackages = [ dnsmasq ]` | Unnecessary: `dnsmasq` is already on libvirt's wrapped `binPath` (`pkgs/by-name/li/libvirt/package.nix:89`) |
+| What the wiki says                                             | What 26.05 actually does                                                                                                             |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `qemu.ovmf.packages = [ pkgs.OVMFFull.fd ]`                    | REMOVED. The submodule is `internal` and there is an assertion (`libvirtd.nix:415`) that FAILS the build if any of its fields is set |
+| `systemd.tmpfiles.rules = [ "L+ /var/lib/qemu/firmware ..." ]` | The module already emits that exact line itself (`libvirtd.nix:631`), so declaring it is dead config (rule 16)                       |
+| `environment.systemPackages = [ dnsmasq ]`                     | Unnecessary: `dnsmasq` is already on libvirt's wrapped `binPath` (`pkgs/by-name/li/libvirt/package.nix:89`)                          |
 
 So NOTHING about UEFI is declared here, and that is not an omission. Windows 11 needs Secure Boot
 capable firmware, and the pinned `qemu-10.2.4` ships `50-edk2-x86_64-secure.json` in

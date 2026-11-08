@@ -37,11 +37,11 @@ points it has. Committing ZERO points is how the card is handed back to its own 
 
 `pwm1_enable` is the switch, and its three values are not the usual hwmon ones:
 
-| Value | What the driver does |
-| --- | --- |
-| `0` | writes 100 into every point of the table: full speed |
-| `1` | activates the user table, seeded from the stock points if it was never programmed |
-| `2` | commits zero points: back to the card's own stock curve |
+| Value | What the driver does                                                              |
+| ----- | --------------------------------------------------------------------------------- |
+| `0`   | writes 100 into every point of the table: full speed                              |
+| `1`   | activates the user table, seeded from the stock points if it was never programmed |
+| `2`   | commits zero points: back to the card's own stock curve                           |
 
 A write to `pwm1` is REFUSED unless the mode is already `1`. The duty is also not stored as you
 wrote it: the driver converts it with `pwm = (pwm * 100) / U8_MAX`, flattens every point of the
@@ -119,13 +119,13 @@ tachometers plus six PWM channels appear.
 
 What is actually connected, measured on 14/10/2026 by driving each channel to 100%:
 
-| Channel | Low duty | Full duty | Verdict |
-| --- | --- | --- | --- |
-| `xe` `pwm1` (GPU) | 0 RPM | 3926 RPM | controllable |
-| `nct6798` `pwm1` | ~290 RPM | ~1070 RPM | controllable, the CPU's |
-| `nct6798` `pwm2` | ~563 RPM | ~1909 RPM | controllable, a chassis header |
-| `nct6798` `pwm4`, `pwm5`, `pwm6`, `pwm7` | nothing responded | | empty |
-| `nct6798` `fan3` | no PWM channel at all | | empty |
+| Channel                                  | Low duty              | Full duty | Verdict                        |
+| ---------------------------------------- | --------------------- | --------- | ------------------------------ |
+| `xe` `pwm1` (GPU)                        | 0 RPM                 | 3926 RPM  | controllable                   |
+| `nct6798` `pwm1`                         | ~290 RPM              | ~1070 RPM | controllable, the CPU's        |
+| `nct6798` `pwm2`                         | ~563 RPM              | ~1909 RPM | controllable, a chassis header |
+| `nct6798` `pwm4`, `pwm5`, `pwm6`, `pwm7` | nothing responded     |           | empty                          |
+| `nct6798` `fan3`                         | no PWM channel at all |           | empty                          |
 
 `pwm1` is the CPU's because of how it behaves rather than how it is numbered: under a full load on
 all twelve threads it went from 285 to 930 RPM within five seconds of the load starting, while

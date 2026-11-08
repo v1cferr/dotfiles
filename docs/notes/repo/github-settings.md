@@ -74,10 +74,10 @@ straight through it, so the repo adds two layers of its own, both running gitlea
 (`commit:file:rule:line`), so each one silences that exact spot and nothing else. The first full
 scan on 27/09/2026 read 1419 commits and found exactly these two, both already dealt with:
 
-| Commit | What it is |
-| --- | --- |
+| Commit    | What it is                                                                                     |
+| --------- | ---------------------------------------------------------------------------------------------- |
 | `a2a7b6f` | the router's `rpcd_token`, a real credential: rotated, and the sync redacts it since `0277caf` |
-| `dd73404` | a `curl -H "Authorization: Bearer ..."` placeholder in an `.env.example` |
+| `dd73404` | a `curl -H "Authorization: Bearer ..."` placeholder in an `.env.example`                       |
 
 A new finding means one of two things. A real credential gets ROTATED first, since it is already
 public and rewriting history is not an option (the `history` ruleset exists to forbid it). A false
@@ -94,14 +94,14 @@ numbers and dates. What remains legitimate is an ALLOWLIST, one block per reason
 carries a `# review-by:` date that `dead-config --expired` reads in the canary, which is rule 22
 applied to this list too. The first pass, measured over the tree and every commit:
 
-| Allowlist | Review by | Why |
-| --- | --- | --- |
-| not a public address | never | RFC 1918, loopback, CGNAT, link-local, multicast, the TEST-NETs |
-| public DNS resolvers | 2027-09-29 | upstreams and probes, named on purpose |
-| two version numbers | 2027-09-29 | codex `1.2.92.147`, a postgres tag |
-| the Arch-era package lists | 2027-09-29 | history-only files, full of versions |
-| this house, and addresses that attacked it | 2027-09-29 | the home IP is already public through the DNS of `ssh.v1cferr.dev` |
-| FAI and UFSCar | **2026-12-31** | someone else's network, kept until I decide if it belongs in a public repo |
+| Allowlist                                  | Review by      | Why                                                                        |
+| ------------------------------------------ | -------------- | -------------------------------------------------------------------------- |
+| not a public address                       | never          | RFC 1918, loopback, CGNAT, link-local, multicast, the TEST-NETs            |
+| public DNS resolvers                       | 2027-09-29     | upstreams and probes, named on purpose                                     |
+| two version numbers                        | 2027-09-29     | codex `1.2.92.147`, a postgres tag                                         |
+| the Arch-era package lists                 | 2027-09-29     | history-only files, full of versions                                       |
+| this house, and addresses that attacked it | 2027-09-29     | the home IP is already public through the DNS of `ssh.v1cferr.dev`         |
+| FAI and UFSCar                             | **2026-12-31** | someone else's network, kept until I decide if it belongs in a public repo |
 
 With it in, the full history scan reads no leaks. MEASURED in the other direction: a staged file
 with a new public address fails the hook, while an FAI address, a LAN address, a TEST-NET example
@@ -124,12 +124,12 @@ reporting turned on (27/09/2026) feeds Security-Policy.
 
 **Some checks stay low ON PURPOSE**, and chasing them would be theatre:
 
-| Check | Why it stays low |
-| --- | --- |
-| Code-Review | one maintainer pushing straight to `nixos`; nobody else could review |
-| Branch-Protection | partial for the same reason: no required review, no required check |
-| Fuzzing, Packaging, Signed-Releases, CII-Best-Practices | a machine config, not a released artifact |
-| Contributors | a personal repo |
+| Check                                                   | Why it stays low                                                     |
+| ------------------------------------------------------- | -------------------------------------------------------------------- |
+| Code-Review                                             | one maintainer pushing straight to `nixos`; nobody else could review |
+| Branch-Protection                                       | partial for the same reason: no required review, no required check   |
+| Fuzzing, Packaging, Signed-Releases, CII-Best-Practices | a machine config, not a released artifact                            |
+| Contributors                                            | a personal repo                                                      |
 
 **The first score, 27/09/2026: 6.5.** Beyond the low checks above, two had something to act on:
 License is 0 because the repo has no license file, which is a decision about reuse and not a CI

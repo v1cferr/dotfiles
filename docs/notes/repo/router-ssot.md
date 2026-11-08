@@ -21,18 +21,18 @@ of a surprise.
 
 ## The ten checks
 
-| Check | What it compares | Why the drift is silent |
-| --- | --- | --- |
-| subnet | the router's `lan.ipaddr` and `wg0.addresses` against `my.net.lanSubnet` / `vpnSubnet` | a range that moved keeps working for everything that already knows the old one |
-| moonlight (sources) | the `Moonlight-*` `src_ip` against `moonlightSources`, as SET EQUALITY | since the direct path was retired the repo declares NONE, so a redirect that reappears on the device is a port silently open to UFSCar |
-| moonlight (ports) | the redirect ports against the offsets DERIVED from `basePort`, EMPTY while no source is declared | a translated port lets the client negotiate and then find nothing |
-| moonlight (dest) | every `dest_ip` against this host's address | one DHCP change would point the rules at whoever took the address |
-| fai | the `fai_r*` static routes against `faiSubnets`, and their gateway against the host | a route to an undeclared range sends traffic to a host that will not answer for it |
-| ssh | that some redirect still sends `services.openssh.ports` to the host | the port is one number in two configs, and only the OUTSIDE notices |
-| dns | every answer the router gives from its own tables, `address=` override AND `config domain` record, against the hosts this repo declares, inside the LAN or inside the TUNNEL | a name pointing at a machine that is not there breaks only by name |
-| peer | every `ssh.nix` host at a tunnel address against the `allowed_ips` of the wg0 peers | the name resolves and nothing answers, which reads as "the machine is off" |
-| hydra | a tcp+udp redirect sending `torrentPort` to the host | the app hard-codes the port, and a torrent that cannot be dialed still downloads, only slower |
-| dnat | every redirect's `dest_ip` against `vpnSubnet`, and the answer is always no | a port published for a machine that is off site, in somebody else's house, with no gate in front of it |
+| Check               | What it compares                                                                                                                                                             | Why the drift is silent                                                                                                                |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| subnet              | the router's `lan.ipaddr` and `wg0.addresses` against `my.net.lanSubnet` / `vpnSubnet`                                                                                       | a range that moved keeps working for everything that already knows the old one                                                         |
+| moonlight (sources) | the `Moonlight-*` `src_ip` against `moonlightSources`, as SET EQUALITY                                                                                                       | since the direct path was retired the repo declares NONE, so a redirect that reappears on the device is a port silently open to UFSCar |
+| moonlight (ports)   | the redirect ports against the offsets DERIVED from `basePort`, EMPTY while no source is declared                                                                            | a translated port lets the client negotiate and then find nothing                                                                      |
+| moonlight (dest)    | every `dest_ip` against this host's address                                                                                                                                  | one DHCP change would point the rules at whoever took the address                                                                      |
+| fai                 | the `fai_r*` static routes against `faiSubnets`, and their gateway against the host                                                                                          | a route to an undeclared range sends traffic to a host that will not answer for it                                                     |
+| ssh                 | that some redirect still sends `services.openssh.ports` to the host                                                                                                          | the port is one number in two configs, and only the OUTSIDE notices                                                                    |
+| dns                 | every answer the router gives from its own tables, `address=` override AND `config domain` record, against the hosts this repo declares, inside the LAN or inside the TUNNEL | a name pointing at a machine that is not there breaks only by name                                                                     |
+| peer                | every `ssh.nix` host at a tunnel address against the `allowed_ips` of the wg0 peers                                                                                          | the name resolves and nothing answers, which reads as "the machine is off"                                                             |
+| hydra               | a tcp+udp redirect sending `torrentPort` to the host                                                                                                                         | the app hard-codes the port, and a torrent that cannot be dialed still downloads, only slower                                          |
+| dnat                | every redirect's `dest_ip` against `vpnSubnet`, and the answer is always no                                                                                                  | a port published for a machine that is off site, in somebody else's house, with no gate in front of it                                 |
 
 ## What the t480 taught it (22/08/2026)
 

@@ -17,12 +17,12 @@ already signed in.
 
 Measured on 04/11/2026:
 
-| Launch | Window class | Login |
-| --- | --- | --- |
-| `google-chrome-unstable --app=https://gemini.google.com/app` | `Google-chrome-unstable`: the window joins the running Chrome | shared |
-| the same, with `--user-data-dir=<new> --class=gemini` | `gemini` | a second login, a second profile |
-| an installed web app, under XWayland | still `Google-chrome-unstable` | shared |
-| an installed web app, native Wayland | `chrome-<id>-Default` | shared |
+| Launch                                                       | Window class                                                  | Login                            |
+| ------------------------------------------------------------ | ------------------------------------------------------------- | -------------------------------- |
+| `google-chrome-unstable --app=https://gemini.google.com/app` | `Google-chrome-unstable`: the window joins the running Chrome | shared                           |
+| the same, with `--user-data-dir=<new> --class=gemini`        | `gemini`                                                      | a second login, a second profile |
+| an installed web app, under XWayland                         | still `Google-chrome-unstable`                                | shared                           |
+| an installed web app, native Wayland                         | `chrome-<id>-Default`                                         | shared                           |
 
 A class of its own is what the rest of the desktop keys on: the bar's icon (looked up by the
 class among the `.desktop` entries), window rules, the vault. Only the installed app, under

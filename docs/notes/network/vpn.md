@@ -6,10 +6,10 @@ The FAI and UFSCar VPNs, declarative and on demand. They do not come up at boot:
 and the SUPER+N / SUPER+SHIFT+N / SUPER+CTRL+N binds turn them on and off. They are system
 services, because a VPN needs tun and routes.
 
-| VPN | Protocol | Client |
-| --- | --- | --- |
-| UFSCar | GlobalProtect (Palo Alto) | `openconnect --protocol=gp`, FOSS, in nixpkgs |
-| FAI | SonicWall SSL VPN | nxBender ([`pkgs/nxbender/package.nix`](../../../pkgs/nxbender/package.nix)), replacing the proprietary netExtender |
+| VPN    | Protocol                  | Client                                                                                                              |
+| ------ | ------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| UFSCar | GlobalProtect (Palo Alto) | `openconnect --protocol=gp`, FOSS, in nixpkgs                                                                       |
+| FAI    | SonicWall SSL VPN         | nxBender ([`pkgs/nxbender/package.nix`](../../../pkgs/nxbender/package.nix)), replacing the proprietary netExtender |
 
 If nxBender ever stops connecting, the fallback is packaging netExtender.
 

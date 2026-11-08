@@ -48,11 +48,11 @@ fzf all followed. A stock scheme may not match the official colors of the theme 
 Qt/KDE apps (Dolphin) do NOT follow GTK on their own under Hyprland. Three layers put them on the
 palette, and each one was MEASURED missing on 13/10/2026 before it went in:
 
-| Layer | What it does | Without it |
-| --- | --- | --- |
-| `QT_STYLE_OVERRIDE=kvantum` | the recolored Win11OS theme draws the widgets | Qt's own Fusion look |
-| `QT_QPA_PLATFORMTHEME=qt5ct` (qt6ct answers to it) | hands Kvantum's palette to the app (`custom_palette=false`) | Qt keeps its LIGHT default palette: dark text on `#F0F0F0` rows |
-| the KDE color scheme `<slug>.colors`, selected in `dolphinrc` | KDE apps paint their views from KColorScheme, not from the style | Breeze's colors (Breeze Dark under gtk3, `#141618`) |
+| Layer                                                         | What it does                                                     | Without it                                                      |
+| ------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------- |
+| `QT_STYLE_OVERRIDE=kvantum`                                   | the recolored Win11OS theme draws the widgets                    | Qt's own Fusion look                                            |
+| `QT_QPA_PLATFORMTHEME=qt5ct` (qt6ct answers to it)            | hands Kvantum's palette to the app (`custom_palette=false`)      | Qt keeps its LIGHT default palette: dark text on `#F0F0F0` rows |
+| the KDE color scheme `<slug>.colors`, selected in `dolphinrc` | KDE apps paint their views from KColorScheme, not from the style | Breeze's colors (Breeze Dark under gtk3, `#141618`)             |
 
 The old declared value, `platformTheme.name = "kvantum"`, was never real: there is no `kvantum`
 platform theme plugin, so Qt silently used none. It never showed, because `hypr/lua/environment.lua`
@@ -255,21 +255,21 @@ component never holds a size, an opacity or a duration of its own (rule 11).
 
 ### The tokens
 
-| Group | Tokens | Values |
-| --- | --- | --- |
-| Spacing, a 4 px grid | `sp1` `sp2` `sp3` `sp4` `sp6` | 4, 8, 12, 16, 24 |
-| Radii, concentric | `radiusControl`, `radiusSurface` | 8, and 8 + `sp1` = 12 |
-| The bar | `barHeight`, `barTop`, `barCell`, `barCellY`, `barSlant`, `barGap`, `barPad`, `barEdge`, `barCenterWidth`, `barLogo` | 34, 0, 24, 5, 8 (1:3 over the cell), 4, 16, `screenInset` = 12, 72, 20 ([bar.md](bar.md#the-glass-cells-04112026)) |
-| Controls off the bar | `barControl` | 28 (a panel's icon button, a calendar arrow) |
-| Insets | `bandTop`, `screenInset` | the bar plus 8 = 42; `my.theme.gaps.outer` = 12 |
-| Type (px, all mono) | `fontMicro` `fontSmall` `fontBody` `fontLabel` `fontTitle` | 10, 11, 12, 13, 14 |
-| Glass | `colSurfaceBar`, `colSurfaceCard`, `colSurfacePop` | the palette's surface at 72% (the bar and the band); the bg at 92% and 96% |
-| Cells | `colCellFill` `colCellEdge`, the hover, press and open pairs, `colCompFill` `colCompEdge`, `colBarAccent` | text at 7% and 14%, brighter on hover, the accent at 16% and 50% when open, the compartment a step above, the accent line at 90% |
-| Edges | `colEdge`, `colSheen`, `hairline` | border at 55%, text at 6%, 1 px |
-| States | `colHoverFill`, `colPressFill`, `colSelectFill`, `opacityDisabled` | text at 8% and 14%, accent at 18%, 0.4 |
-| Motion | `motionHover` `motionNormal` `motionSlow`, `hoverIntent` | [motion.md](motion.md); the intent is 200 ms |
-| Semantics | `colOk` `colWarn` `colAlert` `colCrit` `colUnknown` | green, yellow, orange, red, dim: the states below |
-| Icons, tips | `iconBar`, `tipDelay`, `colSurfaceTip` | 16 px; 300 ms; bg at 95% for a tip drawn inside a panel |
+| Group                | Tokens                                                                                                               | Values                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Spacing, a 4 px grid | `sp1` `sp2` `sp3` `sp4` `sp6`                                                                                        | 4, 8, 12, 16, 24                                                                                                                 |
+| Radii, concentric    | `radiusControl`, `radiusSurface`                                                                                     | 8, and 8 + `sp1` = 12                                                                                                            |
+| The bar              | `barHeight`, `barTop`, `barCell`, `barCellY`, `barSlant`, `barGap`, `barPad`, `barEdge`, `barCenterWidth`, `barLogo` | 34, 0, 24, 5, 8 (1:3 over the cell), 4, 16, `screenInset` = 12, 72, 20 ([bar.md](bar.md#the-glass-cells-04112026))               |
+| Controls off the bar | `barControl`                                                                                                         | 28 (a panel's icon button, a calendar arrow)                                                                                     |
+| Insets               | `bandTop`, `screenInset`                                                                                             | the bar plus 8 = 42; `my.theme.gaps.outer` = 12                                                                                  |
+| Type (px, all mono)  | `fontMicro` `fontSmall` `fontBody` `fontLabel` `fontTitle`                                                           | 10, 11, 12, 13, 14                                                                                                               |
+| Glass                | `colSurfaceBar`, `colSurfaceCard`, `colSurfacePop`                                                                   | the palette's surface at 72% (the bar and the band); the bg at 92% and 96%                                                       |
+| Cells                | `colCellFill` `colCellEdge`, the hover, press and open pairs, `colCompFill` `colCompEdge`, `colBarAccent`            | text at 7% and 14%, brighter on hover, the accent at 16% and 50% when open, the compartment a step above, the accent line at 90% |
+| Edges                | `colEdge`, `colSheen`, `hairline`                                                                                    | border at 55%, text at 6%, 1 px                                                                                                  |
+| States               | `colHoverFill`, `colPressFill`, `colSelectFill`, `opacityDisabled`                                                   | text at 8% and 14%, accent at 18%, 0.4                                                                                           |
+| Motion               | `motionHover` `motionNormal` `motionSlow`, `hoverIntent`                                                             | [motion.md](motion.md); the intent is 200 ms                                                                                     |
+| Semantics            | `colOk` `colWarn` `colAlert` `colCrit` `colUnknown`                                                                  | green, yellow, orange, red, dim: the states below                                                                                |
+| Icons, tips          | `iconBar`, `tipDelay`, `colSurfaceTip`                                                                               | 16 px; 300 ms; bg at 95% for a tip drawn inside a panel                                                                          |
 
 ## States (18/10/2026)
 
@@ -277,19 +277,19 @@ One catalog for every surface: the bar, the rail, the tips, the panels, the chip
 notifications. **A color stands for a condition someone can verify**, and something critical always
 carries a second signal (an icon, a word, a strip), never color alone.
 
-| State | Token | Where it shows | When |
-| --- | --- | --- | --- |
-| normal | `colText` for values, `colSubtext` for icons | every pill at rest | nothing to report |
-| hover | `colHoverFill` | any control under the pointer | |
-| active | the accent at 22%, the number in `colAccent` | the rail's sliding inner shape | the workspace on screen |
-| selected | `colCellOpenFill` and the 24 px accent line on a bar cell; `colSelectFill` elsewhere | a cell whose panel is open, a toggle that is on | |
-| healthy | `colOk` | the VPN connected, a forge that answered clean, a quality probe that passed | only with evidence |
-| warning | `colWarn` | a new window on another workspace, a pegged CPU (90%+), RAM 90%+, disk 90%+ or under 20 GB free | attention, not a fault |
-| degraded | `colAlert` | a degraded service, an urgent workspace, DND on | something asks to be looked at |
-| critical | `colCrit` | a current CI failure, a service down, disk 95%+ or under 5 GB free, a critical notification | a confirmed failure |
-| unknown | `colUnknown` and a `?` or `󰋗` | a feed never read, a sensor missing (`n/a`), the VPN off by choice | no data is not health |
-| stale | `colUnknown` and the clock `󰥔` | a forge or the services answering only with old data | the last known state, said as such |
-| disabled | `opacityDisabled` (0.4) | a screenshot target whose monitor is gone, Clear with nothing to clear | |
+| State    | Token                                                                                | Where it shows                                                                                  | When                               |
+| -------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ---------------------------------- |
+| normal   | `colText` for values, `colSubtext` for icons                                         | every pill at rest                                                                              | nothing to report                  |
+| hover    | `colHoverFill`                                                                       | any control under the pointer                                                                   |                                    |
+| active   | the accent at 22%, the number in `colAccent`                                         | the rail's sliding inner shape                                                                  | the workspace on screen            |
+| selected | `colCellOpenFill` and the 24 px accent line on a bar cell; `colSelectFill` elsewhere | a cell whose panel is open, a toggle that is on                                                 |                                    |
+| healthy  | `colOk`                                                                              | the VPN connected, a forge that answered clean, a quality probe that passed                     | only with evidence                 |
+| warning  | `colWarn`                                                                            | a new window on another workspace, a pegged CPU (90%+), RAM 90%+, disk 90%+ or under 20 GB free | attention, not a fault             |
+| degraded | `colAlert`                                                                           | a degraded service, an urgent workspace, DND on                                                 | something asks to be looked at     |
+| critical | `colCrit`                                                                            | a current CI failure, a service down, disk 95%+ or under 5 GB free, a critical notification     | a confirmed failure                |
+| unknown  | `colUnknown` and a `?` or `󰋗`                                                        | a feed never read, a sensor missing (`n/a`), the VPN off by choice                              | no data is not health              |
+| stale    | `colUnknown` and the clock `󰥔`                                                       | a forge or the services answering only with old data                                            | the last known state, said as such |
+| disabled | `opacityDisabled` (0.4)                                                              | a screenshot target whose monitor is gone, Clear with nothing to clear                          |                                    |
 
 Rules the catalog encodes: green only with evidence; unknown and stale are never green; a VPN off by
 choice is neutral; a busy CPU is attention at most, never red; a notification's urgency is the only
@@ -311,11 +311,11 @@ makes a surface read as a pane over the photo instead of a hole cut in it. There
 Hyprland draws none for layers, and a shadow painted in QML would need a margin of transparent
 window around every card for no gain in legibility.
 
-| Level | Opacity | Used by | Why that much |
-| --- | --- | --- | --- |
-| `bar` | 72% (the surface) | the bar and, since 04/11/2026, the band's bento cards | short labels and glanceable cards, one glass on the standing screen |
-| `card` | 92% | the tray menu, the VPN panel, the media panel, the OSD | read for a while, with fine print |
-| `pop` | 96% | every panel, menu, the OSD, the notification center | dense text, read the longest |
+| Level  | Opacity           | Used by                                                | Why that much                                                       |
+| ------ | ----------------- | ------------------------------------------------------ | ------------------------------------------------------------------- |
+| `bar`  | 72% (the surface) | the bar and, since 04/11/2026, the band's bento cards  | short labels and glanceable cards, one glass on the standing screen |
+| `card` | 92%               | the tray menu, the VPN panel, the media panel, the OSD | read for a while, with fine print                                   |
+| `pop`  | 96%               | every panel, menu, the OSD, the notification center    | dense text, read the longest                                        |
 
 Those are the `perceptible` profile's numbers; the next section has the other profile's. The `bar`
 level is the same in both since 04/11/2026.
@@ -326,16 +326,16 @@ level is the same in both since 04/11/2026.
 `motion` travels: the QML surfaces (`quickshell-colors.json`), HyprGlass's presets (`glass.lua`,
 through `hypr-colors.lua`) and kitty's `background_opacity` (`kitty.nix`).
 
-| | `perceptible` (the default) | `clear-gradient` |
-| --- | --- | --- |
-| Bar and band cards | the surface at 72%, flat (04/11/2026) | the same: one frost in both profiles (the bar was a bg-to-surface gradient at 70%, the cards too) |
-| Panels, Center, toasts | 96% flat | 70% flat: dense text gets no gradient (it was 90%) |
-| kitty | background 0.95, then the global 0.98 window opacity on top | background 0.70, exempt from the global rule |
-| HyprGlass tint, panel tint | bg at 33%, at 50% | bg at 20%, at 30% |
-| HyprGlass brightness | 0.85 | 0.95 |
-| HyprGlass blur, window / bar / panel | 1.2 / 1.6 / 2.0 | 0.9 / 1.2 / 1.6 |
-| HyprGlass refraction | 0.3, at the rim | 0.25, at the rim |
-| xray, self sampling | off | off |
+|                                      | `perceptible` (the default)                                 | `clear-gradient`                                                                                  |
+| ------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Bar and band cards                   | the surface at 72%, flat (04/11/2026)                       | the same: one frost in both profiles (the bar was a bg-to-surface gradient at 70%, the cards too) |
+| Panels, Center, toasts               | 96% flat                                                    | 70% flat: dense text gets no gradient (it was 90%)                                                |
+| kitty                                | background 0.95, then the global 0.98 window opacity on top | background 0.70, exempt from the global rule                                                      |
+| HyprGlass tint, panel tint           | bg at 33%, at 50%                                           | bg at 20%, at 30%                                                                                 |
+| HyprGlass brightness                 | 0.85                                                        | 0.95                                                                                              |
+| HyprGlass blur, window / bar / panel | 1.2 / 1.6 / 2.0                                             | 0.9 / 1.2 / 1.6                                                                                   |
+| HyprGlass refraction                 | 0.3, at the rim                                             | 0.25, at the rim                                                                                  |
+| xray, self sampling                  | off                                                         | off                                                                                               |
 
 `solid` stays the opaque fallback for both: every surface at 100% and HyprGlass leaving the layers
 alone.
@@ -353,13 +353,13 @@ exactly 0.70 and the text stays at 100%, which is what keeps it sharp over a bus
 **Contrast, computed** on 18/10/2026 (the same method as above, over a galaxy core that the blur
 turns into `#cccccc`, without counting HyprGlass's own dimming, which only helps):
 
-| Surface, clear-gradient | `text` | `subtext` | `accent` | `red` |
-| --- | --- | --- | --- | --- |
-| bar top, 86% bg | 7.3 | 5.6 | 4.7 | 4.4 |
-| card top, 88% bg (before 18/10/2026) | 8.3 | 6.3 | 5.3 | 5.1 |
-| panel, 90% bg | 8.5 | 6.5 | 5.4 | 5.2 |
-| kitty background, 85% (the first value) | 7.5 | 5.7 | 4.8 | 4.6 |
-| kitty background, 70%, HyprGlass's dimming counted | 6.3 | 4.8 | 4.0 | 3.9 |
+| Surface, clear-gradient                            | `text` | `subtext` | `accent` | `red` |
+| -------------------------------------------------- | ------ | --------- | -------- | ----- |
+| bar top, 86% bg                                    | 7.3    | 5.6       | 4.7      | 4.4   |
+| card top, 88% bg (before 18/10/2026)               | 8.3    | 6.3       | 5.3      | 5.1   |
+| panel, 90% bg                                      | 8.5    | 6.5       | 5.4      | 5.2   |
+| kitty background, 85% (the first value)            | 7.5    | 5.7       | 4.8      | 4.6   |
+| kitty background, 70%, HyprGlass's dimming counted | 6.3    | 4.8       | 4.0      | 3.9   |
 
 The foot of the gradients is where it gets close: the bar's 80% surface foot leaves the accent near
 3.9 over the brightest part of a photo, which is why the gradient stops there and not at the 76%
@@ -371,11 +371,11 @@ bright colored stripes, transmission being the spread of the patch behind the gl
 backdrop's, and contrast read off the real text pixels:
 
 | kitty background | Transmission | Text contrast, mean / worst 5% |
-| --- | --- | --- |
-| 0.85 | 0.067 | 9.2 / 9.0 |
-| 0.70 (chosen) | 0.108 | 8.1 / 7.9 |
-| 0.55 | 0.16 | 7.1 / 6.8 |
-| 0.40 | 0.20 | 6.1 / 5.8 |
+| ---------------- | ------------ | ------------------------------ |
+| 0.85             | 0.067        | 9.2 / 9.0                      |
+| 0.70 (chosen)    | 0.108        | 8.1 / 7.9                      |
+| 0.55             | 0.16         | 7.1 / 6.8                      |
+| 0.40             | 0.20         | 6.1 / 5.8                      |
 
 The cost is the worst case: computed, a white page right behind the terminal would leave the accent
 at about 4.0. Measured, it does better, since HyprGlass darkens more than that estimate assumed. Back
@@ -394,13 +394,13 @@ stands: text 7.3, the accent 4.7 over the brightest 5% of white stripes. The dim
 kitty at 0.70 floating over the same stripes, white included, one grim capture per variant of the
 `window` preset; contrast as mean / the brightest 5% of what shows through:
 
-| Variant | Transmission | `text` | `subtext` | `accent` |
-| --- | --- | --- | --- | --- |
-| no HyprGlass, Hyprland's blur only | 0.272 | 6.3 / 3.9 | 4.8 / 3.0 | 4.0 / 2.5 |
-| current: tint 20%, brightness 0.95, blur 0.9 | 0.109 | 8.7 / 7.3 | 6.6 / 5.6 | 5.6 / 4.7 |
-| tint 13%, brightness 1.0 | 0.125 | 8.4 / 6.9 | 6.4 / 5.3 | 5.4 / 4.4 |
-| blur 0.6 | 0.114 | 8.7 / 7.2 | 6.6 / 5.5 | 5.6 / 4.6 |
-| tint 13%, brightness 1.0, blur 0.6 | 0.130 | 8.4 / 6.8 | 6.4 / 5.2 | 5.4 / 4.4 |
+| Variant                                      | Transmission | `text`    | `subtext` | `accent`  |
+| -------------------------------------------- | ------------ | --------- | --------- | --------- |
+| no HyprGlass, Hyprland's blur only           | 0.272        | 6.3 / 3.9 | 4.8 / 3.0 | 4.0 / 2.5 |
+| current: tint 20%, brightness 0.95, blur 0.9 | 0.109        | 8.7 / 7.3 | 6.6 / 5.6 | 5.6 / 4.7 |
+| tint 13%, brightness 1.0                     | 0.125        | 8.4 / 6.9 | 6.4 / 5.3 | 5.4 / 4.4 |
+| blur 0.6                                     | 0.114        | 8.7 / 7.2 | 6.6 / 5.5 | 5.6 / 4.6 |
+| tint 13%, brightness 1.0, blur 0.6           | 0.130        | 8.4 / 6.8 | 6.4 / 5.2 | 5.4 / 4.4 |
 
 The best variant buys 19% more transmission and takes the accent's worst case under AA (4.5), and
 less blur barely moves it: the glass's tint is what keeps text readable over a bright backdrop, so the
@@ -426,12 +426,12 @@ extremes a space photo puts behind it: black sky, and a galaxy core that Hyprlan
 `brightness = 0.8`, turns from white into `#cccccc`):
 
 | Text color | bar over black | bar over a bright core | panel over a bright core | solid |
-| --- | --- | --- | --- | --- |
-| `text` | 10.9 | 8.5 | 9.8 | 10.6 |
-| `subtext` | 8.3 | 6.5 | 7.5 | 8.1 |
-| `accent` | 7.0 | 5.4 | 6.3 | 6.8 |
-| `red` | 6.6 | 5.2 | 6.0 | 6.5 |
-| `dim` | 2.8 | 2.2 | 2.5 | 2.8 |
+| ---------- | -------------- | ---------------------- | ------------------------ | ----- |
+| `text`     | 10.9           | 8.5                    | 9.8                      | 10.6  |
+| `subtext`  | 8.3            | 6.5                    | 7.5                      | 8.1   |
+| `accent`   | 7.0            | 5.4                    | 6.3                      | 6.8   |
+| `red`      | 6.6            | 5.2                    | 6.0                      | 6.5   |
+| `dim`      | 2.8            | 2.2                    | 2.5                      | 2.8   |
 
 Everything that carries information stays above WCAG AA's 4.5 even over the brightest part of a
 photo. `dim` does not, and it does not on a SOLID Tokyo Night background either (2.8): it is the
@@ -456,12 +456,12 @@ by forcing the QML default: the cards turn opaque with the same geometry.
 
 ### Tuning
 
-| To change | Where |
-| --- | --- |
-| How see-through a level is | `colSurfaceBar` / `colSurfaceCard` / `colSurfacePop` in `Theme.qml` (the hex byte) |
-| Glass off entirely | `my.theme.glass = "solid";` and a rebuild |
-| The blur's look | `decoration.blur` in `appearance.lua`, shared with the windows |
-| The band's height | `my.dash.share` ([dash.md](dash.md#the-share-35-by-default-never-above-40)) |
-| Window gaps and corners | `my.theme.gaps.inner` / `.outer`, `my.theme.rounding` ([hypr.md](hypr.md#balanced-geometry)) |
-| Liquid Glass instead of the blur | `my.hypr.hyprglass.enable` ([hyprglass.md](hyprglass.md)) |
-| A duration | the `motion*` tokens ([motion.md](motion.md)) |
+| To change                        | Where                                                                                        |
+| -------------------------------- | -------------------------------------------------------------------------------------------- |
+| How see-through a level is       | `colSurfaceBar` / `colSurfaceCard` / `colSurfacePop` in `Theme.qml` (the hex byte)           |
+| Glass off entirely               | `my.theme.glass = "solid";` and a rebuild                                                    |
+| The blur's look                  | `decoration.blur` in `appearance.lua`, shared with the windows                               |
+| The band's height                | `my.dash.share` ([dash.md](dash.md#the-share-35-by-default-never-above-40))                  |
+| Window gaps and corners          | `my.theme.gaps.inner` / `.outer`, `my.theme.rounding` ([hypr.md](hypr.md#balanced-geometry)) |
+| Liquid Glass instead of the blur | `my.hypr.hyprglass.enable` ([hyprglass.md](hyprglass.md))                                    |
+| A duration                       | the `motion*` tokens ([motion.md](motion.md))                                                |

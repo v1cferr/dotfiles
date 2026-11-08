@@ -84,14 +84,14 @@ a second format of the same URL (rule 11), and antigravity's opaque build id sto
 
 Start from the package closest in SHAPE, since `latest` and `resolve` are what differ:
 
-| Upstream publishes | Copy from |
-| --- | --- |
-| a GitHub release asset | [`pkgs/codex/`](../../../pkgs/codex/bump.nix): a HEAD on `/releases/latest`, `prefetch` |
-| a version API with the hash in it | [`pkgs/vscode/`](../../../pkgs/vscode/bump.nix): one JSON kept in `$tmp`, `sri` |
-| a manifest per release | [`pkgs/antigravity-cli/`](../../../pkgs/antigravity-cli/bump.nix): `sri` on the published sha512 |
-| only a pointer url | [`pkgs/curseforge/`](../../../pkgs/curseforge/bump.nix): the version from somewhere cheap, `prefetch` |
-| a GitHub release among other release lines | [`pkgs/stack-wallet/`](../../../pkgs/stack-wallet/bump.nix): the API filtered by tag, `sri` on the asset digest |
-| many artifacts in one package | [`pkgs/wow-addons/`](../../../pkgs/wow-addons/bump.nix): NOT `mkVendoredBump`, which pins one version; its own `bump.sh` keeps the contract (`$1`, no-op, unreachable is 0) over `sources.json` ([wow-addons](../apps/wow-addons.md)) |
+| Upstream publishes                         | Copy from                                                                                                                                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| a GitHub release asset                     | [`pkgs/codex/`](../../../pkgs/codex/bump.nix): a HEAD on `/releases/latest`, `prefetch`                                                                                                                                               |
+| a version API with the hash in it          | [`pkgs/vscode/`](../../../pkgs/vscode/bump.nix): one JSON kept in `$tmp`, `sri`                                                                                                                                                       |
+| a manifest per release                     | [`pkgs/antigravity-cli/`](../../../pkgs/antigravity-cli/bump.nix): `sri` on the published sha512                                                                                                                                      |
+| only a pointer url                         | [`pkgs/curseforge/`](../../../pkgs/curseforge/bump.nix): the version from somewhere cheap, `prefetch`                                                                                                                                 |
+| a GitHub release among other release lines | [`pkgs/stack-wallet/`](../../../pkgs/stack-wallet/bump.nix): the API filtered by tag, `sri` on the asset digest                                                                                                                       |
+| many artifacts in one package              | [`pkgs/wow-addons/`](../../../pkgs/wow-addons/bump.nix): NOT `mkVendoredBump`, which pins one version; its own `bump.sh` keeps the contract (`$1`, no-op, unreachable is 0) over `sources.json` ([wow-addons](../apps/wow-addons.md)) |
 
 1. Create `pkgs/<name>/` with the three files. `pname` in `bump.nix` MUST be the folder name,
    because that is how the skeleton finds `source.json`. Start `source.json` as the placeholder
@@ -123,11 +123,11 @@ Researched on 26/09/2026 (rule 1), and both lost on measurement, not taste:
 
 Only in the two answers, which is the point of the layout:
 
-| | vscode | curseforge | codex | antigravity-cli | stack-wallet |
-| --- | --- | --- | --- | --- | --- |
-| Upstream URL | versioned (`/1.139.1/linux-x64/stable`) | a POINTER (`curseforge-latest-linux.AppImage`) | versioned (`/rust-v0.157.1/…musl.tar.gz`) | versioned, plus an opaque build id | versioned (`/build_316/sw-v2.7.1-linux.AppImage`) |
-| `latest` asks | the official update API, `productVersion` | the `control` file of the `.deb` | the redirect of `/releases/latest` | a `latest` file holding the bare version | the releases API, the newest `build_*` tag |
-| `resolve` hashes by | `sri`: the API publishes the sha256 | `prefetch`: 139 MiB, only on a new version | `prefetch`: 93 MiB, only on a new tag | `sri`: the manifest publishes the sha512 | `sri`: GitHub's asset digest, matched against the notes |
+|                     | vscode                                    | curseforge                                     | codex                                     | antigravity-cli                          | stack-wallet                                            |
+| ------------------- | ----------------------------------------- | ---------------------------------------------- | ----------------------------------------- | ---------------------------------------- | ------------------------------------------------------- |
+| Upstream URL        | versioned (`/1.139.1/linux-x64/stable`)   | a POINTER (`curseforge-latest-linux.AppImage`) | versioned (`/rust-v0.157.1/…musl.tar.gz`) | versioned, plus an opaque build id       | versioned (`/build_316/sw-v2.7.1-linux.AppImage`)       |
+| `latest` asks       | the official update API, `productVersion` | the `control` file of the `.deb`               | the redirect of `/releases/latest`        | a `latest` file holding the bare version | the releases API, the newest `build_*` tag              |
+| `resolve` hashes by | `sri`: the API publishes the sha256       | `prefetch`: 139 MiB, only on a new version     | `prefetch`: 93 MiB, only on a new tag     | `sri`: the manifest publishes the sha512 | `sri`: GitHub's asset digest, matched against the notes |
 
 **VS Code.** The URL is versioned because `/latest/` is a pointer that broke the eval on every
 release ([flake](flake.md) has the CI failure). `latest` reads `productVersion` and NOT `version`

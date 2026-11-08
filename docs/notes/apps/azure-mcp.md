@@ -30,11 +30,11 @@ first start (`libpal_azure_c_shared_openssl3.so` is there, you can check). It is
 
 Tried and rejected in this order, with each one's error:
 
-| Attempt | Result |
-| --- | --- |
-| nothing | `Couldn't find a valid ICU package` |
+| Attempt                                   | Result                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------- |
+| nothing                                   | `Couldn't find a valid ICU package`                                       |
 | icu plus openssl in `runtimeDependencies` | ICU passes, then `No usable version of libssl was found` plus a core dump |
-| LD_LIBRARY_PATH in the wrapper | works: the extracted libs inherit it |
+| LD_LIBRARY_PATH in the wrapper            | works: the extracted libs inherit it                                      |
 
 ## The dependencies, all measured against the binary
 

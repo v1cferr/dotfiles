@@ -38,11 +38,11 @@ of truth, sops-nix as the encrypted, offline-capable copy the build reads.
 Bitwarden is the only source. A secret falls into one of three kinds, and the kind decides where it
 goes:
 
-| Kind | What it is | Where it lives |
-| --- | --- | --- |
-| **config** | a value the machine needs to work (an API token, a VPN password) | Bitwarden, then sops, then `/run/secrets` |
-| **session** | a login an app makes and refreshes itself (gh, vercel, azure, docker, browsers) | the app's own state, kept by `my.persist`; logging in again is its source |
-| **cold** | recovery or archive material nothing reads (key backups, recovery codes, old configs) | only in Bitwarden, as a secure note or attachment; no local copy |
+| Kind        | What it is                                                                            | Where it lives                                                            |
+| ----------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **config**  | a value the machine needs to work (an API token, a VPN password)                      | Bitwarden, then sops, then `/run/secrets`                                 |
+| **session** | a login an app makes and refreshes itself (gh, vercel, azure, docker, browsers)       | the app's own state, kept by `my.persist`; logging in again is its source |
+| **cold**    | recovery or archive material nothing reads (key backups, recovery codes, old configs) | only in Bitwarden, as a secure note or attachment; no local copy          |
 
 ## Consequences
 

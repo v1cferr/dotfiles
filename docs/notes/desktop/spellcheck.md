@@ -9,22 +9,22 @@ languages from its own place. So there is ONE list, `my.spellcheck.languages` in
 
 `spellcheck.dictionaries` in each Chromium/Electron `Preferences`:
 
-| App | Languages |
-| --- | --- |
-| Obsidian | `en-US`, `pt-BR` (picked in its own settings) |
-| Discord | `en-US` |
-| Google Chrome | `en-US` |
+| App           | Languages                                     |
+| ------------- | --------------------------------------------- |
+| Obsidian      | `en-US`, `pt-BR` (picked in its own settings) |
+| Discord       | `en-US`                                       |
+| Google Chrome | `en-US`                                       |
 
 `/run/current-system/sw/share/hunspell` existed and was EMPTY: no system app had a dictionary.
 
 ## The layers
 
-| Layer | Apps | Where |
-| --- | --- | --- |
-| hunspell dictionaries plus `DICPATH` | GTK (gspell, libspelling), Qt (Sonnet), Gecko | `modules/nixos/desktop/spellcheck.nix` |
-| `spellchecker.dictionary` pref | Zen, LibreWolf | `modules/home/apps/zen.nix`, `modules/home/apps/librewolf.nix` |
-| managed policy `SpellcheckLanguage` | Google Chrome (every channel) | `modules/nixos/desktop/spellcheck.nix` |
-| `cSpell.language` | VS Code | `modules/home/apps/vscode/settings.json` |
+| Layer                                | Apps                                          | Where                                                          |
+| ------------------------------------ | --------------------------------------------- | -------------------------------------------------------------- |
+| hunspell dictionaries plus `DICPATH` | GTK (gspell, libspelling), Qt (Sonnet), Gecko | `modules/nixos/desktop/spellcheck.nix`                         |
+| `spellchecker.dictionary` pref       | Zen, LibreWolf                                | `modules/home/apps/zen.nix`, `modules/home/apps/librewolf.nix` |
+| managed policy `SpellcheckLanguage`  | Google Chrome (every channel)                 | `modules/nixos/desktop/spellcheck.nix`                         |
+| `cSpell.language`                    | VS Code                                       | `modules/home/apps/vscode/settings.json`                       |
 
 ### hunspell dictionaries
 
@@ -68,9 +68,9 @@ second extension with the dictionary. Extensions come from Settings Sync, not fr
 
 ## Left by hand
 
-| App | Why | Where to pick the languages |
-| --- | --- | --- |
-| Discord | rewrites `Preferences` from its own settings (measured) | right click in the text box |
-| Obsidian | same, and it already has both | Settings, Editor, Spellcheck languages |
-| Telegram | settings live in `tdata`, binary state (rule 6) | Settings, Advanced, Spell checker |
-| ONLYOFFICE | its own dictionaries, the language is per document | the status bar's language |
+| App        | Why                                                     | Where to pick the languages            |
+| ---------- | ------------------------------------------------------- | -------------------------------------- |
+| Discord    | rewrites `Preferences` from its own settings (measured) | right click in the text box            |
+| Obsidian   | same, and it already has both                           | Settings, Editor, Spellcheck languages |
+| Telegram   | settings live in `tdata`, binary state (rule 6)         | Settings, Advanced, Spell checker      |
+| ONLYOFFICE | its own dictionaries, the language is per document      | the status bar's language              |

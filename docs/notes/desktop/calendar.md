@@ -20,12 +20,12 @@ is noticed by a weekly workflow, which never edits the data by itself (below).
 
 Each event keeps apart four things a calendar website usually blends:
 
-| Field | What it says | Values |
-| --- | --- | --- |
-| `rule` | WHEN | `fixed` (month, day), `easter` (offset from Easter Sunday), `date` (one dated act), `range` (several days) |
-| `jurisdiction` | WHERE | `BR`, `BR-SP`, `BR-SP-SAO-CARLOS`, `UN` |
-| `kind` | WHAT it is in law | `civil_holiday`, `religious_holiday`, `optional` (ponto facultativo), `optional_partial`, `observance` |
-| `applicability` | FOR WHOM | `general`, `federal_admin`, `state_admin`, `municipal_admin`, `municipal_education`, `observance` |
+| Field           | What it says      | Values                                                                                                     |
+| --------------- | ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| `rule`          | WHEN              | `fixed` (month, day), `easter` (offset from Easter Sunday), `date` (one dated act), `range` (several days) |
+| `jurisdiction`  | WHERE             | `BR`, `BR-SP`, `BR-SP-SAO-CARLOS`, `UN`                                                                    |
+| `kind`          | WHAT it is in law | `civil_holiday`, `religious_holiday`, `optional` (ponto facultativo), `optional_partial`, `observance`     |
+| `applicability` | FOR WHOM          | `general`, `federal_admin`, `state_admin`, `municipal_admin`, `municipal_education`, `observance`          |
 
 Plus `status`, `verified_at` (the day the source was actually read), `basis` (the act and article),
 `sources` (ids into the source table, each with title, URL, authority, document id and when it was
@@ -44,13 +44,13 @@ Inheritance never duplicates: a national holiday is one record, valid wherever y
 
 ### Status
 
-| Status | Means | Example |
-| --- | --- | --- |
-| `verified` | read in an official source on `verified_at` | Tiradentes (Lei 662/1949) |
-| `calculated` | a law fixes the holiday; the DATE of that year comes from the computus | Corpus Christi 2027 |
-| `pending` | the date is computable but an annual act must still declare it | federal Carnaval 2027 |
-| `stale` | the source moved or could not be re-read in time | (none today) |
-| `disputed` | official sources disagree in a way that changes the answer | (none today) |
+| Status       | Means                                                                  | Example                   |
+| ------------ | ---------------------------------------------------------------------- | ------------------------- |
+| `verified`   | read in an official source on `verified_at`                            | Tiradentes (Lei 662/1949) |
+| `calculated` | a law fixes the holiday; the DATE of that year comes from the computus | Corpus Christi 2027       |
+| `pending`    | the date is computable but an annual act must still declare it         | federal Carnaval 2027     |
+| `stale`      | the source moved or could not be re-read in time                       | (none today)              |
+| `disputed`   | official sources disagree in a way that changes the answer             | (none today)              |
 
 `occurrence_status()` derives the per-year status: a year an act `confirmed` takes the act's
 sources; an `annual_act` event without one is `pending`; an Easter-based law holiday is
@@ -65,15 +65,15 @@ and Carnaval's Tuesday on 29/02/2028 is a test of its own.
 
 ## The sources (read 18/10/2026)
 
-| Source | Read how | Result |
-| --- | --- | --- |
-| [Prefeitura de São Carlos, feriados](https://www.saocarlos.sp.gov.br/index.php/conheca-sao-carlos/115443-feriados.html) | curl, the chain completed through AIA (the server omits its intermediate) | the 2026 list, citing Portaria 2083/2025 and Lei 10.257/1990 |
-| [Portaria nº 2083/2025](https://www.saocarlos.sp.gov.br/files/Portaria%202083_25.pdf) | the PDF's text | 25 items, for the municipal executive's own staff |
-| [Lei Municipal nº 10.257/1990](https://www.saocarlos.sp.gov.br/images/stories/pdf/2014/expediente/lei10257-digital.pdf) | a scan, read by OCR | the four religious holidays: Sexta-Feira da Paixão, Corpus Christi, São Carlos Borromeu, 15 de Agosto |
-| [Portaria MGI nº 11.460/2025](https://www.in.gov.br/web/dou/-/portaria-mgi-n-11.460-de-29-de-dezembro-de-2025-678388627) | the DOU's text through Sigepe Legis | national holidays and federal optional days of 2026 |
-| [Lei 662/1949](https://www.planalto.gov.br/ccivil_03/leis/l0662.htm), [6.802/1980](https://www.planalto.gov.br/ccivil_03/leis/l6802.htm), [9.093/1995](https://www.planalto.gov.br/ccivil_03/leis/l9093.htm), [14.759/2023](https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2023/lei/l14759.htm) | Planalto, revoked wording skipped | the national civil holidays; religious ones are municipal law |
-| [Lei SP 9.497/1997](https://www.al.sp.gov.br/repositorio/legislacao/lei/1997/lei-9497-05.03.1997.html) | ALESP answered 503 to two clients | NOT re-read; 9 July confirmed by the municipal portaria |
-| [UN, International Days and Weeks](https://www.un.org/observances/list-days-weeks) | the page's rows, imported | 248 observances for 2026 (249 rows, one listed twice) |
+| Source                                                                                                                                                                                                                                                                                               | Read how                                                                  | Result                                                                                                |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [Prefeitura de São Carlos, feriados](https://www.saocarlos.sp.gov.br/index.php/conheca-sao-carlos/115443-feriados.html)                                                                                                                                                                              | curl, the chain completed through AIA (the server omits its intermediate) | the 2026 list, citing Portaria 2083/2025 and Lei 10.257/1990                                          |
+| [Portaria nº 2083/2025](https://www.saocarlos.sp.gov.br/files/Portaria%202083_25.pdf)                                                                                                                                                                                                                | the PDF's text                                                            | 25 items, for the municipal executive's own staff                                                     |
+| [Lei Municipal nº 10.257/1990](https://www.saocarlos.sp.gov.br/images/stories/pdf/2014/expediente/lei10257-digital.pdf)                                                                                                                                                                              | a scan, read by OCR                                                       | the four religious holidays: Sexta-Feira da Paixão, Corpus Christi, São Carlos Borromeu, 15 de Agosto |
+| [Portaria MGI nº 11.460/2025](https://www.in.gov.br/web/dou/-/portaria-mgi-n-11.460-de-29-de-dezembro-de-2025-678388627)                                                                                                                                                                             | the DOU's text through Sigepe Legis                                       | national holidays and federal optional days of 2026                                                   |
+| [Lei 662/1949](https://www.planalto.gov.br/ccivil_03/leis/l0662.htm), [6.802/1980](https://www.planalto.gov.br/ccivil_03/leis/l6802.htm), [9.093/1995](https://www.planalto.gov.br/ccivil_03/leis/l9093.htm), [14.759/2023](https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2023/lei/l14759.htm) | Planalto, revoked wording skipped                                         | the national civil holidays; religious ones are municipal law                                         |
+| [Lei SP 9.497/1997](https://www.al.sp.gov.br/repositorio/legislacao/lei/1997/lei-9497-05.03.1997.html)                                                                                                                                                                                               | ALESP answered 503 to two clients                                         | NOT re-read; 9 July confirmed by the municipal portaria                                               |
+| [UN, International Days and Weeks](https://www.un.org/observances/list-days-weeks)                                                                                                                                                                                                                   | the page's rows, imported                                                 | 248 observances for 2026 (249 rows, one listed twice)                                                 |
 
 A search on 18/10/2026 found no later act changing Portaria 2083/2025.
 
@@ -100,32 +100,32 @@ The test `Audit2026` asserts every item of Portaria 2083/2025 against the expans
 jurisdiction and applicability, and that it is verified. It also asserts 14 general holidays in São
 Carlos in 2026, the city's own count.
 
-| Date | Event | Kind | For | Source | Status |
-| --- | --- | --- | --- | --- | --- |
-| 01/01 | Confraternização Universal | civil holiday | everyone | Lei 662/1949 | verified |
-| 16/02, 17/02 | Carnaval | optional | municipal staff; federal staff | Portaria 2083/2025; Portaria MGI 11.460/2025 | verified |
-| 18/02 | Cinzas | optional until 12:00 / 14:00 | municipal / federal staff | same | verified |
-| 03/04 | Paixão de Cristo | religious holiday | everyone | Lei 10.257/1990 (and both portarias) | verified |
-| 20/04 | (bridge) | optional | municipal and federal staff | both portarias | verified |
-| 21/04 | Tiradentes | civil holiday | everyone | Lei 662/1949 | verified |
-| 01/05 | Dia Mundial do Trabalho | civil holiday | everyone | Lei 662/1949 | verified |
-| 04/06 | Corpus Christi | religious holiday; also a federal optional day | everyone; federal staff | Lei 10.257/1990; Portaria MGI | verified |
-| 05/06 | (bridge) | optional | municipal and federal staff | both portarias | verified |
-| 09/07 | Revolução Constitucionalista | civil holiday (state) | everyone | Lei SP 9.497/1997 via Portaria 2083 | verified (law not re-read) |
-| 10/07 | (bridge) | optional | municipal staff | Portaria 2083/2025 | verified |
-| 15/08 | Nossa Senhora da Babilônia | religious holiday | everyone | Lei 10.257/1990 | verified |
-| 07/09 | Independência do Brasil | civil holiday | everyone | Lei 662/1949 | verified |
-| 12/10 | Nossa Senhora Aparecida | civil holiday | everyone | Lei 6.802/1980 | verified |
-| 15/10 | Dia do Professor | holiday | municipal school network only | Portaria 2083/2025 | verified |
-| 28/10 | Dia do Funcionário / Servidor Público | optional | municipal / federal staff | both portarias | verified |
-| 02/11 | Finados | civil holiday | everyone | Lei 662/1949 | verified |
-| 03/11 | (bridge) | optional | municipal staff | Portaria 2083/2025 | verified |
-| 04/11 | Aniversário de São Carlos | religious holiday | everyone | Lei 10.257/1990 | verified |
-| 15/11 | Proclamação da República | civil holiday | everyone | Lei 662/1949 | verified |
-| 20/11 | Consciência Negra | civil holiday | everyone | Lei 14.759/2023 | verified |
-| 24/12 | (Christmas Eve) | optional; federal after 13:00 | municipal / federal staff | both portarias | verified |
-| 25/12 | Natal | civil holiday | everyone | Lei 662/1949 | verified |
-| 31/12 | (New Year's Eve) | optional; federal after 13:00 | municipal / federal staff | both portarias | verified |
+| Date         | Event                                 | Kind                                           | For                            | Source                                       | Status                     |
+| ------------ | ------------------------------------- | ---------------------------------------------- | ------------------------------ | -------------------------------------------- | -------------------------- |
+| 01/01        | Confraternização Universal            | civil holiday                                  | everyone                       | Lei 662/1949                                 | verified                   |
+| 16/02, 17/02 | Carnaval                              | optional                                       | municipal staff; federal staff | Portaria 2083/2025; Portaria MGI 11.460/2025 | verified                   |
+| 18/02        | Cinzas                                | optional until 12:00 / 14:00                   | municipal / federal staff      | same                                         | verified                   |
+| 03/04        | Paixão de Cristo                      | religious holiday                              | everyone                       | Lei 10.257/1990 (and both portarias)         | verified                   |
+| 20/04        | (bridge)                              | optional                                       | municipal and federal staff    | both portarias                               | verified                   |
+| 21/04        | Tiradentes                            | civil holiday                                  | everyone                       | Lei 662/1949                                 | verified                   |
+| 01/05        | Dia Mundial do Trabalho               | civil holiday                                  | everyone                       | Lei 662/1949                                 | verified                   |
+| 04/06        | Corpus Christi                        | religious holiday; also a federal optional day | everyone; federal staff        | Lei 10.257/1990; Portaria MGI                | verified                   |
+| 05/06        | (bridge)                              | optional                                       | municipal and federal staff    | both portarias                               | verified                   |
+| 09/07        | Revolução Constitucionalista          | civil holiday (state)                          | everyone                       | Lei SP 9.497/1997 via Portaria 2083          | verified (law not re-read) |
+| 10/07        | (bridge)                              | optional                                       | municipal staff                | Portaria 2083/2025                           | verified                   |
+| 15/08        | Nossa Senhora da Babilônia            | religious holiday                              | everyone                       | Lei 10.257/1990                              | verified                   |
+| 07/09        | Independência do Brasil               | civil holiday                                  | everyone                       | Lei 662/1949                                 | verified                   |
+| 12/10        | Nossa Senhora Aparecida               | civil holiday                                  | everyone                       | Lei 6.802/1980                               | verified                   |
+| 15/10        | Dia do Professor                      | holiday                                        | municipal school network only  | Portaria 2083/2025                           | verified                   |
+| 28/10        | Dia do Funcionário / Servidor Público | optional                                       | municipal / federal staff      | both portarias                               | verified                   |
+| 02/11        | Finados                               | civil holiday                                  | everyone                       | Lei 662/1949                                 | verified                   |
+| 03/11        | (bridge)                              | optional                                       | municipal staff                | Portaria 2083/2025                           | verified                   |
+| 04/11        | Aniversário de São Carlos             | religious holiday                              | everyone                       | Lei 10.257/1990                              | verified                   |
+| 15/11        | Proclamação da República              | civil holiday                                  | everyone                       | Lei 662/1949                                 | verified                   |
+| 20/11        | Consciência Negra                     | civil holiday                                  | everyone                       | Lei 14.759/2023                              | verified                   |
+| 24/12        | (Christmas Eve)                       | optional; federal after 13:00                  | municipal / federal staff      | both portarias                               | verified                   |
+| 25/12        | Natal                                 | civil holiday                                  | everyone                       | Lei 662/1949                                 | verified                   |
+| 31/12        | (New Year's Eve)                      | optional; federal after 13:00                  | municipal / federal staff      | both portarias                               | verified                   |
 
 **Still pending:** the State of São Paulo's own optional days (a yearly decree for state staff) are
 not in the registry; Lei SP 9.497/1997 must be re-read when ALESP answers; every optional day of
@@ -137,10 +137,10 @@ not in the registry; Lei SP 9.497/1997 must be re-read when ALESP answers; every
 or a click outside: the bar's coordinator, unchanged. It is hung from the logo, so the time and the
 date open the same panel in the same place.
 
-| View | Holds |
-| --- | --- |
-| The year | the 12 months, the current one on a surface of its own; the upcoming events beside them |
-| A month | one month at about 140 x 87 px a cell, the events named inside; the selected day's detail beside it |
+| View     | Holds                                                                                               |
+| -------- | --------------------------------------------------------------------------------------------------- |
+| The year | the 12 months, the current one on a surface of its own; the upcoming events beside them             |
+| A month  | one month at about 140 x 87 px a cell, the events named inside; the selected day's detail beside it |
 
 A month's name, or any day, focuses that month (the day selected); `Year` goes back; `‹ ›` step a
 year in the year view and a month in the month view, across the year's turn; `Today` returns to
@@ -154,23 +154,23 @@ below; a cell from the month's width, never under 26 px wide or 24 px high, the 
 past the screen's height the body scrolls and the header, the filters and the legend stay. Measured
 on 18/10/2026 through IPC, no cursor moved:
 
-| Screen | Panel | Grid | Cells |
-| --- | --- | --- | --- |
-| ASUS, 2560 x 1440 | 1320 x 790 at x 620 (centered on 1280) | 4 x 3, the upcoming list beside | about 30 x 27 px |
-| LG standing, 1080 x 1920 | 960 x 1557 | 3 x 4, the upcoming list below, the legend wrapped | about 31 x 28 px |
+| Screen                   | Panel                                  | Grid                                               | Cells            |
+| ------------------------ | -------------------------------------- | -------------------------------------------------- | ---------------- |
+| ASUS, 2560 x 1440        | 1320 x 790 at x 620 (centered on 1280) | 4 x 3, the upcoming list beside                    | about 30 x 27 px |
+| LG standing, 1080 x 1920 | 960 x 1557                             | 3 x 4, the upcoming list below, the legend wrapped | about 31 x 28 px |
 
 ## The grid
 
 A day carries independent signals, each its own shape, never one more color:
 
-| Signal | Means |
-| --- | --- |
-| a filled chip in the scope's color | a holiday for everyone |
-| an outlined chip | an optional day, or a holiday for a restricted group (Teachers' Day) |
-| a teal dot under the number | an observance |
-| a small corner dot | more than one event that day; the detail lists them |
-| a ring around the whole cell | today |
-| a neutral fill | the selected day |
+| Signal                             | Means                                                                |
+| ---------------------------------- | -------------------------------------------------------------------- |
+| a filled chip in the scope's color | a holiday for everyone                                               |
+| an outlined chip                   | an optional day, or a holiday for a restricted group (Teachers' Day) |
+| a teal dot under the number        | an observance                                                        |
+| a small corner dot                 | more than one event that day; the detail lists them                  |
+| a ring around the whole cell       | today                                                                |
+| a neutral fill                     | the selected day                                                     |
 
 Scope colors are the bar's `scopeColor()`: red Brasil, blue São Paulo, mauve São Carlos, teal
 International. Today is a RING because a fill would collide: `accent` and `blue` are the same hex in
@@ -184,14 +184,14 @@ The band's month card reads the same data through `monthCells()` with the defaul
 
 While the panel is PINNED (a click on the time or the date; a hover never takes the keyboard):
 
-| Key | Year view | Focused month |
-| --- | --- | --- |
-| ← → | the day before / after | the same, the month following the day |
-| ↑ ↓ | a week before / after | the same |
-| Page Up / Down | the year before / after | the month before / after |
-| Enter or Space | focus the selected day's month | |
-| Home | today | today |
-| Escape | close | back to the year |
+| Key            | Year view                      | Focused month                         |
+| -------------- | ------------------------------ | ------------------------------------- |
+| ← →            | the day before / after         | the same, the month following the day |
+| ↑ ↓            | a week before / after          | the same                              |
+| Page Up / Down | the year before / after        | the month before / after              |
+| Enter or Space | focus the selected day's month |                                       |
+| Home           | today                          | today                                 |
+| Escape         | close                          | back to the year                      |
 
 `BarPanel` offers each key to the panel first (`keyPressed`); one the panel leaves unaccepted falls
 through, Escape closing, so every other panel keeps its Escape. A day's step is computed at local

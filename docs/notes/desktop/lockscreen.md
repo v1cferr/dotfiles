@@ -33,21 +33,21 @@ lock has no Python left. See [languages.md](../repo/languages.md).
 
 ## The architecture
 
-| Piece | Where | What |
-| --- | --- | --- |
-| The unit | `lockscreen.service` (`default.nix`) | runs `lockscreen-launch`; one owner, idempotent |
-| The launcher | `modules/home/desktop/lockscreen/scripts/lock-launch.sh` | finds the session's compositor, starts the QML lock, falls back to hyprlock |
-| The lock | `quickshell/lock.qml` | `WlSessionLock`, one `Face` per output, quits after an unlock |
-| Auth | `quickshell/lock/Auth.qml` | the ONE password buffer and the PAM conversation, shared by every output |
-| Faces | `quickshell/lock/AsusFace.qml`, `LgFace.qml` | chosen by connector in `Face.qml`; keys from any output go to the buffer |
-| The logo | `quickshell/lock/Logo.qml`, `my.lockscreen.logo` | the logo in the type's ink, beside the signature |
-| The print | `quickshell/lock/Wallpaper.qml` | picks from the pools, decodes to cover the screen, crops at the sidecar's focus |
-| The ink | `quickshell/lock/Ink.qml`, `InkMath.qml` | the side, the ink and the shade, measured on the shown print |
-| The quote | `quickshell/lock/Quotes.qml`, `QuoteMath.qml` | the curated collection, no repeats, haiku beside prints |
-| The glass | `quickshell/widgets/LiquidGlass.qml` | a live blur of the print under each card |
-| The data | `quickshell/data/Energy.qml`, `System.qml`, `Weather.qml`, `dash/ClaudeUsage.qml` | the same singletons the band reads |
-| The fallback | `programs.hyprlock` in `default.nix` | the palette, the time and a field on every output, nothing that can fail |
-| PAM | `modules/nixos/desktop/desktop.nix` | `quickshell-lock`, and `hyprlock` for the fallback |
+| Piece        | Where                                                                             | What                                                                            |
+| ------------ | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| The unit     | `lockscreen.service` (`default.nix`)                                              | runs `lockscreen-launch`; one owner, idempotent                                 |
+| The launcher | `modules/home/desktop/lockscreen/scripts/lock-launch.sh`                          | finds the session's compositor, starts the QML lock, falls back to hyprlock     |
+| The lock     | `quickshell/lock.qml`                                                             | `WlSessionLock`, one `Face` per output, quits after an unlock                   |
+| Auth         | `quickshell/lock/Auth.qml`                                                        | the ONE password buffer and the PAM conversation, shared by every output        |
+| Faces        | `quickshell/lock/AsusFace.qml`, `LgFace.qml`                                      | chosen by connector in `Face.qml`; keys from any output go to the buffer        |
+| The logo     | `quickshell/lock/Logo.qml`, `my.lockscreen.logo`                                  | the logo in the type's ink, beside the signature                                |
+| The print    | `quickshell/lock/Wallpaper.qml`                                                   | picks from the pools, decodes to cover the screen, crops at the sidecar's focus |
+| The ink      | `quickshell/lock/Ink.qml`, `InkMath.qml`                                          | the side, the ink and the shade, measured on the shown print                    |
+| The quote    | `quickshell/lock/Quotes.qml`, `QuoteMath.qml`                                     | the curated collection, no repeats, haiku beside prints                         |
+| The glass    | `quickshell/widgets/LiquidGlass.qml`                                              | a live blur of the print under each card                                        |
+| The data     | `quickshell/data/Energy.qml`, `System.qml`, `Weather.qml`, `dash/ClaudeUsage.qml` | the same singletons the band reads                                              |
+| The fallback | `programs.hyprlock` in `default.nix`                                              | the palette, the time and a field on every output, nothing that can fail        |
+| PAM          | `modules/nixos/desktop/desktop.nix`                                               | `quickshell-lock`, and `hyprlock` for the fallback                              |
 
 **A store snapshot, never the live tree.** The shell's QML is linked mutable so it hot-reloads on
 save (`quickshell.nix`); the lock runs from `builtins.path` of the same tree in the store, so
@@ -157,14 +157,14 @@ the same tone sits on the type itself.
 
 ## The LG: one hero number per glass card
 
-| Card | Hero | Chart | Context |
-| --- | --- | --- | --- |
-| Energia | measured CPU + GPU watts | the last 30 min, a line | CPU, GPU, the peak |
-| Claude Code | session % and week %, each with when it renews | the week as a step line against its pace | none |
-| Sistema | CPU % now | its last two minutes | RAM used, GPU temperature |
-| Processos | the top three apps by CPU now, each with its icon | none | "% de um núcleo" |
-| Clima (always) | the temperature and the sky now | the next 12 hours: temperature line over rain bars | max, min, rain, feels-like |
-| Tocando (only while playing) | the title, the artist | a vermilion progress line | none |
+| Card                         | Hero                                              | Chart                                              | Context                    |
+| ---------------------------- | ------------------------------------------------- | -------------------------------------------------- | -------------------------- |
+| Energia                      | measured CPU + GPU watts                          | the last 30 min, a line                            | CPU, GPU, the peak         |
+| Claude Code                  | session % and week %, each with when it renews    | the week as a step line against its pace           | none                       |
+| Sistema                      | CPU % now                                         | its last two minutes                               | RAM used, GPU temperature  |
+| Processos                    | the top three apps by CPU now, each with its icon | none                                               | "% de um núcleo"           |
+| Clima (always)               | the temperature and the sky now                   | the next 12 hours: temperature line over rain bars | max, min, rain, feels-like |
+| Tocando (only while playing) | the title, the artist                             | a vermilion progress line                          | none                       |
 
 The weather is ALWAYS on screen (21/10/2026): it used to give its place to Tocando whenever music
 played, and the user missed it. Tocando is a compact row under it, only while a player PLAYS
@@ -223,12 +223,12 @@ does not report; processes are app names from their systemd unit, never a comman
 
 ## The data, shared with the band
 
-| Singleton | Reads | Cadence |
-| --- | --- | --- |
-| `data/Energy.qml` (+ `EnergyMath.qml`) | power-log's last two monthly CSVs, through `tail` | 1 min |
-| `data/System.qml` (+ `SystemMath.qml`) | `/proc/stat`, `/proc/meminfo`, the xe sysfs (rc6, frequency, the `pkg` temperature), every `/proc/*/stat` and cgroup | 2 s, processes 5 s |
-| `data/Weather.qml` | glance-feed's cache (`glance-feed read weather`) and `my.weather`'s pt-BR conditions | on change, and every 5 min |
-| `dash/ClaudeUsage.qml` | glance-feed's `claude_usage` document | on change |
+| Singleton                              | Reads                                                                                                                | Cadence                    |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `data/Energy.qml` (+ `EnergyMath.qml`) | power-log's last two monthly CSVs, through `tail`                                                                    | 1 min                      |
+| `data/System.qml` (+ `SystemMath.qml`) | `/proc/stat`, `/proc/meminfo`, the xe sysfs (rc6, frequency, the `pkg` temperature), every `/proc/*/stat` and cgroup | 2 s, processes 5 s         |
+| `data/Weather.qml`                     | glance-feed's cache (`glance-feed read weather`) and `my.weather`'s pt-BR conditions                                 | on change, and every 5 min |
+| `dash/ClaudeUsage.qml`                 | glance-feed's `claude_usage` document                                                                                | on change                  |
 
 The band's energy panel reads `data/Energy.qml` too, so the lock and the desktop cannot disagree.
 Nothing here touches the network: glance-feed owns every fetch
@@ -239,12 +239,12 @@ Nothing here touches the network: glance-feed owns every fetch
 The quotes are a CURATED collection in the repo, `modules/home/desktop/lockscreen/quotes.json`.
 Four kinds, mixed:
 
-| Kind | What | Shown as |
-| --- | --- | --- |
-| `stoic` | Marcus Aurelius, Seneca, Epictetus | a free pt-BR translation, the Greek or Latin under it |
-| `literature` | Machado de Assis, Fernando Pessoa and his heteronyms | the original Portuguese, once |
-| `haiku` | Bashō, Buson, Issa | a pt-BR translation in its 3 lines, the Japanese under it |
-| `computing` | Kay, Dijkstra, Knuth, Hopper, Brooks, Perlis… | a pt-BR translation, the English under it |
+| Kind         | What                                                 | Shown as                                                  |
+| ------------ | ---------------------------------------------------- | --------------------------------------------------------- |
+| `stoic`      | Marcus Aurelius, Seneca, Epictetus                   | a free pt-BR translation, the Greek or Latin under it     |
+| `literature` | Machado de Assis, Fernando Pessoa and his heteronyms | the original Portuguese, once                             |
+| `haiku`      | Bashō, Buson, Issa                                   | a pt-BR translation in its 3 lines, the Japanese under it |
+| `computing`  | Kay, Dijkstra, Knuth, Hopper, Brooks, Perlis…        | a pt-BR translation, the English under it                 |
 
 **The sources policy.** An entry goes in only with a precise source (a work and its section, an
 EWD number, a paper or talk with its year), checked against a primary text (Perseus, Wikisource,
@@ -270,10 +270,10 @@ in Noto Sans, which has it (Geist does not).
 
 ## The wallpapers
 
-| Monitor | Pool (`LOCK_POOL_*` in `default.nix`) | No usable file |
-| --- | --- | --- |
-| ASUS | `~/Pictures/lockscreen/wide/`: Japanese landscape prints | the palette's gradient |
-| LG | `~/Pictures/lockscreen/tall/`: Hiroshige's One Hundred Famous Views of Edo | the palette's gradient |
+| Monitor | Pool (`LOCK_POOL_*` in `default.nix`)                                      | No usable file         |
+| ------- | -------------------------------------------------------------------------- | ---------------------- |
+| ASUS    | `~/Pictures/lockscreen/wide/`: Japanese landscape prints                   | the palette's gradient |
+| LG      | `~/Pictures/lockscreen/tall/`: Hiroshige's One Hundred Famous Views of Edo | the palette's gradient |
 
 **Two collections, on purpose (20/10/2026).** The lock is Japanese and contemplative, the desktop
 is real galaxies. The lock's landscape pool started with 16 prints from The Met's Open Access
@@ -340,14 +340,14 @@ true fullscreen (Hyprland's state 2; maximized does not count) and the owner of 
 (`GetConnectionUnixProcessID`), not from the player's own metadata, so a Spotify playing behind a
 fullscreen game is two processes and does not hold. The hold is capped at 3 h, then it locks anyway.
 
-| Situation | Before 19/10/2026 | Now |
-| --- | --- | --- |
-| Spotify playing, nobody at the desk | never locked, all night | locks at 5 min |
-| Anything paused | locked | locked |
-| A film fullscreen in Zen or mpv | held until it stopped | held until it stops, at most 3 h |
-| The same film in a window | held | locks at 5 min |
-| A game fullscreen with music playing | held | locks at 5 min (the Sunshine guard covers streams) |
-| Manual lock (`SUPER+L`, the bar) | always | always: the gate is only on the idle path |
+| Situation                            | Before 19/10/2026       | Now                                                |
+| ------------------------------------ | ----------------------- | -------------------------------------------------- |
+| Spotify playing, nobody at the desk  | never locked, all night | locks at 5 min                                     |
+| Anything paused                      | locked                  | locked                                             |
+| A film fullscreen in Zen or mpv      | held until it stopped   | held until it stops, at most 3 h                   |
+| The same film in a window            | held                    | locks at 5 min                                     |
+| A game fullscreen with music playing | held                    | locks at 5 min (the Sunshine guard covers streams) |
+| Manual lock (`SUPER+L`, the bar)     | always                  | always: the gate is only on the idle path          |
 
 IT WAITS, IT DOES NOT SKIP. Each hypridle listener fires ONCE per idle cycle, so a gate that
 returned without locking would leave the machine open until the next keystroke. Waiting keeps the
@@ -409,10 +409,10 @@ the original under them). Those strings are the product, not untranslated debt.
 Measured on 21/10/2026 in the headless sway (GL on the B580's render node, both outputs, 30 s of
 `/proc/<pid>/stat`):
 
-| | CPU, % of one core | RSS |
-| --- | --- | --- |
-| **v6**, the QML lock, both faces, data sampling | 1.93 | 220 MB |
-| v5.1, hyprlock plus its label children (the last measured hyprlock) | 2.12 | 93 MB |
+|                                                                     | CPU, % of one core | RSS    |
+| ------------------------------------------------------------------- | ------------------ | ------ |
+| **v6**, the QML lock, both faces, data sampling                     | 1.93               | 220 MB |
+| v5.1, hyprlock plus its label children (the last measured hyprlock) | 2.12               | 93 MB  |
 
 The memory is Qt's and the two decoded prints, and only exists while locked: the process exits on
 unlock.
@@ -420,10 +420,10 @@ unlock.
 **On the real desk**, 01/11 to 03/11/2026, the power log's minutes inside a lock (934 of them, the
 first 2 min of each lock left out) against the rest:
 
-| | CPU package | GPU board | busy CPU |
-| --- | --- | --- | --- |
-| locked | 18.8 W | 36.6 W | 7.6% |
-| unlocked | 52.4 W | 48.8 W | 14.2% |
+|          | CPU package | GPU board | busy CPU |
+| -------- | ----------- | --------- | -------- |
+| locked   | 18.8 W      | 36.6 W    | 7.6%     |
+| unlocked | 52.4 W      | 48.8 W    | 14.2%    |
 
 The GPU sits at the B580's floor with both panels on, the same 37 W v2's hyprlock had. The lock's
 OWN cost is higher than the harness said: a 4 h 26 min lock on 03/11 used 21 min of CPU, **7.9% of
@@ -432,10 +432,10 @@ rate is the likely difference: something still repaints every frame while locked
 
 ## Testing
 
-| Check | What it pins |
-| --- | --- |
-| `nix build .#checks.x86_64-linux.lockscreen` | `modules/home/desktop/lockscreen/scripts/test.sh`, bash: the launcher reaches the session's compositor with a stale, missing or hostile `WAYLAND_DISPLAY`; five fallback cases (unlock, death while locked, a clean exit without an unlock, never locking, failing to start); the idle gate's video policy |
-| `nix build .#checks.x86_64-linux.quickshell-logic` | `quickshell/tests/`, Qt's `qmltestrunner`, headless: quotes (wrap, schema, no repeat, haiku pairing), ink (contrast, the side, the shade), energy (holes, staleness, the Eco baseline), system (CPU, memory, app names) |
+| Check                                              | What it pins                                                                                                                                                                                                                                                                                               |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nix build .#checks.x86_64-linux.lockscreen`       | `modules/home/desktop/lockscreen/scripts/test.sh`, bash: the launcher reaches the session's compositor with a stale, missing or hostile `WAYLAND_DISPLAY`; five fallback cases (unlock, death while locked, a clean exit without an unlock, never locking, failing to start); the idle gate's video policy |
+| `nix build .#checks.x86_64-linux.quickshell-logic` | `quickshell/tests/`, Qt's `qmltestrunner`, headless: quotes (wrap, schema, no repeat, haiku pairing), ink (contrast, the side, the shade), energy (holes, staleness, the Eco baseline), system (CPU, memory, app names)                                                                                    |
 
 **The harness** (`~/.cache/lockscreen-dev/harness`, outside the repo) runs a headless sway with two
 outputs and a guard that refuses unless the socket belongs to that sway; the BUILT launcher is run
@@ -476,21 +476,21 @@ Nothing here locks the session by itself. After `! rebuild`:
 
 ## Troubleshooting
 
-| Symptom | Look at |
-| --- | --- |
-| the palette's gradient instead of a print | the pool is empty or unreadable: `ls ~/Pictures/lockscreen/wide` |
+| Symptom                                    | Look at                                                                                                                                                     |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| the palette's gradient instead of a print  | the pool is empty or unreadable: `ls ~/Pictures/lockscreen/wide`                                                                                            |
 | the plain hyprlock instead of the QML lock | `journalctl --user -u lockscreen`: "did not lock within 5 s" or "exited without an unlock", then the QML's own log under `/run/user/1000/quickshell/by-id/` |
-| a card says "sem dados" | its source: `tail /var/lib/power-log/*.csv`, `glance-feed read claude_usage`, `glance-feed read weather` |
-| the same quotes coming back | `~/.local/state/lockscreen/quotes-seen.json`: it resets only after the whole collection |
-| the lock does not appear | `systemctl --user status lockscreen` and its `ExecCondition` (a hyprlock started by hand) |
+| a card says "sem dados"                    | its source: `tail /var/lib/power-log/*.csv`, `glance-feed read claude_usage`, `glance-feed read weather`                                                    |
+| the same quotes coming back                | `~/.local/state/lockscreen/quotes-seen.json`: it resets only after the whole collection                                                                     |
+| the lock does not appear                   | `systemctl --user status lockscreen` and its `ExecCondition` (a hyprlock started by hand)                                                                   |
 
 ## Rollback
 
-| Layer | How back |
-| --- | --- |
-| Configuration | `git revert` the v6 commits and `! rebuild`, or boot the previous generation (`sudo nixos-rebuild switch --rollback`) |
-| State | `~/.local/state/lockscreen` holds only the seen-lists; deleting it only resets them |
-| A blank or stuck lock | from a TTY (`CTRL+ALT+F2`) or SSH: `WAYLAND_DISPLAY=wayland-1 hyprlock` REATTACHES to the locked session and draws a field |
+| Layer                 | How back                                                                                                                                                        |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Configuration         | `git revert` the v6 commits and `! rebuild`, or boot the previous generation (`sudo nixos-rebuild switch --rollback`)                                           |
+| State                 | `~/.local/state/lockscreen` holds only the seen-lists; deleting it only resets them                                                                             |
+| A blank or stuck lock | from a TTY (`CTRL+ALT+F2`) or SSH: `WAYLAND_DISPLAY=wayland-1 hyprlock` REATTACHES to the locked session and draws a field                                      |
 | The compositor itself | from SSH, the journal first; relaunching hyprlock as above is the fix for an orphaned lock, and restarting Hyprland (which ends the session) is the last resort |
 
 Killing the QML lock is now SAFE (the launcher hands over to hyprlock), but killing hyprlock

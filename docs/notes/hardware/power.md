@@ -5,11 +5,11 @@
 (the user-side effects), `modules/home/desktop/hypr/lua/rules.lua` (the game-window trigger). Three operating profiles
 with ONE owner of the state: power-profiles-daemon (ppd). Everything else FOLLOWS it.
 
-| Profile | ppd profile | CPU (intel_pstate EPP) | GPU (xe, both GTs) | SignalSift | Ollama |
-| --- | --- | --- | --- | --- | --- |
-| Balanced (the default) | `balanced` | `balance_performance`, the kernel default | `base`, the driver's floor | `balanced` | its own 5 min keep-alive |
-| Gaming | `performance` | `performance` | `base`, the driver's floor | `gaming` | idle models unloaded once |
-| Eco | `power-saver` | `power` | `power_saving`, floor at RPn (400 MHz) | `eco` (`balanced` when automatic) | idle models unloaded once (manual Eco; the automatic one leaves its 5 min keep-alive) |
+| Profile                | ppd profile   | CPU (intel_pstate EPP)                    | GPU (xe, both GTs)                     | SignalSift                        | Ollama                                                                                |
+| ---------------------- | ------------- | ----------------------------------------- | -------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------- |
+| Balanced (the default) | `balanced`    | `balance_performance`, the kernel default | `base`, the driver's floor             | `balanced`                        | its own 5 min keep-alive                                                              |
+| Gaming                 | `performance` | `performance`                             | `base`, the driver's floor             | `gaming`                          | idle models unloaded once                                                             |
+| Eco                    | `power-saver` | `power`                                   | `power_saving`, floor at RPn (400 MHz) | `eco` (`balanced` when automatic) | idle models unloaded once (manual Eco; the automatic one leaves its 5 min keep-alive) |
 
 **Automatic by default** (19/10/2026). I never pick a profile: Balanced is the base, and two
 HOLDS move it, both released by ppd when their unit stops, when it crashes, or when I pick a
@@ -172,15 +172,15 @@ Only a measured saving with a clean way back earns it a place in the Eco apply.
 average over its interval and no burst between samples is lost. A first sample, a new boot or a
 gap over 10 min writes nothing (there is no interval to report).
 
-| Column | Source | Kind |
-| --- | --- | --- |
-| `cpu_package_w`, `cpu_cores_w` | RAPL `package-0` and `core` (root-only, which is why it runs as root) | measured |
-| `gpu_board_w` | `xe` hwmon `energy1` (`card`): the WHOLE B580 board | measured |
-| `gpu_chip_w` | `xe` hwmon `energy2` (`pkg`): the GPU package only | measured |
-| `measured_w` | CPU package + GPU board | a measured FLOOR, never the PC |
-| `wall_w` | empty: there is no meter | see below |
-| `gpu_render_idle_pct`, `gpu_media_idle_pct` | GT0/GT1 `idle_residency_ms`: the time in RC6 | context |
-| `cpu_busy_pct`, `profile`, `cpu_c`, `gpu_c`, `nvme_c` | `/proc/stat`, ppd, coretemp, `xe` pkg, NVMe | context |
+| Column                                                | Source                                                                | Kind                           |
+| ----------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------ |
+| `cpu_package_w`, `cpu_cores_w`                        | RAPL `package-0` and `core` (root-only, which is why it runs as root) | measured                       |
+| `gpu_board_w`                                         | `xe` hwmon `energy1` (`card`): the WHOLE B580 board                   | measured                       |
+| `gpu_chip_w`                                          | `xe` hwmon `energy2` (`pkg`): the GPU package only                    | measured                       |
+| `measured_w`                                          | CPU package + GPU board                                               | a measured FLOOR, never the PC |
+| `wall_w`                                              | empty: there is no meter                                              | see below                      |
+| `gpu_render_idle_pct`, `gpu_media_idle_pct`           | GT0/GT1 `idle_residency_ms`: the time in RC6                          | context                        |
+| `cpu_busy_pct`, `profile`, `cpu_c`, `gpu_c`, `nvme_c` | `/proc/stat`, ppd, coretemp, `xe` pkg, NVMe                           | context                        |
 
 Checked on 19/10/2026 that this board has no other source: no PSU telemetry on USB, no UPS, no
 `/sys/class/power_supply`. The board, RAM, SSD, fans, the PSU's own loss and the monitors have no

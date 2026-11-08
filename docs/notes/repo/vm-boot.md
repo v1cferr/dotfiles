@@ -50,11 +50,11 @@ builds, plus `hosts/ex-b560m-v5/vm-boot.nix`. One definition, two consumers, ins
 that drifts (rule 14). What the variant turns off is only what needs the real hardware, a secret or
 another machine:
 
-| Override | Why |
-| --- | --- |
-| `disko.devices = mkForce { }` | disko generates the Kingston's fileSystems and the test VM brings its own root; keeping both waits forever for a device that does not exist |
-| every `my.services` off | they need secrets, `/srv`, a GPU or the private input. Read from the OPTION SET (`options.my.services`), never from a copy of the list, so a toggle added tomorrow is off here by construction (rule 11) |
-| lightdm and autoLogin off | no GPU and no monitor. A session that cannot start would drown the failed-unit list this test exists to read |
+| Override                      | Why                                                                                                                                                                                                      |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `disko.devices = mkForce { }` | disko generates the Kingston's fileSystems and the test VM brings its own root; keeping both waits forever for a device that does not exist                                                              |
+| every `my.services` off       | they need secrets, `/srv`, a GPU or the private input. Read from the OPTION SET (`options.my.services`), never from a copy of the list, so a toggle added tomorrow is off here by construction (rule 11) |
+| lightdm and autoLogin off     | no GPU and no monitor. A session that cannot start would drown the failed-unit list this test exists to read                                                                                             |
 
 `node.pkgsReadOnly = false` is needed because `runNixOSTest` pins the node's `pkgs` and makes the
 `nixpkgs.*` options read-only, while this config sets both `nixpkgs.overlays` (in `flake/hosts.nix`) and
@@ -118,10 +118,10 @@ is known and not new.
 it boots ONLY the boot modules (`boot.nix`, `limine.nix`, `boot-appearance.nix`, `boot-trust.nix`)
 under OVMF with `useBootLoader`, so the real `limine-install.py` writes a real ESP. Two machines:
 
-| Node | What it proves |
-| --- | --- |
+| Node     | What it proves                                                                                                                                                                                                                                                                                                                                                                    |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `secure` | OVMF with Secure Boot on THROWAWAY keys generated inside the image (the machine's `/var/lib/sbctl` is never read): Limine boots signed, `LoaderInfo` names it, the config carries a hash on the initrd, the editor is off, Plymouth hands over, `boot-trust` reports every link proven, no unit fails; then one byte appended to the initrd makes Limine panic instead of booting |
-| `chain` | plain UEFI and a second disk whose ESP has a fixed PARTUUID and the UEFI shell as `bootmgfw.efi`: the `guid(...)` entry chainloads it |
+| `chain`  | plain UEFI and a second disk whose ESP has a fixed PARTUUID and the UEFI shell as `bootmgfw.efi`: the `guid(...)` entry chainloads it                                                                                                                                                                                                                                             |
 
 Measured on 22/10/2026, all seven subtests green. The screenshots it leaves in `result/` are the
 menu (with `Secure Boot` in Limine's top line on `secure`, without it on `chain`), the splash, the

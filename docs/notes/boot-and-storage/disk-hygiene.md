@@ -72,19 +72,19 @@ become the 4th biggest consumer on the machine without ever being on the list, s
 structurally blind to 27 GiB. A hardcoded ranking rots; that is why `disk-insight.nix` logs a trend
 instead of trusting a snapshot.
 
-| Path | 30/07 | 30/08 |
-| --- | --- | --- |
-| `~/.local/share/bottles` | 319 GiB | 316 GiB (Battlenet 181, CS-II 85, Ascension 46) |
-| `~/Games` | 47 GiB | 46 GiB (one 46 GiB PS3 ISO) |
-| `/nix/store` | 58 GiB | 46 GiB, handled by the GC, not deletable by hand |
-| `/srv/media` | 132 GiB | 45 GiB, the Jellyfin library |
-| `~/Downloads` | 2.5 GiB | **35 GiB** |
-| `~/.config` | not listed | **27 GiB** (Claude `vm_bundles` 14, Chrome 6) |
-| `~/Projects` | not listed | 18 GiB |
-| `~/.cache` | 3.9 GiB | 9 GiB |
-| `~/.local/share/Steam` | 8 GiB | 8 GiB |
-| `~/Documents` | not listed | 4.5 GiB |
-| `~/.local/share/Trash` | 1.7 GiB | 0.1 GiB, the timer below is working |
+| Path                     | 30/07      | 30/08                                            |
+| ------------------------ | ---------- | ------------------------------------------------ |
+| `~/.local/share/bottles` | 319 GiB    | 316 GiB (Battlenet 181, CS-II 85, Ascension 46)  |
+| `~/Games`                | 47 GiB     | 46 GiB (one 46 GiB PS3 ISO)                      |
+| `/nix/store`             | 58 GiB     | 46 GiB, handled by the GC, not deletable by hand |
+| `/srv/media`             | 132 GiB    | 45 GiB, the Jellyfin library                     |
+| `~/Downloads`            | 2.5 GiB    | **35 GiB**                                       |
+| `~/.config`              | not listed | **27 GiB** (Claude `vm_bundles` 14, Chrome 6)    |
+| `~/Projects`             | not listed | 18 GiB                                           |
+| `~/.cache`               | 3.9 GiB    | 9 GiB                                            |
+| `~/.local/share/Steam`   | 8 GiB      | 8 GiB                                            |
+| `~/Documents`            | not listed | 4.5 GiB                                          |
+| `~/.local/share/Trash`   | 1.7 GiB    | 0.1 GiB, the timer below is working              |
 
 ### It names the FILES too
 

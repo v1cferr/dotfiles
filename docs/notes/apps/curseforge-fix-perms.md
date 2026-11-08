@@ -38,14 +38,14 @@ On 15/08/2026 Minecraft still refused to open, and the agent log named a differe
 
 A sweep of `Install/` by ELF magic byte found **115 ELF files still at 644**:
 
-| Tree | Files | What it is |
-| --- | --- | --- |
-| `runtime/` | 68 | the JRE of the VANILLA launcher, the one that actually runs the game |
-| `natives/` | 31 | lwjgl/openal per modloader |
-| `launcher/` | 8 | the launcher CEF |
-| `bin/` | 6 | natives per version |
-| `webcache2/` | 1 | widevine |
-| `minecraft-launcher` | 1 | itself |
+| Tree                 | Files | What it is                                                           |
+| -------------------- | ----- | -------------------------------------------------------------------- |
+| `runtime/`           | 68    | the JRE of the VANILLA launcher, the one that actually runs the game |
+| `natives/`           | 31    | lwjgl/openal per modloader                                           |
+| `launcher/`          | 8     | the launcher CEF                                                     |
+| `bin/`               | 6     | natives per version                                                  |
+| `webcache2/`         | 1     | widevine                                                             |
+| `minecraft-launcher` | 1     | itself                                                               |
 
 And `java/` was the ONLY correct tree, 133 of 133, precisely because that was what the old script
 covered. The extractor loses the bit on EVERYTHING, so the fix follows it there.

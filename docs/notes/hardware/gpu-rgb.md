@@ -52,12 +52,12 @@ guessed: asking `14 00 01` and reading the answer back returns bitmap `0x00C8`, 
 
 ## The four patches, and why each one exists
 
-| patch | whose | what it does |
-| --- | --- | --- |
-| `system-plugins-env.patch` | the channel's, rebased | keeps `withPlugins` working |
-| `intel-gpu-i2c-bus.patch` | upstream !3612, someone else's | gives the Arc's bus a PCI identity |
-| `asrock-arc-b580-steel-legend.patch` | ours | registers the card and guards the bus |
-| `asrock-gpu-shutdown.patch` | ours | a missing `Shutdown()` in the destructor |
+| patch                                | whose                          | what it does                             |
+| ------------------------------------ | ------------------------------ | ---------------------------------------- |
+| `system-plugins-env.patch`           | the channel's, rebased         | keeps `withPlugins` working              |
+| `intel-gpu-i2c-bus.patch`            | upstream !3612, someone else's | gives the Arc's bus a PCI identity       |
+| `asrock-arc-b580-steel-legend.patch` | ours                           | registers the card and guards the bus    |
+| `asrock-gpu-shutdown.patch`          | ours                           | a missing `Shutdown()` in the destructor |
 
 **The bus patch is the prerequisite.** OpenRGB reads the i2c adapter's parent directory to learn
 which PCI device it belongs to. On AMD and Nvidia the adapter sits directly under the card, so one

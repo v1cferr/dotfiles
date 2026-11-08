@@ -8,31 +8,31 @@ GameMode) open. That is a LOADED desktop, not an idle one: see Pending.
 
 ## Memory (MEASURED, `free`, `swapon`, `zramctl`, `/proc/pressure/memory`)
 
-| What | Value |
-| --- | --- |
-| RAM | 15.4 GiB total, 4.3 to 6.0 GiB available across the session |
-| zram0 | zstd, 7.7 GiB logical (the NixOS default, 50% of RAM), priority 5 |
-| zram use | 5.0 GiB of data in 1.4 GiB of RAM: a 3.6x ratio |
-| NVMe swapfile | 16 GiB, priority -1 (the fallback), 2.4 GiB in use |
-| Swap total in use | 7.9 GiB now; earlyoom's hourly line read 62% (15 GiB) at 18:12 |
-| PSI memory | `some avg300=0.03`, `full avg300=0.03`: no sustained stall |
-| `vm.swappiness` | 60 (the kernel default) |
-| `vm.page-cluster` | 3 (the kernel default) |
-| MGLRU | `/sys/kernel/mm/lru_gen/enabled` = `0x0007`: on, all features |
-| zswap | `N`: off, correctly so next to zram |
-| OOM kills | none: no earlyoom kill in 30 days, no kernel OOM in 14 (`journalctl`) |
+| What              | Value                                                                 |
+| ----------------- | --------------------------------------------------------------------- |
+| RAM               | 15.4 GiB total, 4.3 to 6.0 GiB available across the session           |
+| zram0             | zstd, 7.7 GiB logical (the NixOS default, 50% of RAM), priority 5     |
+| zram use          | 5.0 GiB of data in 1.4 GiB of RAM: a 3.6x ratio                       |
+| NVMe swapfile     | 16 GiB, priority -1 (the fallback), 2.4 GiB in use                    |
+| Swap total in use | 7.9 GiB now; earlyoom's hourly line read 62% (15 GiB) at 18:12        |
+| PSI memory        | `some avg300=0.03`, `full avg300=0.03`: no sustained stall            |
+| `vm.swappiness`   | 60 (the kernel default)                                               |
+| `vm.page-cluster` | 3 (the kernel default)                                                |
+| MGLRU             | `/sys/kernel/mm/lru_gen/enabled` = `0x0007`: on, all features         |
+| zswap             | `N`: off, correctly so next to zram                                   |
+| OOM kills         | none: no earlyoom kill in 30 days, no kernel OOM in 14 (`journalctl`) |
 
 Where the memory goes (MEASURED, `memory.current` and `memory.swap.current` per cgroup, MiB):
 
-| cgroup | RAM | swap |
-| --- | --- | --- |
-| Zen | 3888 | 1705 |
-| Bottles (Hearthstone) | 2138 | 30 |
-| VS Code (two scopes) | 2074 | 1773 |
-| Chromium, Discord, Obsidian | ~1080 | ~830 |
-| ALL of `system.slice` | ~1100 | small |
-| Docker containers (11) | 3 to 20 each | up to 263 |
-| Ollama with no model loaded | 12 | 20 |
+| cgroup                      | RAM          | swap      |
+| --------------------------- | ------------ | --------- |
+| Zen                         | 3888         | 1705      |
+| Bottles (Hearthstone)       | 2138         | 30        |
+| VS Code (two scopes)        | 2074         | 1773      |
+| Chromium, Discord, Obsidian | ~1080        | ~830      |
+| ALL of `system.slice`       | ~1100        | small     |
+| Docker containers (11)      | 3 to 20 each | up to 263 |
+| Ollama with no model loaded | 12           | 20        |
 
 **Conclusion**: the pressure is the interactive apps, not the services. Every background service
 together is about 1.1 GiB of RAM, and the eleven containers are mostly swapped out already. Making
@@ -56,13 +56,13 @@ that need the database, timers that `docker exec` into it). zram is doing its jo
 
 ## Boot and Docker (MEASURED, `systemd-analyze`, `journalctl -b -N`)
 
-| Boot | Userspace to `graphical.target` | Stack builds |
-| --- | --- | --- |
-| 18/10 14:12 (after the 04:30 prune) | 2 min 30 s | full rebuild |
-| 18/10 02:38 | 27.7 s | 28 `CACHED` |
-| 17/10 22:46 | 29.9 s | 28 `CACHED` |
-| 17/10 16:03 | 27.2 s | 28 `CACHED` |
-| 17/10 13:29 (after the 11:20 catch-up prune) | 1 min 53 s | full rebuild |
+| Boot                                         | Userspace to `graphical.target` | Stack builds |
+| -------------------------------------------- | ------------------------------- | ------------ |
+| 18/10 14:12 (after the 04:30 prune)          | 2 min 30 s                      | full rebuild |
+| 18/10 02:38                                  | 27.7 s                          | 28 `CACHED`  |
+| 17/10 22:46                                  | 29.9 s                          | 28 `CACHED`  |
+| 17/10 16:03                                  | 27.2 s                          | 28 `CACHED`  |
+| 17/10 13:29 (after the 11:20 catch-up prune) | 1 min 53 s                      | full rebuild |
 
 `multi-user.target` waits for the three oneshot stacks, so a rebuild holds the whole boot. Fixed
 by keeping the build cache a week: [docker-prune](../services/docker-prune.md).
@@ -98,15 +98,15 @@ by keeping the build cache a week: [docker-prune](../services/docker-prune.md).
 Taken after the bump from 7.2.10 to 7.3.0 (nixpkgs `cd4ea8d`), 10 min after boot, with Zen, VS
 Code and Discord open and no game. So only what is comparable to the audit above is compared.
 
-| What | 7.2.10 | 7.3.0 |
-| --- | --- | --- |
-| Kernel start to `graphical.target` (journal timestamps) | 91.4, 91.6, 94.5 s (19 to 21/10) | 93.9 s |
-| GPU board idle, two monitors lit (`energy1` over 60 s) | 45 W (NixOS Center card) | 44.4 W |
-| GPU package idle (`energy2` over 60 s) | not taken | 26.2 W |
-| GT0 `min_freq`, `power_profile`, runtime PM | 1200 MHz, `base`, `active` | same |
-| swappiness, page-cluster, MGLRU, zswap | 60, 3, `0x0007`, `N` | same |
-| `intel_pstate`, governor, EPP, ASPM policy | active, `powersave`, `balance_performance`, `default` | same |
-| PSI memory `avg300` | 0.03 (loaded, 5 h) | 0.04 (10 min) |
+| What                                                    | 7.2.10                                                | 7.3.0         |
+| ------------------------------------------------------- | ----------------------------------------------------- | ------------- |
+| Kernel start to `graphical.target` (journal timestamps) | 91.4, 91.6, 94.5 s (19 to 21/10)                      | 93.9 s        |
+| GPU board idle, two monitors lit (`energy1` over 60 s)  | 45 W (NixOS Center card)                              | 44.4 W        |
+| GPU package idle (`energy2` over 60 s)                  | not taken                                             | 26.2 W        |
+| GT0 `min_freq`, `power_profile`, runtime PM             | 1200 MHz, `base`, `active`                            | same          |
+| swappiness, page-cluster, MGLRU, zswap                  | 60, 3, `0x0007`, `N`                                  | same          |
+| `intel_pstate`, governor, EPP, ASPM policy              | active, `powersave`, `balance_performance`, `default` | same          |
+| PSI memory `avg300`                                     | 0.03 (loaded, 5 h)                                    | 0.04 (10 min) |
 
 **Conclusion**: no regression and no measurable gain on this desktop. The idle draw did not move,
 which fits the cause above: it is the PEG root port's ASPM, a BIOS setting the kernel cannot

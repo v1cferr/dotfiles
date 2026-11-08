@@ -16,12 +16,12 @@ layer in the style of a developer portal: diagrams, flows, steps, an overview, a
 
 Build it from the three pieces already in the bundle, and add nothing:
 
-| Need | Built from | Instead of |
-| --- | --- | --- |
-| diagrams and flows | Mermaid fences in `docs/`, themed from the Fumadocs preset's own tokens | a second renderer such as beautiful-mermaid |
-| a procedure | Fumadocs' `remarkSteps`, over the numbered headings of `guides/` | a Steps component written into the markdown |
-| an overview | Fumadocs' `Card` and `buttonVariants`, filled from the page tree | shadcn/ui, copied in through `components.json` |
-| icons | `lucide-react`, which Fumadocs UI already depends on | a second icon set |
+| Need               | Built from                                                              | Instead of                                     |
+| ------------------ | ----------------------------------------------------------------------- | ---------------------------------------------- |
+| diagrams and flows | Mermaid fences in `docs/`, themed from the Fumadocs preset's own tokens | a second renderer such as beautiful-mermaid    |
+| a procedure        | Fumadocs' `remarkSteps`, over the numbered headings of `guides/`        | a Steps component written into the markdown    |
+| an overview        | Fumadocs' `Card` and `buttonVariants`, filled from the page tree        | shadcn/ui, copied in through `components.json` |
+| icons              | `lucide-react`, which Fumadocs UI already depends on                    | a second icon set                              |
 
 shadcn/ui lost for the reason [site](../notes/repo/site.md) gave on 23/09/2026, which still holds:
 Fumadocs UI already brings every piece of the docs shell, and a second component library is

@@ -16,11 +16,11 @@ on disk: turning an export into knowledge is the context repo's own tooling.
 
 ## Fixed context
 
-| What | Value |
-| --- | --- |
-| Knowledge base | the context repo, `my.memory.dir` (private `v1cferr/context`) |
-| Raw exports | `~/context-raw/<product>/<YYYY-MM-DD>/`, outside git |
-| Backup | none right now (rule 6); a provider can produce an export again while the account exists |
+| What           | Value                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| Knowledge base | the context repo, `my.memory.dir` (private `v1cferr/context`)                            |
+| Raw exports    | `~/context-raw/<product>/<YYYY-MM-DD>/`, outside git                                     |
+| Backup         | none right now (rule 6); a provider can produce an export again while the account exists |
 
 ## 1. ChatGPT
 

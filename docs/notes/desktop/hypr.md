@@ -126,16 +126,16 @@ mixer on SUPER+S. The launcher is Vicinae too, in `desktop/vicinae/`.
 stays visible inside every module loaded through `dofile`. The order is load-bearing: `autostart`
 comes late, so anything that aborts an earlier module leaves the session with no services.
 
-| Module | Subject |
-| --- | --- |
-| `environment` | `hl.env`: the cursor, the Qt theme, the Wayland platform |
-| `monitors` | `hl.monitor` plus `hl.workspace_rule` |
-| `glass` | HyprGlass, only when `my.hypr.hyprglass.enable` names it ([hyprglass.md](hyprglass.md)) |
-| `appearance` | general, decoration, animations |
-| `input` | the ABNT2 keyboard plus the mouse |
-| `autostart` | `hl.on("hyprland.start")` |
-| `rules` | `hl.window_rule` |
-| `keybinds` | every `hl.bind`, see [`keybinds.md`](keybinds.md) |
+| Module        | Subject                                                                                 |
+| ------------- | --------------------------------------------------------------------------------------- |
+| `environment` | `hl.env`: the cursor, the Qt theme, the Wayland platform                                |
+| `monitors`    | `hl.monitor` plus `hl.workspace_rule`                                                   |
+| `glass`       | HyprGlass, only when `my.hypr.hyprglass.enable` names it ([hyprglass.md](hyprglass.md)) |
+| `appearance`  | general, decoration, animations                                                         |
+| `input`       | the ABNT2 keyboard plus the mouse                                                       |
+| `autostart`   | `hl.on("hyprland.start")`                                                               |
+| `rules`       | `hl.window_rule`                                                                        |
+| `keybinds`    | every `hl.bind`, see [`keybinds.md`](keybinds.md)                                       |
 
 ### The `pcall` fallback, repeated in four modules
 
@@ -262,12 +262,12 @@ same way.
 
 Measured with `glxgears` parked on a workspace that was off screen (0.55.4, Arc B580):
 
-| State | FPS |
-| --- | --- |
-| Visible | 141.78 (vsync at 144 Hz) |
-| Off screen, no rule | 1.000 |
-| Off screen, `render_unfocused` + `render_unfocused_fps = 15` | 8 to 18, jittery |
-| Off screen, `render_unfocused` + `render_unfocused_fps = 30` | 30.28, steady |
+| State                                                        | FPS                      |
+| ------------------------------------------------------------ | ------------------------ |
+| Visible                                                      | 141.78 (vsync at 144 Hz) |
+| Off screen, no rule                                          | 1.000                    |
+| Off screen, `render_unfocused` + `render_unfocused_fps = 15` | 8 to 18, jittery         |
+| Off screen, `render_unfocused` + `render_unfocused_fps = 30` | 30.28, steady            |
 
 `render_unfocused = true` per class is the intended fix; the wiki's own example is Dark Souls, which
 disconnects when the fps flutters. The ceiling is not per rule, it is the global

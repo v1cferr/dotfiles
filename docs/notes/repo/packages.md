@@ -12,13 +12,13 @@ the [README](../../../README.md#where-does-a-package-go).
 
 ## Why some packages come from `unstable.*`
 
-| Package | Reason |
-| --- | --- |
-| `yt-dlp` | it breaks whenever the sites change, so it has to be fresh |
-| `speedtest-cli` | it follows speedtest.net's changes |
-| `fastfetch` | new hardware and version detection |
-| `flameshot` | v14 is the one with the portal capture path |
-| `vscode` | its src is swapped for the official tarball anyway (see [version-bumps](version-bumps.md)) |
+| Package         | Reason                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| `yt-dlp`        | it breaks whenever the sites change, so it has to be fresh                                 |
+| `speedtest-cli` | it follows speedtest.net's changes                                                         |
+| `fastfetch`     | new hardware and version detection                                                         |
+| `flameshot`     | v14 is the one with the portal capture path                                                |
+| `vscode`        | its src is swapped for the official tarball anyway (see [version-bumps](version-bumps.md)) |
 
 ## Claude Desktop needs the FHS variant
 

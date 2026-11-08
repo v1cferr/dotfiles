@@ -14,12 +14,12 @@ tolerate the hole instead of dying. But EVERYTHING is sized to fit inside VS Cod
 budget, which aborts with `Connecting with SSH timed out` at a FIXED 17 s (from the extension's
 log: `Using connect timeout of 17 seconds`).
 
-| Setting | Value | Why that number |
-| --- | --- | --- |
+| Setting                                    | Value        | Why that number                                                                                                                               |
+| ------------------------------------------ | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ConnectTimeout` plus `ConnectionAttempts` | 7 x 2 = 14 s | worst case INSIDE the 17 s. It was 15 x 3 = 45 s, and VS Code gave up mid second attempt and reported a timeout with the host about to answer |
-| `ServerAliveInterval` | 15 s | an encrypted keepalive holds the idle session on the SonicWall |
-| `ServerAliveCountMax` | 8 (~2 min) | it was 20 (~5 min) and that was COUNTERPRODUCTIVE |
-| `ControlPersist` | 10m | reopening becomes instant |
+| `ServerAliveInterval`                      | 15 s         | an encrypted keepalive holds the idle session on the SonicWall                                                                                |
+| `ServerAliveCountMax`                      | 8 (~2 min)   | it was 20 (~5 min) and that was COUNTERPRODUCTIVE                                                                                             |
+| `ControlPersist`                           | 10m          | reopening becomes instant                                                                                                                     |
 
 **Why 8 and not 20.** With 5 min of tolerance the multiplexed master stayed stuck in a dead tunnel
 that whole time, and every new connection glued itself to it and hung along
@@ -179,11 +179,11 @@ and its own host keys (`C:\ProgramData\ssh\ssh_host_*` on Windows, `/etc/ssh/ssh
 Linux side), answering on the SAME address and port. Measured that day, none of the three keys
 matched:
 
-| | Windows (OpenSSH 9.5) | Linux (OpenSSH 10.5) |
-| --- | --- | --- |
+|         | Windows (OpenSSH 9.5)                                | Linux (OpenSSH 10.5)                                 |
+| ------- | ---------------------------------------------------- | ---------------------------------------------------- |
 | ed25519 | `SHA256:PfytwEuINkNhyNE5RMzea0NkL4O1AFWuoeOhCI5CWdE` | `SHA256:ovue+UzduT+luQHHLT3KUfOwVbbGMA949wdQJPBdUmQ` |
-| rsa | `SHA256:GNgSXh/w+P8nbk/eQ373Bd3DlPSQlTwj38ShskQF3Dg` | `SHA256:KWrwbOOK0X4OD/2W0SNpxYO2fR6FjbwCUBqFnEJ7RLQ` |
-| ecdsa | `SHA256:MOzk0McYirsptnTn2Y4tRL8ucV4yfEDRNGmlRInuxqQ` | `SHA256:HyD7k1eBqJwpKEYqnaPiCNf/7Bi38SwgnQdHw9a51yo` |
+| rsa     | `SHA256:GNgSXh/w+P8nbk/eQ373Bd3DlPSQlTwj38ShskQF3Dg` | `SHA256:KWrwbOOK0X4OD/2W0SNpxYO2fR6FjbwCUBqFnEJ7RLQ` |
+| ecdsa   | `SHA256:MOzk0McYirsptnTn2Y4tRL8ucV4yfEDRNGmlRInuxqQ` | `SHA256:HyD7k1eBqJwpKEYqnaPiCNf/7Bi38SwgnQdHw9a51yo` |
 
 **The alarm is CORRECT and cannot be tuned away.** `known_hosts` maps a NAME (a host, an IP) to a
 key, so one address with two identities is, to the client, indistinguishable from somebody having

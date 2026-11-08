@@ -18,11 +18,11 @@ when its quota filled (the whole account is in
 
 No new destination yet. The three compared on 30/09/2026, so the next decision starts from here:
 
-| Destination | Cost, as quoted by third-party guides that day (NOT checked on the providers' own pages) | What it covers |
-| --- | --- | --- |
-| Hetzner Storage Box | about 3.20 EUR a month for 1 TB, SFTP, no egress fee | offsite, and restic speaks SFTP natively |
-| Backblaze B2 | about 6 USD per TB a month, 10 GB free, free egress up to 3x stored | offsite, paid by use |
-| a local USB disk | the disk, once | a dead NVMe; not a theft, a fire or a surge |
+| Destination         | Cost, as quoted by third-party guides that day (NOT checked on the providers' own pages) | What it covers                              |
+| ------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Hetzner Storage Box | about 3.20 EUR a month for 1 TB, SFTP, no egress fee                                     | offsite, and restic speaks SFTP natively    |
+| Backblaze B2        | about 6 USD per TB a month, 10 GB free, free egress up to 3x stored                      | offsite, paid by use                        |
+| a local USB disk    | the disk, once                                                                           | a dead NVMe; not a theft, a fire or a surge |
 
 ## Consequences
 

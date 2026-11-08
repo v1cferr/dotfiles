@@ -24,15 +24,15 @@ ported closes here and moves to [open-items.md](open-items.md) or to
 Every ref in the repo, because "check all the branches" was the ask and three of the six carry
 no configuration of their own:
 
-| Ref | Files | What it holds |
-| --- | --- | --- |
-| `main` | 659 | The FULLEST Arch snapshot: `arch` plus 2 commits (the netextender NAT gateway and one VS Code tweak) |
-| `arch` | 656 | The same tree, 2 commits behind `main`. Nothing exclusive |
-| `nixos` | 296 | Today's config. An ORPHAN history: no merge base with `main` or `arch` |
-| `backup-ptbr-msgs` | - | Branched off `nixos`. Only pt-BR commit messages, no config of its own |
-| `salvaguarda-voz` | - | Branched off `nixos`. Same thing, the voice safeguard of rule 17 |
-| `fix/jellyfin-wait-ipv4` | - | Already merged into `nixos` (0 commits ahead) |
-| tag `archive/pre-nix-2026-07-16` | - | It preserves the 493 pre-Nix COMMITS, but its TREE is the post-reset clean slate. It forks off `main` at `2ccecf9`, so the LAST 4 Arch commits are not in it |
+| Ref                              | Files | What it holds                                                                                                                                                |
+| -------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `main`                           | 659   | The FULLEST Arch snapshot: `arch` plus 2 commits (the netextender NAT gateway and one VS Code tweak)                                                         |
+| `arch`                           | 656   | The same tree, 2 commits behind `main`. Nothing exclusive                                                                                                    |
+| `nixos`                          | 296   | Today's config. An ORPHAN history: no merge base with `main` or `arch`                                                                                       |
+| `backup-ptbr-msgs`               | -     | Branched off `nixos`. Only pt-BR commit messages, no config of its own                                                                                       |
+| `salvaguarda-voz`                | -     | Branched off `nixos`. Same thing, the voice safeguard of rule 17                                                                                             |
+| `fix/jellyfin-wait-ipv4`         | -     | Already merged into `nixos` (0 commits ahead)                                                                                                                |
+| tag `archive/pre-nix-2026-07-16` | -     | It preserves the 493 pre-Nix COMMITS, but its TREE is the post-reset clean slate. It forks off `main` at `2ccecf9`, so the LAST 4 Arch commits are not in it |
 
 So the real comparison is **`main` against `nixos`**, and the tag is a history anchor rather
 than a source of files. The wallpapers dominate `main`'s count (369 of the 659), which is why
@@ -44,42 +44,42 @@ The same sweep, a month and the rename later. Of the 16 tail areas, most closed 
 other work went by, and the rest were decided one by one with the Arch tree open in `arch`. The
 sections below this one are left as measured on 08/09, so read this table first.
 
-| Area | Now | Where, or why |
-| --- | --- | --- |
-| atuin | Ported | `programs.atuin` in `modules/home/shell/cli.nix`, on Ctrl+R |
-| easyeffects | Replaced | The speaker EQ is a PipeWire filter-chain in `modules/nixos/hardware/audio.nix` |
-| spicetify | Replaced | Spotify itself gave way to Spotifast, its colors from the palette, in `modules/home/apps/spotifast.nix` |
-| nano | Ported, as a decision | `EDITOR=nano` in `zsh.nix`. Its syntax files come with nano 9.2; the Arch `.nanorc` only pulled a third-party set whose nixpkgs copy is from 2020 |
-| neovim | Dropped | Stock LazyVim boilerplate, nothing personal in it (see the corrected entry below) |
-| zsh | Closed | Ported: Ctrl+arrows, double-Esc sudo, the YouTube aliases (`ytmix` is the shuffled playlist), `grep --color=auto`. Replaced: `fhome`/`froot` by fzf's Alt+C and Ctrl+T through `fd` (the aliases ran `cd .` on Esc and walked all of `/`); the `ssh` TERM alias by `SetEnv TERM` per host in `ssh.nix`. Dropped: fastfetch at startup (measured: 0.09 s on a 0.12 s shell, and it would print in every VS Code and agent shell too; `fastfetch` is one command away) and `nrd`, since toolchains live in devShells |
-| kitty | Closed | Only `cursor_shape beam` came back. The rest was kitty's own defaults (`wheel_scroll_multiplier 5.0`, `repaint_delay`, `input_delay`, `sync_to_monitor`, `disable_ligatures never`), and F8/F9/F10 were refused: they duplicate binds that exist and steal F9/F10 from htop and btop |
-| btop | Ported, and better | Arch ran `Default`; now `tokyo-night`, set in place because btop owns its file (rule 14). bat and delta followed in the same pass |
-| vlc | Nothing to port | `vlcrc` held one active line, `qt-privacy-ask=0` |
-| gh | Ported | `programs.gh` in `modules/home/shell/git.nix` |
-| zen-browser | Rewritten | A minimal palette theme on Zen's own variables, `modules/home/apps/zen/theme.nix`. `zen-sync` is the activation now. Refining it is an open item |
-| hypr: wallpaper rotation | Ported | The september wallpaper work, per monitor, from my own pools |
-| hypr: 3-minute idle dim | Dropped | Not used and not wanted. It lived in Arch's `idle-dim.sh`, a listener that zeroed the gamma at 180 s before the lock at 300 s |
-| hypr: lockscreen notification count | Dropped | Not wanted. Arch's `lockscreen_notifs.sh` read it over IPC; the `notif count` IPC verb that waited for it in `Notifs.qml` went too, since nothing called it |
-| `bin/` | Closed | `vpn`, `wake-workstation` ported; `hypr-quick`'s wallpaper actions went with the rotation; `zen-sync` became the theme's activation |
-| `scripts/` | Closed | Arch by nature, as measured below |
-| homelab and the Caddy set | Dropped | Every absent service decided NOT to come back (13/10/2026): what covers each one is in the section below. The 9 vhosts declared now are the whole set |
-| polychromatic | Replaced | The OpenRGB service already in place for the Arc B580 DETECTS the Razer DeathAdder V2 (measured with `openrgb --client --list-devices`), so no openrazer GUI is needed. Setting the mouse's color from Nix would be new work, not a gap |
-| opencode | Ported | `modules/home/shell/opencode.nix` (25/10/2026), from `pkgs.unstable`. The Arch MCP list was not carried over: it pointed at `/opt` and project-specific servers |
-| lazydocker | Ported | `modules/nixos/services/docker.nix`, only where the engine is enabled. Ten containers run here, so a TUI over them earns its place |
+| Area                                | Now                   | Where, or why                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| atuin                               | Ported                | `programs.atuin` in `modules/home/shell/cli.nix`, on Ctrl+R                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| easyeffects                         | Replaced              | The speaker EQ is a PipeWire filter-chain in `modules/nixos/hardware/audio.nix`                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| spicetify                           | Replaced              | Spotify itself gave way to Spotifast, its colors from the palette, in `modules/home/apps/spotifast.nix`                                                                                                                                                                                                                                                                                                                                                                                                            |
+| nano                                | Ported, as a decision | `EDITOR=nano` in `zsh.nix`. Its syntax files come with nano 9.2; the Arch `.nanorc` only pulled a third-party set whose nixpkgs copy is from 2020                                                                                                                                                                                                                                                                                                                                                                  |
+| neovim                              | Dropped               | Stock LazyVim boilerplate, nothing personal in it (see the corrected entry below)                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| zsh                                 | Closed                | Ported: Ctrl+arrows, double-Esc sudo, the YouTube aliases (`ytmix` is the shuffled playlist), `grep --color=auto`. Replaced: `fhome`/`froot` by fzf's Alt+C and Ctrl+T through `fd` (the aliases ran `cd .` on Esc and walked all of `/`); the `ssh` TERM alias by `SetEnv TERM` per host in `ssh.nix`. Dropped: fastfetch at startup (measured: 0.09 s on a 0.12 s shell, and it would print in every VS Code and agent shell too; `fastfetch` is one command away) and `nrd`, since toolchains live in devShells |
+| kitty                               | Closed                | Only `cursor_shape beam` came back. The rest was kitty's own defaults (`wheel_scroll_multiplier 5.0`, `repaint_delay`, `input_delay`, `sync_to_monitor`, `disable_ligatures never`), and F8/F9/F10 were refused: they duplicate binds that exist and steal F9/F10 from htop and btop                                                                                                                                                                                                                               |
+| btop                                | Ported, and better    | Arch ran `Default`; now `tokyo-night`, set in place because btop owns its file (rule 14). bat and delta followed in the same pass                                                                                                                                                                                                                                                                                                                                                                                  |
+| vlc                                 | Nothing to port       | `vlcrc` held one active line, `qt-privacy-ask=0`                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| gh                                  | Ported                | `programs.gh` in `modules/home/shell/git.nix`                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| zen-browser                         | Rewritten             | A minimal palette theme on Zen's own variables, `modules/home/apps/zen/theme.nix`. `zen-sync` is the activation now. Refining it is an open item                                                                                                                                                                                                                                                                                                                                                                   |
+| hypr: wallpaper rotation            | Ported                | The september wallpaper work, per monitor, from my own pools                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| hypr: 3-minute idle dim             | Dropped               | Not used and not wanted. It lived in Arch's `idle-dim.sh`, a listener that zeroed the gamma at 180 s before the lock at 300 s                                                                                                                                                                                                                                                                                                                                                                                      |
+| hypr: lockscreen notification count | Dropped               | Not wanted. Arch's `lockscreen_notifs.sh` read it over IPC; the `notif count` IPC verb that waited for it in `Notifs.qml` went too, since nothing called it                                                                                                                                                                                                                                                                                                                                                        |
+| `bin/`                              | Closed                | `vpn`, `wake-workstation` ported; `hypr-quick`'s wallpaper actions went with the rotation; `zen-sync` became the theme's activation                                                                                                                                                                                                                                                                                                                                                                                |
+| `scripts/`                          | Closed                | Arch by nature, as measured below                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| homelab and the Caddy set           | Dropped               | Every absent service decided NOT to come back (13/10/2026): what covers each one is in the section below. The 9 vhosts declared now are the whole set                                                                                                                                                                                                                                                                                                                                                              |
+| polychromatic                       | Replaced              | The OpenRGB service already in place for the Arc B580 DETECTS the Razer DeathAdder V2 (measured with `openrgb --client --list-devices`), so no openrazer GUI is needed. Setting the mouse's color from Nix would be new work, not a gap                                                                                                                                                                                                                                                                            |
+| opencode                            | Ported                | `modules/home/shell/opencode.nix` (25/10/2026), from `pkgs.unstable`. The Arch MCP list was not carried over: it pointed at `/opt` and project-specific servers                                                                                                                                                                                                                                                                                                                                                    |
+| lazydocker                          | Ported                | `modules/nixos/services/docker.nix`, only where the engine is enabled. Ten containers run here, so a TUI over them earns its place                                                                                                                                                                                                                                                                                                                                                                                 |
 
 ## The verdict
 
 53 configuration areas on the Arch side, and the split is what a finished migration looks like
 with a tail:
 
-| Verdict | Areas | Meaning |
-| --- | --- | --- |
-| Migrated | 25 | Declared on NixOS, same job, usually a superset |
-| Replaced | 9 | A different tool doing the same job, on purpose |
-| Dropped on purpose | 2 | Decided against, with the reasoning already written down |
-| Arch-only | 1 | Meaningless outside pacman |
-| Partial | 8 | The app came across, some of its config did not |
-| Missing | 8 | Nothing on this side at all |
+| Verdict            | Areas | Meaning                                                  |
+| ------------------ | ----- | -------------------------------------------------------- |
+| Migrated           | 25    | Declared on NixOS, same job, usually a superset          |
+| Replaced           | 9     | A different tool doing the same job, on purpose          |
+| Dropped on purpose | 2     | Decided against, with the reasoning already written down |
+| Arch-only          | 1     | Meaningless outside pacman                               |
+| Partial            | 8     | The app came across, some of its config did not          |
+| Missing            | 8     | Nothing on this side at all                              |
 
 The 16 areas in the last two rows are the whole of what is left, and none of them holds the
 machine back: the desktop, the network, the boot, the backup, the secrets and the remote access
@@ -98,56 +98,56 @@ does not read them as paths that should exist on this branch.
 
 ### Migrated
 
-| Arch area | Where it lives now |
-| --- | --- |
-| `main:hypr/` (37 files) | [`modules/home/desktop/hypr.nix`](../modules/home/desktop/hypr.nix) plus 7 Lua files. Two deltas, below |
-| `main:quickshell/` (17) | [`modules/home/desktop/quickshell.nix`](../modules/home/desktop/quickshell.nix) plus 25 QML files, a superset |
-| `main:vscode/` (8) | [`modules/home/apps/vscode.nix`](../modules/home/apps/vscode.nix): settings, keybindings, MCP and the extension mirror |
-| `main:netextender/` (12) | [`modules/nixos/network/vpn.nix`](../modules/nixos/network/vpn.nix) (nxBender) plus [`modules/nixos/network/fai-gateway.nix`](../modules/nixos/network/fai-gateway.nix); the WoL scripts became `wake-workstation` |
-| `main:networkmanager/` | The UFSCar profile became openconnect/GlobalProtect in the same `vpn.nix` |
-| `main:fail2ban/` (5) | [`modules/nixos/network/network.nix`](../modules/nixos/network/network.nix) plus the generated jail in [`modules/nixos/services/caddy.nix`](../modules/nixos/services/caddy.nix) |
-| `main:ssh/` (4) | `network.nix` (port 2222, now with TOTP) plus [`modules/home/shell/ssh.nix`](../modules/home/shell/ssh.nix) |
-| `main:caddy/` (3) | `caddy.nix`, with the vhosts GENERATED from `my.ingress`. The subdomain SET is smaller, see Partial |
-| `main:wireguard/` | [`hosts/cudy-wr3000/uci/`](../hosts/cudy-wr3000/uci/network.conf), because the tunnel moved to the router |
-| `main:system/` (14) | [`modules/nixos/core/core.nix`](../modules/nixos/core/core.nix) (locale, timezone, `br-abnt2`), `hostName` per host, [`modules/nixos/core/boot.nix`](../modules/nixos/core/boot.nix) |
-| `main:swap/` | `zramSwap.enable` in [`modules/nixos/hardware/hardware.nix`](../modules/nixos/hardware/hardware.nix) |
-| `main:fontconfig/` | [`modules/nixos/desktop/fonts.nix`](../modules/nixos/desktop/fonts.nix), a superset: CJK plus corefonts plus vista-fonts |
-| `main:gtk-3.0/`, `main:gtk-4.0/` | [`modules/home/desktop/theme.nix`](../modules/home/desktop/theme.nix) plus [`modules/home/desktop/palette.nix`](../modules/home/desktop/palette.nix) |
-| `main:rofi/` | replaced by Vicinae on 13/10/2026: [`modules/home/desktop/vicinae/`](../modules/home/desktop/vicinae/default.nix), themed from the palette |
-| `main:kitty/` | [`modules/home/shell/kitty.nix`](../modules/home/shell/kitty.nix). Small deltas, below |
-| `main:starship/` | [`modules/home/shell/starship.nix`](../modules/home/shell/starship.nix) |
-| `main:git/` | [`modules/home/shell/git.nix`](../modules/home/shell/git.nix) |
-| `main:fastfetch/` | [`modules/home/shell/fastfetch/`](../modules/home/shell/fastfetch/default.nix) |
-| `main:flameshot/` | [`modules/home/apps/flameshot.nix`](../modules/home/apps/flameshot.nix), with the `sc1`/`sc2` aliases by monitor NAME |
-| `main:mpv/` | `programs.mpv` in [`modules/home/apps/media.nix`](../modules/home/apps/media.nix) |
-| `main:uv/` | The package in [`modules/nixos/packages.nix`](../modules/nixos/packages.nix); the receipt is state (rule 6) |
-| `main:autostart/` | [`modules/home/apps/dropbox.nix`](../modules/home/apps/dropbox.nix) plus [`modules/home/desktop/autostart.nix`](../modules/home/desktop/autostart.nix), one unit per app |
-| `main:claude/` | `claude-desktop-fhs` in [`modules/home/packages.nix`](../modules/home/packages.nix) |
-| `main:.claude/` | [`.claude/settings.json`](../.claude/settings.json), plus the managed layer of [`modules/nixos/services/claude-code.nix`](../modules/nixos/services/claude-code.nix) |
-| The root `.md` files | The whole of [docs/](README.md). `ANOTACOES.md` was 1949 lines and became this tree |
+| Arch area                        | Where it lives now                                                                                                                                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `main:hypr/` (37 files)          | [`modules/home/desktop/hypr.nix`](../modules/home/desktop/hypr.nix) plus 7 Lua files. Two deltas, below                                                                                                            |
+| `main:quickshell/` (17)          | [`modules/home/desktop/quickshell.nix`](../modules/home/desktop/quickshell.nix) plus 25 QML files, a superset                                                                                                      |
+| `main:vscode/` (8)               | [`modules/home/apps/vscode.nix`](../modules/home/apps/vscode.nix): settings, keybindings, MCP and the extension mirror                                                                                             |
+| `main:netextender/` (12)         | [`modules/nixos/network/vpn.nix`](../modules/nixos/network/vpn.nix) (nxBender) plus [`modules/nixos/network/fai-gateway.nix`](../modules/nixos/network/fai-gateway.nix); the WoL scripts became `wake-workstation` |
+| `main:networkmanager/`           | The UFSCar profile became openconnect/GlobalProtect in the same `vpn.nix`                                                                                                                                          |
+| `main:fail2ban/` (5)             | [`modules/nixos/network/network.nix`](../modules/nixos/network/network.nix) plus the generated jail in [`modules/nixos/services/caddy.nix`](../modules/nixos/services/caddy.nix)                                   |
+| `main:ssh/` (4)                  | `network.nix` (port 2222, now with TOTP) plus [`modules/home/shell/ssh.nix`](../modules/home/shell/ssh.nix)                                                                                                        |
+| `main:caddy/` (3)                | `caddy.nix`, with the vhosts GENERATED from `my.ingress`. The subdomain SET is smaller, see Partial                                                                                                                |
+| `main:wireguard/`                | [`hosts/cudy-wr3000/uci/`](../hosts/cudy-wr3000/uci/network.conf), because the tunnel moved to the router                                                                                                          |
+| `main:system/` (14)              | [`modules/nixos/core/core.nix`](../modules/nixos/core/core.nix) (locale, timezone, `br-abnt2`), `hostName` per host, [`modules/nixos/core/boot.nix`](../modules/nixos/core/boot.nix)                               |
+| `main:swap/`                     | `zramSwap.enable` in [`modules/nixos/hardware/hardware.nix`](../modules/nixos/hardware/hardware.nix)                                                                                                               |
+| `main:fontconfig/`               | [`modules/nixos/desktop/fonts.nix`](../modules/nixos/desktop/fonts.nix), a superset: CJK plus corefonts plus vista-fonts                                                                                           |
+| `main:gtk-3.0/`, `main:gtk-4.0/` | [`modules/home/desktop/theme.nix`](../modules/home/desktop/theme.nix) plus [`modules/home/desktop/palette.nix`](../modules/home/desktop/palette.nix)                                                               |
+| `main:rofi/`                     | replaced by Vicinae on 13/10/2026: [`modules/home/desktop/vicinae/`](../modules/home/desktop/vicinae/default.nix), themed from the palette                                                                         |
+| `main:kitty/`                    | [`modules/home/shell/kitty.nix`](../modules/home/shell/kitty.nix). Small deltas, below                                                                                                                             |
+| `main:starship/`                 | [`modules/home/shell/starship.nix`](../modules/home/shell/starship.nix)                                                                                                                                            |
+| `main:git/`                      | [`modules/home/shell/git.nix`](../modules/home/shell/git.nix)                                                                                                                                                      |
+| `main:fastfetch/`                | [`modules/home/shell/fastfetch/`](../modules/home/shell/fastfetch/default.nix)                                                                                                                                     |
+| `main:flameshot/`                | [`modules/home/apps/flameshot.nix`](../modules/home/apps/flameshot.nix), with the `sc1`/`sc2` aliases by monitor NAME                                                                                              |
+| `main:mpv/`                      | `programs.mpv` in [`modules/home/apps/media.nix`](../modules/home/apps/media.nix)                                                                                                                                  |
+| `main:uv/`                       | The package in [`modules/nixos/packages.nix`](../modules/nixos/packages.nix); the receipt is state (rule 6)                                                                                                        |
+| `main:autostart/`                | [`modules/home/apps/dropbox.nix`](../modules/home/apps/dropbox.nix) plus [`modules/home/desktop/autostart.nix`](../modules/home/desktop/autostart.nix), one unit per app                                           |
+| `main:claude/`                   | `claude-desktop-fhs` in [`modules/home/packages.nix`](../modules/home/packages.nix)                                                                                                                                |
+| `main:.claude/`                  | [`.claude/settings.json`](../.claude/settings.json), plus the managed layer of [`modules/nixos/services/claude-code.nix`](../modules/nixos/services/claude-code.nix)                                               |
+| The root `.md` files             | The whole of [docs/](README.md). `ANOTACOES.md` was 1949 lines and became this tree                                                                                                                                |
 
 ### Replaced
 
 Same job, a different tool, and each one has its reasoning already recorded:
 
-| Arch area | What does the job now | Why |
-| --- | --- | --- |
-| `main:waybar/` (23) | The Quickshell bar | The port happened while still on Arch; the bar is QML now |
-| `main:swaync/` | Quickshell's notification service | One daemon fewer, and it is already the tray owner |
-| `main:xsettingsd/` | `gtk` plus `dconf` in `theme.nix` | The idiomatic home-manager path; no X11 daemon |
-| `main:greetd/` (7) | LightDM plus autologin in [`modules/nixos/desktop/desktop.nix`](../modules/nixos/desktop/desktop.nix) | Sunshine captures a LIVE session, so the machine has to log itself in |
-| `main:kwallet/` | gnome-keyring in the same `desktop.nix` | It is the `org.freedesktop.secrets` provider VS Code asks for |
-| `main:openrazer/` | hidraw plus `razer-dpi` in [`modules/nixos/hardware/deathadder-v2.nix`](../modules/nixos/hardware/deathadder-v2.nix) | openrazer does not build on kernel 7.1 or newer |
-| `main:cloudflare-ddns/` (4) | `ddns-scripts` on the router, [`hosts/cudy-wr3000/uci/ddns.conf`](../hosts/cudy-wr3000/uci/ddns.conf) | The anchor stopped depending on this machine being awake |
-| `main:docker/` | [`modules/nixos/services/docker.nix`](../modules/nixos/services/docker.nix), the prune policy | The only content was the nvidia runtime, and the GPU is an Arc now |
-| `main:bash/` | zsh as the login shell | `.bashrc` was already vestigial |
+| Arch area                   | What does the job now                                                                                                | Why                                                                   |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `main:waybar/` (23)         | The Quickshell bar                                                                                                   | The port happened while still on Arch; the bar is QML now             |
+| `main:swaync/`              | Quickshell's notification service                                                                                    | One daemon fewer, and it is already the tray owner                    |
+| `main:xsettingsd/`          | `gtk` plus `dconf` in `theme.nix`                                                                                    | The idiomatic home-manager path; no X11 daemon                        |
+| `main:greetd/` (7)          | LightDM plus autologin in [`modules/nixos/desktop/desktop.nix`](../modules/nixos/desktop/desktop.nix)                | Sunshine captures a LIVE session, so the machine has to log itself in |
+| `main:kwallet/`             | gnome-keyring in the same `desktop.nix`                                                                              | It is the `org.freedesktop.secrets` provider VS Code asks for         |
+| `main:openrazer/`           | hidraw plus `razer-dpi` in [`modules/nixos/hardware/deathadder-v2.nix`](../modules/nixos/hardware/deathadder-v2.nix) | openrazer does not build on kernel 7.1 or newer                       |
+| `main:cloudflare-ddns/` (4) | `ddns-scripts` on the router, [`hosts/cudy-wr3000/uci/ddns.conf`](../hosts/cudy-wr3000/uci/ddns.conf)                | The anchor stopped depending on this machine being awake              |
+| `main:docker/`              | [`modules/nixos/services/docker.nix`](../modules/nixos/services/docker.nix), the prune policy                        | The only content was the nvidia runtime, and the GPU is an Arc now    |
+| `main:bash/`                | zsh as the login shell                                                                                               | `.bashrc` was already vestigial                                       |
 
 ### Dropped on purpose
 
-| Arch area | Decision |
-| --- | --- |
-| `main:wallpapers/` (369 files) | `pkgs.nixos-artwork` instead, so no binary lives in git. Recorded in the [july history](history/2026/07-july.md). The images went; the ROTATION went with them, which is a delta and not a decision, see below |
-| `main:cloudflare/` (the tunnel) | `expose = "public"` works without it. Written down in the [august history](history/2026/08-august.md): "there is no need for cloudflared" |
+| Arch area                       | Decision                                                                                                                                                                                                       |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `main:wallpapers/` (369 files)  | `pkgs.nixos-artwork` instead, so no binary lives in git. Recorded in the [july history](history/2026/07-july.md). The images went; the ROTATION went with them, which is a delta and not a decision, see below |
+| `main:cloudflare/` (the tunnel) | `expose = "public"` works without it. Written down in the [august history](history/2026/08-august.md): "there is no need for cloudflared"                                                                      |
 
 `main:pacseek/` is the one area that has no NixOS meaning at all.
 
@@ -159,22 +159,22 @@ This was the biggest gap by far, and the only one that would have been a project
 served **14 subdomains**; this branch declares **5**, and one of those (`pos`, GradRadar) is new
 and never existed over there.
 
-| Subdomain | Port | On NixOS |
-| --- | --- | --- |
-| `jellyfin` | 8096 | Yes, and NATIVE now instead of a container |
-| `torrent` | 8080 | Yes, native ([`modules/nixos/services/qbittorrent.nix`](../modules/nixos/services/qbittorrent.nix)) |
-| `ai` | 11434 | Yes, `expose = "lan"` ([`modules/nixos/services/ollama.nix`](../modules/nixos/services/ollama.nix)) |
-| `duo` | 3010 | Yes ([`modules/nixos/services/duo.nix`](../modules/nixos/services/duo.nix)) |
-| `chat` | 3000 | Dropped. open-webui: Ollama stays in `ai`, and the chat I use is Claude and agy |
-| `jellyseerr` | 5055 | Dropped, with the whole \*arr stack: no media is fetched on a schedule anymore |
-| `prowlarr` | 9696 | Dropped (\*arr) |
-| `radarr` | 7878 | Dropped (\*arr) |
-| `sonarr` | 8989 | Dropped (\*arr) |
-| `bazarr` | 6767 | Dropped (\*arr) |
-| `spendflow` | 3001 | Dropped. My own project, not in use; it can come back like `credit` and `pos` if it is |
-| `ap` | 3005 | Dropped. ufscar-housing-radar (V1C-68), idle since 30/06/2026 |
-| `dash` | 3003 | Dropped. Homepage: the Quickshell dash is the status page now, and it needed the docker socket |
-| `files` | 3004 | Dropped. FileBrowser: Dolphin, SSH and rclone cover it, without files on the web |
+| Subdomain    | Port  | On NixOS                                                                                            |
+| ------------ | ----- | --------------------------------------------------------------------------------------------------- |
+| `jellyfin`   | 8096  | Yes, and NATIVE now instead of a container                                                          |
+| `torrent`    | 8080  | Yes, native ([`modules/nixos/services/qbittorrent.nix`](../modules/nixos/services/qbittorrent.nix)) |
+| `ai`         | 11434 | Yes, `expose = "lan"` ([`modules/nixos/services/ollama.nix`](../modules/nixos/services/ollama.nix)) |
+| `duo`        | 3010  | Yes ([`modules/nixos/services/duo.nix`](../modules/nixos/services/duo.nix))                         |
+| `chat`       | 3000  | Dropped. open-webui: Ollama stays in `ai`, and the chat I use is Claude and agy                     |
+| `jellyseerr` | 5055  | Dropped, with the whole \*arr stack: no media is fetched on a schedule anymore                      |
+| `prowlarr`   | 9696  | Dropped (\*arr)                                                                                     |
+| `radarr`     | 7878  | Dropped (\*arr)                                                                                     |
+| `sonarr`     | 8989  | Dropped (\*arr)                                                                                     |
+| `bazarr`     | 6767  | Dropped (\*arr)                                                                                     |
+| `spendflow`  | 3001  | Dropped. My own project, not in use; it can come back like `credit` and `pos` if it is              |
+| `ap`         | 3005  | Dropped. ufscar-housing-radar (V1C-68), idle since 30/06/2026                                       |
+| `dash`       | 3003  | Dropped. Homepage: the Quickshell dash is the status page now, and it needed the docker socket      |
+| `files`      | 3004  | Dropped. FileBrowser: Dolphin, SSH and rclone cover it, without files on the web                    |
 
 Two containers had no subdomain and were dropped too: `flaresolverr` (the \*arr stack's captcha
 solver, gone with the stack) and the RustDesk server (`hbbs`/`hbbr`), which Sunshine/Moonlight and
@@ -216,13 +216,13 @@ gone by policy, since toolchains live in a devShell reached by direnv now.
 
 ### `main:bin/`
 
-| Script | Status |
-| --- | --- |
-| `vpn`, `vpn-off` | The `vpn` CLI in `modules/nixos/network/vpn.nix`, and it needs no password (polkit) |
-| `wake-fai` | `wake-workstation` in [`modules/home/network/fai-workstation.nix`](../modules/home/network/fai-workstation.nix), with three WoL paths instead of one |
-| `dark-mode`, `tokyo-night` | Obsolete by construction: the theme is a Nix palette applied at build time (rule 11, decision 0001) |
-| `hypr-quick` | Missing. Mostly subsumed by the binds, EXCEPT its wallpaper actions |
-| `zen-sync` | Missing, and it is the delivery half of the Zen customization below |
+| Script                     | Status                                                                                                                                               |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vpn`, `vpn-off`           | The `vpn` CLI in `modules/nixos/network/vpn.nix`, and it needs no password (polkit)                                                                  |
+| `wake-fai`                 | `wake-workstation` in [`modules/home/network/fai-workstation.nix`](../modules/home/network/fai-workstation.nix), with three WoL paths instead of one |
+| `dark-mode`, `tokyo-night` | Obsolete by construction: the theme is a Nix palette applied at build time (rule 11, decision 0001)                                                  |
+| `hypr-quick`               | Missing. Mostly subsumed by the binds, EXCEPT its wallpaper actions                                                                                  |
+| `zen-sync`                 | Missing, and it is the delivery half of the Zen customization below                                                                                  |
 
 ### `main:hypr/`, the two deltas
 

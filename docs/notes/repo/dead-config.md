@@ -8,15 +8,15 @@ remembering, which is the same "intention, not a standard" the CI's own header r
 
 ## The seven checks
 
-| Check | What is dead | Why it is silent |
-| --- | --- | --- |
-| module | a `.nix` under `modules/nixos/` or `modules/home/` that no `imports` reaches | it evaluates to nothing, so nothing fails; the file just sits there looking live |
-| input | a flake input nothing consumes | it is still fetched, locked and evaluated on every build |
-| option | a `my.*` option nobody reads through `config`/`osConfig` | an SSOT with no consumer, which is the thing rule 11 exists to prevent |
-| note | a page in `docs/notes/` no module points at | rule 2 made the pointer the ONLY path in, so an unpointed page is unreachable |
-| secret | a key in `secrets.yaml` nothing consumes | a credential kept, re-encrypted for two recipients and rotated for nobody |
-| secret-index | a key in `bitwarden-secrets.json` with no value in the vault | it breaks at `nixos-rebuild`, which is a far slower loop than a hook |
-| artifact | a tracked build output or editor dropping | a `.gitignore` only stops what is not tracked YET |
+| Check        | What is dead                                                                 | Why it is silent                                                                 |
+| ------------ | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| module       | a `.nix` under `modules/nixos/` or `modules/home/` that no `imports` reaches | it evaluates to nothing, so nothing fails; the file just sits there looking live |
+| input        | a flake input nothing consumes                                               | it is still fetched, locked and evaluated on every build                         |
+| option       | a `my.*` option nobody reads through `config`/`osConfig`                     | an SSOT with no consumer, which is the thing rule 11 exists to prevent           |
+| note         | a page in `docs/notes/` no module points at                                  | rule 2 made the pointer the ONLY path in, so an unpointed page is unreachable    |
+| secret       | a key in `secrets.yaml` nothing consumes                                     | a credential kept, re-encrypted for two recipients and rotated for nobody        |
+| secret-index | a key in `bitwarden-secrets.json` with no value in the vault                 | it breaks at `nixos-rebuild`, which is a far slower loop than a hook             |
+| artifact     | a tracked build output or editor dropping                                    | a `.gitignore` only stops what is not tracked YET                                |
 
 ## What it found on the first run
 
@@ -133,10 +133,10 @@ nobody deletes a line that looks deliberate. The date is not a deadline for the 
 the question comes back: on it, the exception is deleted or the date moves in a commit that says
 why, which is the same contract as a budget in `tools/eval-metrics/budget.json`.
 
-| Exception | Review by | Why that date |
-| --- | --- | --- |
-| `secret:restic_password` | 2026-12-31 | new storage was the plan; a quarter is when to ask again |
-| `note:docs/notes/repo/license.md` | 2027-09-29 | a policy, so a yearly look is enough |
+| Exception                         | Review by  | Why that date                                            |
+| --------------------------------- | ---------- | -------------------------------------------------------- |
+| `secret:restic_password`          | 2026-12-31 | new storage was the plan; a quarter is when to ask again |
+| `note:docs/notes/repo/license.md` | 2027-09-29 | a policy, so a yearly look is enough                     |
 
 **`--expired` also reads `.config/gitleaks.toml`**: the `# review-by:` line above each allowlist block,
 keyed by its `description` ([github-settings](github-settings.md)). One clock for every exception

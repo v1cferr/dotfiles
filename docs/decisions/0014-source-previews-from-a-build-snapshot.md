@@ -25,12 +25,12 @@ commit does not rebuild the site.
 A second derivation, `docs-sources`, indexes which files each page is about and copies those files,
 and `pages` joins it to the site, as it already joins the stats:
 
-| Option | Verdict |
-| --- | --- |
+| Option                                              | Verdict                                                  |
+| --------------------------------------------------- | -------------------------------------------------------- |
 | a snapshot built beside the site, joined in `pages` | **chosen**: static, same commit, the site's fence intact |
-| the snapshot inside `docs-site` | rejected: every `modules/` commit would rebuild the site |
-| GitHub's API or an embed in the browser | rejected: a third party at read time, against rule 20 |
-| copying the whole repo into the export | rejected: it publishes what no page shows |
+| the snapshot inside `docs-site`                     | rejected: every `modules/` commit would rebuild the site |
+| GitHub's API or an embed in the browser             | rejected: a third party at read time, against rule 20    |
+| copying the whole repo into the export              | rejected: it publishes what no page shows                |
 
 What may be published is ONE file, `tools/docs-site/source-policy.json`: roots, languages, and what
 is kept out by path, by name and by content. Both the Nix fence and the indexer read it.

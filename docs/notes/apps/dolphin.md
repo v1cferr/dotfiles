@@ -127,13 +127,13 @@ Only the keys where Dolphin's default DIVERGES from Explorer's, and each default
 package's `config.kcfg`, not guessed. `HighlightEntireRow` and `SortFoldersFirst` already come
 right and stay out.
 
-| Key | Why |
-| --- | --- |
+| Key                                   | Why                                                                                                   |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `DetailsMode/ExpandableFolders=false` | the `▶` markers and tree lines are the most jarring difference; Explorer has no expander in that view |
-| `General/ShowSelectionToggle=false` | the hover selection marker; on Win11 "item check boxes" comes OFF |
-| `General/AlwaysShowTabBar=true` | Win11 Explorer shows the tab strip even with a single tab |
-| `General/ShowFullPath=true` | an address bar with the full path, not just the folder name |
-| `General/ShowStatusBar=FullWidth` | a KConfigXT enum: write the choice's NAME, not the index |
+| `General/ShowSelectionToggle=false`   | the hover selection marker; on Win11 "item check boxes" comes OFF                                     |
+| `General/AlwaysShowTabBar=true`       | Win11 Explorer shows the tab strip even with a single tab                                             |
+| `General/ShowFullPath=true`           | an address bar with the full path, not just the folder name                                           |
+| `General/ShowStatusBar=FullWidth`     | a KConfigXT enum: write the choice's NAME, not the index                                              |
 
 The "pixel-perfect" guide that circulates in the community was NOT followed
 (vrunox-9714/dolphin-win11-theme): it depends on a KWIN RULE to remove the title bar, and here it

@@ -19,9 +19,9 @@ The apps are hidden, never closed: they keep running, notifying and playing audi
 
 Two halves, joined by IPC:
 
-| Part | File | Job |
-| --- | --- | --- |
-| The hiding | [`hypr/lua/vault.lua`](../../../modules/home/desktop/hypr/lua/vault.lua) | which classes count, moving windows to `special:vault` and back |
+| Part              | File                                                                                                                                                                    | Job                                                                             |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| The hiding        | [`hypr/lua/vault.lua`](../../../modules/home/desktop/hypr/lua/vault.lua)                                                                                                | which classes count, moving windows to `special:vault` and back                 |
 | The password card | [`quickshell/Vault.qml`](../../../modules/home/desktop/quickshell/Vault.qml), [`vault/VaultPrompt.qml`](../../../modules/home/desktop/quickshell/vault/VaultPrompt.qml) | which apps it asks for, the PAM conversation, calling `vault.release(app)` back |
 
 - **The session lock** hides every open vault app first: `lockscreen.service` runs
@@ -57,14 +57,14 @@ Two halves, joined by IPC:
 The classes are Lua patterns over the lowercased window class, because X11 and Wayland report
 different ids for the same app:
 
-| App | Classes |
-| --- | --- |
-| Discord | `discord`, `vesktop` |
-| Telegram | `TelegramDesktop`, `org.telegram.desktop` |
-| ChatGPT (the `chatgpt-web` web app) | `chatgpt` |
-| Obsidian | `obsidian`, `md.Obsidian` |
-| Zen | `zen*` |
-| LibreWolf | `librewolf` |
+| App                                 | Classes                                   |
+| ----------------------------------- | ----------------------------------------- |
+| Discord                             | `discord`, `vesktop`                      |
+| Telegram                            | `TelegramDesktop`, `org.telegram.desktop` |
+| ChatGPT (the `chatgpt-web` web app) | `chatgpt`                                 |
+| Obsidian                            | `obsidian`, `md.Obsidian`                 |
+| Zen                                 | `zen*`                                    |
+| LibreWolf                           | `librewolf`                               |
 
 Adding an app is one line in `APPS` (vault.lua) plus its name and icon in `Vault.qml`. The `.lua`
 is hot-reloaded, so `hyprctl reload` applies it with no rebuild.

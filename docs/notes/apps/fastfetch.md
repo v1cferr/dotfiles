@@ -42,11 +42,11 @@ goes on to the prompt.
 
 ## The layout follows the terminal
 
-| Terminal | What prints |
-| --- | --- |
-| 143+ columns, taller than the boxes, a terminal on both ends | the spinning logo and the boxes |
-| 64+ columns | the boxes alone |
-| narrower | the plain list, from the same modules in another style |
+| Terminal                                                     | What prints                                            |
+| ------------------------------------------------------------ | ------------------------------------------------------ |
+| 143+ columns, taller than the boxes, a terminal on both ends | the spinning logo and the boxes                        |
+| 64+ columns                                                  | the boxes alone                                        |
+| narrower                                                     | the plain list, from the same modules in another style |
 
 A logo taller than the window breaks fastfetch, which draws the logo first and climbs back up to
 print the boxes beside it; a scrolled screen cannot be climbed. Arguments (`fastfetch --help`) and a

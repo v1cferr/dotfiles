@@ -178,12 +178,12 @@ It replaces the MkDocs hook that did this and does the same four things, with on
 (The hook's own path cannot be quoted here: `docs-links` would flag a backticked path to a file
 that no longer exists, which is the check working.)
 
-| Target | Becomes |
-| --- | --- |
-| a page inside `docs/` | its site URL, from `lib/urls.ts` |
-| a path that escapes `docs/` | `.../blob/main/<path>` |
-| a folder with a README | that folder's page |
-| a folder without one | `.../tree/main/<path>` |
+| Target                      | Becomes                          |
+| --------------------------- | -------------------------------- |
+| a page inside `docs/`       | its site URL, from `lib/urls.ts` |
+| a path that escapes `docs/` | `.../blob/main/<path>`           |
+| a folder with a README      | that folder's page               |
+| a folder without one        | `.../tree/main/<path>`           |
 
 **The repo and the branch are READ from `tools/docs-site/site.json`**, not written in the plugin as
 well: that would be a second owner of a value whose staleness breaks 140 links at once, which is

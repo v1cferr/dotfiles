@@ -3,11 +3,11 @@
 `modules/nixos/hardware/btrfs.nix` is the SSOT of btrfs POLICY. The division of labor, so nobody looks in
 the wrong place:
 
-| Concern | Where |
-| --- | --- |
-| LAYOUT (subvolumes, mount options) | `hosts/<host>/disko.nix` |
-| POLICY (scrub, alarm, reclaim) | `modules/nixos/hardware/btrfs.nix` |
-| SNAPSHOTS (retention, schedule) | `modules/nixos/services/btrbk.nix` |
+| Concern                            | Where                              |
+| ---------------------------------- | ---------------------------------- |
+| LAYOUT (subvolumes, mount options) | `hosts/<host>/disko.nix`           |
+| POLICY (scrub, alarm, reclaim)     | `modules/nixos/hardware/btrfs.nix` |
+| SNAPSHOTS (retention, schedule)    | `modules/nixos/services/btrbk.nix` |
 
 It is machine-agnostic on purpose (it lives in `modules/nixos/`, not in `hosts/`): everything is behind
 the `is the root btrfs?` guard, so a future ext4 host simply receives none of it, instead of
@@ -152,17 +152,17 @@ on purpose: its library changes little between updates, and the games live on th
 [Akita, "always pick BTRFS, not EXT4"](https://akitaonrails.com/2026/10/12/usuarios-linux-sempre-escolham-btrfs-nao-ext4/)
 (12/10/2026), item by item, audited on 13/10/2026:
 
-| The article recommends | Here |
-| --- | --- |
-| `compress=zstd:1` | every subvolume but `@swap`, from disko's `btrfsOptions`; MEASURED below |
-| a monthly scrub, watch `device stats` | the NVMe AND the backup disk, plus a daily `device stats -c`, both with the alarm |
-| metadata DUP on a single disk | yes: `Metadata, DUP` and `System, DUP` (the mkfs default) |
-| balance only when unallocated runs low | better: the kernel's dynamic plus periodic reclaim does exactly that |
-| `chattr +C` before VM images and databases | Docker volumes, Jellyfin's SQLite, libvirt images |
-| snapshots with automatic retention | btrbk on `@home`, hourly `onchange`, `48h 7d 4w` ([btrbk](btrbk.md)) |
-| subvolumes to keep caches out of snapshots | `~/.cache`, above |
-| restic, with databases dumped first | yes, to the backup disk ([restic](restic.md)) |
-| reflinks and offline dedup | `cp` reflinks by default (coreutils 9+); `nix.optimise` dedups the store |
+| The article recommends                     | Here                                                                              |
+| ------------------------------------------ | --------------------------------------------------------------------------------- |
+| `compress=zstd:1`                          | every subvolume but `@swap`, from disko's `btrfsOptions`; MEASURED below          |
+| a monthly scrub, watch `device stats`      | the NVMe AND the backup disk, plus a daily `device stats -c`, both with the alarm |
+| metadata DUP on a single disk              | yes: `Metadata, DUP` and `System, DUP` (the mkfs default)                         |
+| balance only when unallocated runs low     | better: the kernel's dynamic plus periodic reclaim does exactly that              |
+| `chattr +C` before VM images and databases | Docker volumes, Jellyfin's SQLite, libvirt images                                 |
+| snapshots with automatic retention         | btrbk on `@home`, hourly `onchange`, `48h 7d 4w` ([btrbk](btrbk.md))              |
+| subvolumes to keep caches out of snapshots | `~/.cache`, above                                                                 |
+| restic, with databases dumped first        | yes, to the backup disk ([restic](restic.md))                                     |
+| reflinks and offline dedup                 | `cp` reflinks by default (coreutils 9+); `nix.optimise` dedups the store          |
 
 `sudo compsize -x /home /nix`, MEASURED on 13/10/2026: 253 GiB of data take 182 GiB on disk, so
 **28% (71 GiB) saved**, above the article's 15%. The zstd part alone goes from 101 GiB to 30 GiB

@@ -26,7 +26,7 @@ Tried on 06/11/2026, in this order:
 For CurseForge, the bump asks `/v1/mods/{id}/files?gameVersionTypeId=88568` (88568 is "WoW
 Forever") and takes the newest file with `releaseType == 1`, so alphas and betas never land. The
 pinned version is the FILE id. For GitHub it takes `/releases/latest` and its zip asset. Questie,
-DBM, DBM-Vanilla and GatherMate2 come from GitHub because their official releases are there.
+DBM and DBM-Vanilla come from GitHub because their official releases are there.
 
 The one exception is an entry with `"channel": "beta"`: it takes the newest file with
 `releaseType <= 2`, stable or beta. Offhand needs it because it has never shipped a stable file.
@@ -41,8 +41,7 @@ the user chose it knowingly on 06/11/2026 to keep one source for every add-on.
 
 ## Folders with no Forever TOC are dropped
 
-Upstream ships ONE zip for every flavour, so DBM brings its Midnight raid modules and GatherMate2
-its retail storage, which the game lists as incompatible. The build keeps a folder only if its TOC
+Upstream ships ONE zip for every flavour, so DBM brings its Midnight raid modules, which the game lists as incompatible. The build keeps a folder only if its TOC
 declares Forever: interface `160xx`, a `_Forever`/`_Camelot` TOC, or `AllowLoadGameType`. Pawn's TOC
 starts with a UTF-8 BOM, which is why the match allows `EF BB BF` before `##`. Two zips that ship
 the same folder fail the build instead of overwriting each other.
@@ -88,9 +87,9 @@ DialogueUI is the NPC dialogue of choice because Spoken has a narrator style mad
 - **GitHub allows 60 anonymous API calls an hour**, and a tag line costs one call per tag: adding
   the three Spoken pt-BR lines ran it dry (403) on 06/11/2026. The bump now sends the `gh` login's
   token when there is one (`GITHUB_TOKEN` wins), which lifts the limit to 5000.
-- **Angleur and Forever Loot Sparkles share `SoftTargetIconGameObject`.** Loot Sparkles needs it on
-  for world-object glints; Angleur turns it off only if "Disable Soft Icon" (its Tiny tab) is
-  checked, which defaults to off. Leave it off.
+- **Mastercraft overlaps three add-ons.** It sells grey junk, fishes and records gathering nodes.
+  Angleur and GatherMate2 were dropped for it on 08/11/2026. Dejunk stays, because Mastercraft
+  never destroys an item and has no price threshold or lists, so its own `autoJunk` is off.
 - **`/reload` is enough.** Tested on 06/11/2026 with the game open: a switch, then `/reload`,
   picked up NEW add-on folders too, not just changed files. No client restart needed.
 - **Required dependencies are checked at build**, from the TOC the Forever client loads. Run-time

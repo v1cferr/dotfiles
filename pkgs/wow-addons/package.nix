@@ -44,7 +44,7 @@ stdenvNoCC.mkDerivation {
       done
     '') zips
   )
-  # Upstream ships ONE zip for every flavour (DBM's Midnight raids, GatherMate2's retail storage),
+  # Upstream ships ONE zip for every flavour (DBM's Midnight raids),
   # and the game lists those folders as incompatible. A folder whose TOCs declare no Forever
   # support (interface 160xx, a _Forever/_Camelot TOC, or AllowLoadGameType) is dropped. Pawn's
   # TOC starts with a UTF-8 BOM, hence the optional EF BB BF before `##`.

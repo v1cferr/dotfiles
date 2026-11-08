@@ -13,13 +13,6 @@
     "url": "https://github.com/DeadlyBossMods/DeadlyBossMods/releases/download/12.1.20/DBM-Core-12.1.20.zip",
     "hash": "sha256-d3gU7rYdQf8MAQ7BgZQAPe2vaVcJhKh+fvux6tFlw2s="
   },
-  "gathermate2": {
-    "source": "github",
-    "repo": "Nevcairiel/GatherMate2",
-    "version": "1.52.5",
-    "url": "https://github.com/Nevcairiel/GatherMate2/releases/download/1.52.5/GatherMate2-1.52.5.zip",
-    "hash": "sha256-yOTlQOt0NZBbH3BNU3NiJ4yBL/7sINsgbDhHnoZwxGA="
-  },
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
@@ -218,13 +211,6 @@
     "version": "9509040",
     "url": "https://edge.forgecdn.net/files/9509/40/Prat-3.0-3.9.117.zip",
     "hash": "sha256-1yuu+cmbsVg7Jpq9hQiLy5V9mg2MpXwyMUREKHUITbE="
-  },
-  "angleur": {
-    "source": "curseforge",
-    "projectId": 893895,
-    "version": "9494010",
-    "url": "https://edge.forgecdn.net/files/9494/10/Angleur-2.9.8-AutoEquipFishingRod.zip",
-    "hash": "sha256-go22e6wkg+bekvjHQkmv8uSrIDcAISRJT9o5OLrCY8s="
   },
   "battletext-forever": {
     "source": "curseforge",

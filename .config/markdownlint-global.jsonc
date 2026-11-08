@@ -4,5 +4,7 @@
   // Table pipes line up with the header's, padded with spaces. No upstream autofix exists.
   "MD060": { "style": "aligned" },
   // Every table row opens and closes with a pipe.
-  "MD055": { "style": "leading_and_trailing" }
+  "MD055": { "style": "leading_and_trailing" },
+  // The VS Code extension's own default, kept: any config file would otherwise turn line length on.
+  "MD013": false
 }

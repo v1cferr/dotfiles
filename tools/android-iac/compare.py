@@ -119,7 +119,9 @@ def findings(spec: Spec, o: Observed, today: Optional[dt.date] = None) -> list[F
     out += _packages(spec, o)
     status = {"in-sync": Status.IN_SYNC, "change": Status.DRIFT, "blocked": Status.UNKNOWN}
     for c in plan.checks(spec, o):
-        before = c.op.before
+        before = c.op.before  # what a fix would start from; in sync, the phone already reads `after`
+        if c.state == "in-sync" and c.op.kind != "settings-put":
+            before = "absent" if c.note == "not installed" else c.op.after
         if c.op.kind == "settings-put":
             before = sanitize.setting_value(c.op.target, before)
         note = c.note or ("managed: `android-iac plan` lists the fix" if c.state == "change" else "")

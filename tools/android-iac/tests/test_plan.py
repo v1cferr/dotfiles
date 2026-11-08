@@ -153,6 +153,16 @@ class Command(unittest.TestCase):
         self.assertEqual(f.status, compare.Status.DRIFT)
         self.assertIn("android-iac plan", f.note)
 
+    def test_diff_shows_an_in_sync_package_as_it_reads(self) -> None:
+        spec = parse(spec_with({"packagesDisabled": ["org.example.notes", "com.example.gone"]}))
+        disabled = ("shell", "pm", "list", "packages", "-d")
+        observed = state.observe(Adb(FakeAdb({**healthy(), disabled: "package:org.example.notes\n"})), spec)
+        f = {x.check: x for x in compare.findings(spec, observed)}
+        self.assertEqual((f["managed org.example.notes"].status, f["managed org.example.notes"].observed),
+                         (compare.Status.IN_SYNC, "disabled"))
+        self.assertEqual((f["managed com.example.gone"].status, f["managed com.example.gone"].observed),
+                         (compare.Status.IN_SYNC, "absent"))
+
 
 if __name__ == "__main__":
     unittest.main()

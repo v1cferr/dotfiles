@@ -16,6 +16,7 @@ let
     android-tools
     git
     jq
+    notify
     scrcpy
     sops
     universal-android-debloater
@@ -34,6 +35,14 @@ let
     ];
     text = builtins.readFile ../../../tools/android-iac/scripts/android-iac-seal.sh;
   };
+  android-iac-weekly = writeShellApplication {
+    name = "android-iac-weekly";
+    runtimeInputs = [
+      android-iac
+      notify
+    ];
+    text = builtins.readFile ../../../tools/android-iac/scripts/android-iac-weekly.sh;
+  };
 in
 {
   # User apps with no root need, hence home (rule 4): no `programs.adb` and no adbusers group,
@@ -49,5 +58,22 @@ in
   # The overlay android-iac reads, straight from /run/secrets: readable here, no sudo, to audit.
   xdg.configFile."android-iac/local.json" = lib.mkIf (sealed != null) {
     source = config.lib.file.mkOutOfStoreSymlink sealed.path;
+  };
+
+  # The unattended audit, now that wireless debugging stays on (the host README): a push on drift.
+  systemd.user.services.android-iac-weekly = {
+    Unit.Description = "Weekly android-iac audit of the Edge 70 Fusion";
+    Service = {
+      Type = "oneshot";
+      ExecStart = lib.getExe android-iac-weekly;
+    };
+  };
+  systemd.user.timers.android-iac-weekly = {
+    Unit.Description = "Weekly android-iac audit";
+    Timer = {
+      OnCalendar = "Sun 12:00"; # a time the phone is usually home, on the WiFi
+      Persistent = true; # the desk off on Sunday means it runs on the next boot
+    };
+    Install.WantedBy = [ "timers.target" ];
   };
 }

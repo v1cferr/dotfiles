@@ -111,6 +111,8 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
 
 
 def _ask(prompt: str, secret: bool) -> str:
+    if not sys.stdin.isatty():  # a timer: waiting for an answer nobody gives would hang it
+        raise AdbError("the phone needs a person (wireless debugging off, or a new pairing): run `android-iac audit` by hand")
     return getpass.getpass(prompt) if secret else input(prompt)
 
 

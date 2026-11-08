@@ -58,6 +58,15 @@ One `manual` result is expected on every audit: the lock screen check can only p
 not "None", since a swipe answers the same. Wireless debugging stays on by choice since 08/11/2026
 (the host README), so it is not declared; USB debugging is, held off.
 
+## The weekly audit
+
+A `--user` timer (`android-iac-weekly`, Sundays at 12:00, `Persistent`) runs `audit` with no
+terminal, which is possible only because wireless debugging stays on. It never waits for a
+person: a prompt (wireless debugging off, a new pairing) ends the run as an environment error.
+The journal keeps every run (`journalctl --user -u android-iac-weekly`); a push (`notify`) goes
+out on drift, on an `unknown` row, and after two misses in a row, since one week away from home
+is normal. Run it now with `systemctl --user start android-iac-weekly`.
+
 ## Security policy
 
 Never root, never unlock the bootloader, never touch system partitions, Verified Boot or SELinux,

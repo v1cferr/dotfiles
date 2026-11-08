@@ -63,7 +63,8 @@ cost more than it protected. What it means, so the choice stays informed:
   leaves that network, so it is not open on someone else's WiFi.
 - Some banking and government apps refuse to run, or warn, with developer options on.
 
-USB debugging stays off, held by `diff` (`global.adb_enabled = 0`).
+USB debugging stays off, held by `diff` (`global.adb_enabled = 0`). What staying on buys: a weekly
+unattended audit that pushes to the phone on drift (the note, "The weekly audit").
 
 ## The address
 

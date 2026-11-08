@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import contextlib
 import io
+import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 from typing import Optional, Sequence
 
 import cli
 import session
-from adb import Adb, Refused, Result, allowed_session
+from adb import Adb, AdbError, Refused, Result, allowed_session
 from fake import FakeAdb, fixture, healthy, isolate_overlay, spec_file
 from spec import load
 
@@ -123,6 +125,10 @@ class Session(unittest.TestCase):
         finally:
             cli.main = main
         self.assertIn("interrupted", err.getvalue())
+
+    def test_no_terminal_never_waits_for_an_answer(self) -> None:
+        with mock.patch.object(sys, "stdin", io.StringIO("")), self.assertRaises(AdbError):
+            cli._ask("port: ", False)  # the weekly timer has no person to answer
 
     def test_cli_wires_audit(self) -> None:
         with contextlib.redirect_stdout(io.StringIO()) as out:

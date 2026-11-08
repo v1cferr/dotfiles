@@ -27,6 +27,7 @@ account, the lock screen's strength, most vendor settings, or anything under `/d
 | `state.py` | device selection, the reads, the inspect report |
 | `compare.py` | declared against observed, one status per check |
 | `managed.py`, `plan.py`, `apply.py` | phase 2: the managed block, validated, the plan and its rehearsal (read-only) |
+| `write.py` | phase 2: `apply` and `rollback`, the only writes, verified and journaled |
 | `session.py` | `audit`'s connect, pair and disconnect, with their own allowlist of host-side commands |
 | `doctor.py`, `cli.py` | the commands |
 
@@ -138,8 +139,15 @@ blocked, in which case nothing is saved. `diff` shows managed items as `managed 
 refuses a plan whose declaration digest, build fingerprint or operations no longer match a fresh
 read, rebuilds the commands from that read (never from the file), and writes the rehearsal mark
 (the plan's sha256 and the time, 0600) under `rehearsals/`. Exit 0 rehearsed, 1 refused, 2 no
-usable plan. `apply` without `--dry-run` is refused until 2c. `audit` runs both after the diff
-when the host declares a `managed` block, the rehearsal on a second fresh read.
+usable plan. `audit` runs both after the diff when the host declares a `managed` block, the
+rehearsal on a second fresh read.
+2c-2e delivered on 08/11/2026 (`write.py`, the only code that writes, through `Adb.write`):
+`apply [plan]` needs that plan's rehearsal under 10 minutes old and still fitting a fresh read,
+the word `apply` typed, and each sensitive target typed by name. It runs one operation at a time,
+re-reads it, and stops at the first that fails or does not read back as declared. Every step goes
+to `journal/<time>.jsonl` (0600). `rollback [journal]` undoes newest first, skips what was changed
+by hand since, and journals in the same file. Settings and packages are tested on a fake phone
+whose state follows the writes; permission revokes share the path but are not exercised yet.
 
 **Delivery, one usable step per commit**: 2a `plan` (read-only); 2b `apply --dry-run`; 2c
 `apply` and `rollback` for settings, starting with harmless keys; 2d packages; 2e permissions.

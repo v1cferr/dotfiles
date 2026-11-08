@@ -115,7 +115,7 @@ def subprocess_runner(target: Sequence[str] = ()) -> Runner:
 
 
 class Adb:
-    """Allowlisted, read-only access to one adb target."""
+    """Allowlisted access to one adb target: reads through `call`, writes only through `write`."""
 
     def __init__(self, runner: Runner) -> None:
         self._run = runner
@@ -123,6 +123,15 @@ class Adb:
     def call(self, *args: str) -> str:
         if not allowed(args):
             raise Refused(f"refused, not a read-only command: adb {' '.join(args)}")
+        return self._checked(args)
+
+    def write(self, *args: str) -> str:
+        """The one door for a change on the phone: only `apply` and `rollback` open it."""
+        if not allowed_write(args):
+            raise Refused(f"refused, not an allowed write: adb {' '.join(args)}")
+        return self._checked(args)
+
+    def _checked(self, args: Sequence[str]) -> str:
         r = self._run(args)
         if r.code != 0:
             err = (r.stderr or r.stdout).strip().splitlines()

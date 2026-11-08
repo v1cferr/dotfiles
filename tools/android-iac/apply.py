@@ -1,5 +1,5 @@
 """`android-iac apply --dry-run`: rehearse a saved plan against a fresh read; nothing runs on the
-phone. The commands are rebuilt from that read, never taken from the plan file."""
+phone. The commands are rebuilt from that read, never taken from the plan file (`write.py` runs)."""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def stale(spec: Spec, o: Observed, doc: dict[str, Any]) -> tuple[list[str], list
 
 
 def rehearse(path: Path, sha: str, now: dt.datetime) -> Path:
-    """The mark `apply` (phase 2c) will require: this plan's bytes, rehearsed at this time."""
+    """The mark `apply` requires: this plan's bytes, rehearsed at this time (10 minutes, write.py)."""
     folder = plan.state_dir() / "rehearsals"
     folder.mkdir(parents=True, exist_ok=True, mode=0o700)
     out = folder / path.name

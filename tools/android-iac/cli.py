@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import functools
 import getpass
 import json
 import os
@@ -15,6 +16,7 @@ import compare
 import plan
 import session
 import state
+import write
 from adb import Adb, AdbError, NoDevice, Runner, subprocess_runner
 from doctor import doctor
 from spec import Spec, SpecError, load
@@ -65,10 +67,12 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
     aps.add_argument("--save", action="store_true", help="write them to the local overlay (never the repo)")
     pl = sub.add_parser("plan", help="the changes that would bring the managed items in line; saved, never run")
     pl.add_argument("--json", action="store_true")
-    apl = sub.add_parser("apply", help="rehearse a saved plan against a fresh read (only --dry-run for now)")
+    apl = sub.add_parser("apply", help="run a rehearsed plan on the phone, one verified step at a time")
     apl.add_argument("plan", nargs="?", help="the plan file (default: the latest saved plan)")
     apl.add_argument("--dry-run", action="store_true", help="print the exact commands, run none")
     apl.add_argument("--json", action="store_true")
+    sub.add_parser("rollback", help="undo what an apply did, newest first").add_argument(
+        "journal", nargs="?", help="the journal (default: the latest)")
     for p in (ins, *[sub.choices[n] for n in ("diff", "verify")]):
         p.add_argument("--permissions", action="store_true",
                        help="also read each third-party app's granted permissions (slower)")
@@ -83,9 +87,6 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
     except SpecError as e:
         print(f"android-iac: spec: {e}", file=sys.stderr)
         return ENV_ERROR
-    if args.command == "apply" and not args.dry_run:
-        print("android-iac: apply runs only with --dry-run until phase 2c", file=sys.stderr)
-        return ENV_ERROR
     if args.command == "audit":
         return audit(adb, spec, (args.spec, args.local), overlay is not None, args.transport_id, runner)
     try:
@@ -95,8 +96,13 @@ def main(argv: Optional[Sequence[str]] = None, runner: Optional[Runner] = None) 
             return plan.run(spec, observed, args.json)
         if args.command == "apps":
             return apps.run(observed, args.save, args.local)
-        if args.command == "apply":
+        if args.command == "apply" and args.dry_run:
             return apply.dry_run(spec, observed, args.plan, args.json)
+        if args.command in ("apply", "rollback"):
+            ask: write.Ask = functools.partial(_ask, secret=False)
+            if args.command == "apply":
+                return write.run_apply(spec, observed, adb, args.plan, ask)
+            return write.run_rollback(adb, args.journal, ask)
         if args.command == "inspect":
             report = state.report(adb, observed)
             if args.json:

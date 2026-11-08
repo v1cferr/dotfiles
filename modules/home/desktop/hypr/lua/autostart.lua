@@ -2,7 +2,8 @@
 -- systemd --user service instead. What each line does: docs/notes/desktop/hypr.md
 hl.on("hyprland.start", function()
   -- Without this the --user services do NOT come up, since LightDM launches a BARE Hyprland.
-  hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP && systemctl --user start hyprland-session.target")
+  -- DISPLAY too: X11-only tray clients (Dropbox) register no icon without Xwayland's display.
+  hl.exec_cmd("systemctl --user import-environment DISPLAY WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP && systemctl --user start hyprland-session.target")
   -- LOCKING at boot, through the UNIT and not a loose hyprlock: one owner, and two session-lock
   -- surfaces break the keyboard grab. The machine autologins so Sunshine can come up.
   hl.exec_cmd("systemctl --user start lockscreen.service")

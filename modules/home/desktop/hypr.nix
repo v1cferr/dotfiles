@@ -150,8 +150,14 @@ let
             -printf '%f\n' 2>/dev/null | sort | head -1)"
       [ -n "$wl" ] || { echo "no wayland socket in $rt, nothing to do"; exit 0; }
 
+      # DISPLAY: Xwayland's first X socket. Without it an X11 tray client (Dropbox) restarted by
+      # this path comes back iconless, which is what the 06/11/2026 recovery did.
+      x="$(find /tmp/.X11-unix -mindepth 1 -maxdepth 1 -name 'X[0-9]*' -printf '%f\n' 2>/dev/null \
+           | sort | head -1)"
+
       systemctl --user set-environment \
-        "HYPRLAND_INSTANCE_SIGNATURE=$sig" "WAYLAND_DISPLAY=$wl" XDG_CURRENT_DESKTOP=Hyprland
+        "HYPRLAND_INSTANCE_SIGNATURE=$sig" "WAYLAND_DISPLAY=$wl" XDG_CURRENT_DESKTOP=Hyprland \
+        ''${x:+"DISPLAY=:''${x#X}"}
 
       # A no-op if autostart.lua's exec-once already brought the target up.
       systemctl --user start hyprland-session.target

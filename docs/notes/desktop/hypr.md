@@ -54,6 +54,11 @@ outside the compositor: `HYPRLAND_INSTANCE_SIGNATURE` is the directory name in
 `WAYLAND_DISPLAY` is the first `wayland-N` socket, ignoring the `.lock` ones. Without those two in
 the `systemd --user` environment, the session's services come up unable to talk to the compositor.
 
+`DISPLAY` is derived too, from the first `X<N>` socket in `/tmp/.X11-unix` (Xwayland's). Missing it
+was measured on 06/11/2026: a nested Hyprland wiped the manager's environment, this path brought the
+target back with only the Wayland pair, and Dropbox (an X11 tray client) restarted with no
+`DISPLAY` and drew no icon for two days. The `exec-once` imports `DISPLAY` for the same reason.
+
 **A TIMER, not a path unit.** With `PathExistsGlob` systemd re-triggers while the condition stays
 true, so the oneshot exits, the socket is still there, it triggers again, and it loops until
 `unit-start-limit-hit`. Tested; it failed exactly like that. A path unit only works when the

@@ -40,8 +40,12 @@ The same account serves the FAI Windows machine (the `settings.json` has
 feature off would freeze that machine forever.
 
 The consequence to accept: this file is a versioned MIRROR, not an immutable source. A change made
-on another machine arrives here as a diff, and an extension that writes to the config (the
-fileNesting `"//": "Last update at …"` is the worst case) shows up in `git status`.
+on another machine arrives here as a diff, and so does an extension that writes to the config.
+
+The worst writer was antfu's File Nesting Updater: every 3 days it refetched the upstream
+patterns and stamped `"//": "Last update at …"`, a diff nobody decided. Since 08/11/2026
+`fileNestingUpdater.autoUpdate` is `false`, so the patterns move only when the command "File
+Nesting Updater: Update config now" runs, and that diff is a choice worth committing.
 
 And that is the FUNCTION, not the price: the repo has to mirror what the system IS, and since the
 linked file is the LIVE one, `git status` became a drift detector for the editor's config.

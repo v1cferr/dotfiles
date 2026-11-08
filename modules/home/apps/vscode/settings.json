@@ -5,6 +5,9 @@
     "localhost": "default",
     "127.0.0.1": "default"
   },
+  // The file nesting extension refreshes the patterns only when asked ("File Nesting Updater:
+  // Update config now"): on its own it rewrote them with a "Last update" stamp every 3 days.
+  "fileNestingUpdater.autoUpdate": false,
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {

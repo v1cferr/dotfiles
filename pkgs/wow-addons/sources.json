@@ -296,5 +296,12 @@
     "version": "9487037",
     "url": "https://edge.forgecdn.net/files/9487/37/LFGBulletinBoard-v3.57.zip",
     "hash": "sha256-O3eypYP2VXTI9maq9YbB/pQAWVAI/3esXWzrDGKVa98="
+  },
+  "mastercraft": {
+    "source": "curseforge",
+    "projectId": 1711528,
+    "version": "9511950",
+    "url": "https://edge.forgecdn.net/files/9511/950/Mastercraft-v1.9.0.zip",
+    "hash": "sha256-Z2xyNf/hK0rZkg8T1Kw97Ack3KnE9mCAE0EJrxRoOtY="
   }
 }

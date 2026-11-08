@@ -114,6 +114,11 @@ The browser is referenced as the same Zen derivation `modules/home/packages.nix`
 PATH, so it is the store path that is guaranteed and not the search order (rule 4). `ldd` says Zen
 resolves entirely under `/nix`, which the sandbox binds, so it runs from in there.
 
+`BROWSER` points at a `dropbox-browser` wrapper, not at `zen-beta` directly. Zen picks its profile
+from `HOME`, and the daemon's `HOME` is `~/.dropbox-hm`, so a direct launch opened a SECOND Zen
+on a blank profile (`~/.dropbox-hm/.config/zen/`) instead of a tab in the running one. Seen on
+08/11/2026 after a daemon restart. The wrapper hands Zen the real `HOME` before the `exec`.
+
 **Proven on the 06/10/2026 unlink**: Zen comes up from inside the bwrap. The unit's journal shows
 `zen-beta` started by `dropbox-start` on 06/10 and again on 08/10, at the first start after boot.
 

@@ -27,6 +27,16 @@ let
   # launch guard (rule 11).
   zen = config.my.zen.package;
 
+  # The daemon's HOME is ~/.dropbox-hm, and Zen picks its profile from HOME: launched as-is it opens
+  # a SECOND instance on a blank profile instead of a tab in the running one. Hand it the real HOME.
+  dropboxBrowser = writeShellApplication {
+    name = "dropbox-browser";
+    text = ''
+      export HOME=${lib.escapeShellArg config.home.homeDirectory}
+      exec ${lib.getExe' zen "zen-beta"} "$@"
+    '';
+  };
+
   # nixpkgs hardcodes `export BROWSER=firefox` in the daemon's launcher and ships a whole
   # firefox-bin INSIDE the FHS sandbox, so the relink page opens in a browser that has never seen
   # this account and the flow dead-ends. Pointing it at the session's browser makes the daemon's
@@ -41,7 +51,7 @@ let
           # instead of silently handing the browser back to Firefox.
           runScript = runCommand "install-and-start-dropbox" { } ''
             substitute ${args.runScript} "$out" \
-              --replace-fail 'export BROWSER=firefox' 'export BROWSER=${lib.getExe' zen "zen-beta"}'
+              --replace-fail 'export BROWSER=firefox' 'export BROWSER=${lib.getExe dropboxBrowser}'
             chmod +x "$out"
           '';
           # With the browser outside the sandbox, firefox-bin is 316 MB of dead closure.

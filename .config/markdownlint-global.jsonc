@@ -1,0 +1,8 @@
+{
+  // The rules every repo on this machine shares: linked to ~/.markdownlintrc and
+  // ~/.markdownlint.jsonc by modules/home/apps/vscode.nix, and extended by this repo's own config.
+  // Table pipes line up with the header's, padded with spaces. No upstream autofix exists.
+  "MD060": { "style": "aligned" },
+  // Every table row opens and closes with a pipe.
+  "MD055": { "style": "leading_and_trailing" }
+}

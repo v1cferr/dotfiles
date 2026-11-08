@@ -136,6 +136,8 @@
   "[markdown]": {
     "editor.defaultFormatter": "yzhang.markdown-all-in-one",
   },
+  // Machine-wide markdownlint rules (aligned tables); a repo's own config file still wins.
+  "markdownlint.configFile": "${userHome}/.markdownlint.jsonc",
   "github.copilot.selectedCompletionModel": "",
   "github.copilot.nextEditSuggestions.enabled": true,
   "github.copilot.chat.codesearch.enabled": true,

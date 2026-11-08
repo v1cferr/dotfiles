@@ -1,6 +1,8 @@
 {
   // The markdownlint rules, versioned so the CLI and the editor agree.
   "default": true,
+  // The machine-wide rules (aligned tables), resolved next to this file.
+  "extends": "markdownlint-global.jsonc",
   // The prose is wrapped at ~100 columns on purpose; tables go past 80.
   // There is no sense in policing line length here.
   "MD013": false,

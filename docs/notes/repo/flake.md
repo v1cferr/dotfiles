@@ -368,6 +368,19 @@ config with no executable owner: the editor obeyed it, and nothing checked the C
 from another machine. 73 `.md` are the most valuable thing in this repo and they were the least
 verified part of it.
 
+**Tables are ALIGNED, on every repo of the machine (08/11/2026).** MD060 `table-column-style:
+aligned` and MD055 `leading_and_trailing` live in `.config/markdownlint-global.jsonc`, the one owner
+of the rules every repo shares. This repo's `.config/markdownlint.jsonc` reaches them through
+`extends` (resolved next to the file, so the hook entry did not change), and home-manager links the
+same file to `~/.markdownlintrc` (markdownlint-cli reads it as a base in any directory) and
+`~/.markdownlint.jsonc` (the VS Code extension's user `configFile`, and markdownlint-cli2 walking up
+from anything under home). A repo's own config file still wins over the home one, so each existing
+repo got the 2 rules committed in its own config: that is what holds in its CI and on a clone.
+MEASURED before enabling: 3891 MD060 findings in 105 `.md`, MD055 already clean. Neither
+markdownlint-cli nor markdownlint-cli2 can fix MD060 (the rule has no `fixInfo`), so the backlog was
+aligned by a throwaway script and only the diff was committed. From now on the hook only FAILS; in
+VS Code, "Format Document" (Markdown All in One, the default formatter here) aligns the table.
+
 **`pre-commit-hook-ensure-sops`, and its `files` had to be narrowed (23/08/2026).** Rule 12 says
 the repo never holds a credential, and `sops.validateSopsFiles` already fails at eval on "declared
 and absent". What neither of them catches is the opposite accident, the loud one: a `secrets.yaml`

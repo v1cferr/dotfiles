@@ -77,6 +77,11 @@ in
   # and safe to version because the key is ${input:...}, not inline. See the notes before adding.
   xdg.configFile."Code/User/mcp.json".source = config.lib.file.mkOutOfStoreSymlink "${repo}/mcp.json";
 
+  # The machine-wide markdownlint rules (aligned tables) under the 2 names the tools look for at
+  # home: .markdownlintrc for markdownlint-cli, .markdownlint.jsonc for the editor and cli2.
+  home.file.".markdownlintrc".source = ../../../.config/markdownlint-global.jsonc;
+  home.file.".markdownlint.jsonc".source = ../../../.config/markdownlint-global.jsonc;
+
   # From the STORE, not mutable: a grammar edit takes a rebuild, and VS Code never writes here.
   home.file.".vscode/extensions/${embeddedShell.publisher}.${embeddedShell.name}-${embeddedShell.version}".source =
     ./vscode/nix-embedded-shell;

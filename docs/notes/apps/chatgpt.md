@@ -15,9 +15,12 @@ homarr-labs/dashboard-icons (Apache-2.0), pinned by commit, because the icon the
   This profile has NO primary password of its own: the chatgpt.com session cookie is protected
   only by the guard and the vault.
 - Spellcheck comes from the Gecko layer (`spellchecker.dictionary`), like any Zen profile.
-- Extensions that virtualize long chats (render only the messages in view) fix most of the lag,
-  but they read every page on chatgpt.com. Install one by hand into this profile only after
-  auditing its source; none is declared here.
+- No extension, on purpose (audited 08/11/2026). chatgpt.com now virtualizes the conversation
+  list itself, which is why GPT-Conversation-Toolkit (open, MIT, clean audit, but unsigned for
+  Firefox) deprecated its lag fix. Speed Booster Toolkit (signed on AMO) is closed, minified,
+  freemium through Freemius, and offers a cloud sync to its vendor. Add one only if this profile
+  is MEASURED lagging: compare `document.querySelectorAll('[data-message-id]').length` with the
+  chat's message count to see whether the virtualization is on.
 
 ## Why the desktop app left (08/11/2026)
 
@@ -27,8 +30,9 @@ newest .deb. Measured with 26.1029 before it went:
 
 - Electron (Chromium 156) on OpenAI's `owl` runtime: a 715 MB `app.asar`, a 329 MB binary, and
   22 processes holding about 1.6 GB RSS with a few chats open.
-- Long chats lag because the whole conversation stays in the DOM and is re-rendered as tokens
-  stream in; Codex, computer use and plugins load with it even when unused.
+- Long chats lagged. The lag-fix extensions blame the whole conversation staying in the DOM, but
+  chatgpt.com virtualizes that list now, so the app's own load is the likelier cause: Codex,
+  computer use and plugins start with it even when unused.
 - No tabs, and OpenAI has not announced any.
 - No tray and no start-hidden flag, so autostart needed a compositor hack to keep login windowless.
 - At launch it wrote its own MCP server, marketplaces and plugins into `~/.codex/config.toml`, with

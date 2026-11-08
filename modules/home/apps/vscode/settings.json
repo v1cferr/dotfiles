@@ -304,6 +304,8 @@
   "workbench.editor.preventPinnedEditorClose": "keyboardAndMouse",
   // It keeps the pinned tabs on a separate row at the top, always fixed to the left
   "workbench.editor.pinnedTabsOnSeparateRow": true,
+  // Editor actions (the terminal "+" included) in every group, not only the focused one
+  "workbench.editor.alwaysShowEditorActions": true,
   // A terminal in the editor area no longer locks its group (the default draws a lock on each)
   "workbench.editor.autoLockGroups": {
     "terminalEditor": false

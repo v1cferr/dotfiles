@@ -65,6 +65,9 @@ FAI account: without that, the Azure MCP would only appear for whoever remembere
 `home.packages`, since two `bin/claude` would collide at activation; it is referenced through
 `lib.getExe` inside the wrappers.
 
+`ctw` (one task per git worktree, in tmux) calls these same wrappers by name and adds nothing to
+them: its `--fai` / `--pessoal` flags come from the account list here. See [tmux](tmux.md).
+
 ## settings.json is versioned, and the atomic-write guard is what makes it safe
 
 Same contract as VS Code and `hyprland.lua`: `mkOutOfStoreSymlink` to the REAL file in the repo,

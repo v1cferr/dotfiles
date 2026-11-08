@@ -7,7 +7,7 @@
     ./starship.nix # ~/.config/starship.toml (zsh's prompt)
     ./cli.nix # the modern CLI toolkit (eza/bat/fzf/zoxide/direnv/yazi/tealdeer) plus the zsh integration
     ./kitty.nix # ~/.config/kitty/kitty.conf (Hyprland's default terminal)
-    ./tmux.nix # ~/.config/tmux/tmux.conf plus `ct`, Claude in a session the phone can join
+    ./tmux.nix # ~/.config/tmux/tmux.conf plus `ct`/`ctw`/`ca`, Claude in sessions the phone can join
     ./claude-code.nix # the package plus the separate accounts (claude-fai/claude-pessoal/claude-pick)
     ./antigravity.nix # Google's agent CLI (`agy`), plus the MCP servers merged into its config
     ./codex.nix # OpenAI's CLI (its declared config is the system layer, modules/nixos/services/codex.nix)

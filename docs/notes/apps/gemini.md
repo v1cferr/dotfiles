@@ -1,6 +1,7 @@
 # Gemini: a web app installed by Chrome's policy
 
-`modules/nixos/desktop/web-apps.nix`. Upstream: <https://gemini.google.com/app>.
+An `engine = "chrome"` entry of `my.webApps` (`modules/nixos/desktop/web-apps.nix`, see
+[web-apps](web-apps.md)). Upstream: <https://gemini.google.com/app>.
 
 ## Why a web app
 

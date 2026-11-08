@@ -44,8 +44,9 @@ so the wrapper's `CODEX_CLI_PATH` and the terminal use the same version and the 
 
 ## Daily chats: the tabbed web launcher
 
-"ChatGPT (tabs)" (`chatgpt-web`, same module) opens chatgpt.com in the guarded Zen on its own
-profile, `~/.local/share/chatgpt-web`. The app stays for Codex; plain chats live in browser tabs.
+"ChatGPT (tabs)" (`chatgpt-web`, an `engine = "zen"` entry of `my.webApps`, see
+[web-apps](web-apps.md)) opens chatgpt.com in the guarded Zen on its own profile,
+`~/.local/share/chatgpt-web`. The app stays for Codex; plain chats live in browser tabs.
 
 Why, measured on 08/11/2026 with 26.1029:
 

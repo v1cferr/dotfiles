@@ -1,15 +1,73 @@
-# WEB APPS: sites Chrome installs as apps in the profile already signed in, through its managed
-# policy. Gemini has no Linux app (Windows and macOS only); why not a wrapper: docs/notes/apps/gemini.md
-{ ... }:
+# WEB APPS (SSOT): sites lighter than their vendor's app; Chrome's via policy, Zen's from
+# modules/home/apps/web-apps.nix. Why web apps and why two engines: docs/notes/apps/web-apps.md
+{ config, lib, ... }:
 
+let
+  apps = config.my.webApps;
+  onChrome = lib.filterAttrs (_: a: a.engine == "chrome") apps;
+in
 {
-  # Merged with the spellcheck keys into the same /etc/opt/chrome/policies JSON. An installed app
-  # gets its own Wayland app_id (chrome-<id>-Default), which a plain `--app=` window does not.
-  programs.chromium.extraOpts.WebAppInstallForceList = [
-    {
-      url = "https://gemini.google.com/app";
+  options.my.webApps = lib.mkOption {
+    type = lib.types.attrsOf (
+      lib.types.submodule (
+        { name, ... }:
+        {
+          options = {
+            url = lib.mkOption {
+              type = lib.types.str;
+              description = "The site the app opens.";
+            };
+            engine = lib.mkOption {
+              type = lib.types.enum [
+                "chrome"
+                "zen"
+              ];
+              description = ''
+                "chrome": an installed PWA in the signed-in Chrome profile (shared login, one window per
+                app, app_id chrome-<id>-Default). "zen": the guarded Zen on a profile of its own (tabs,
+                a separate login, app_id <name>-web).
+              '';
+            };
+            label = lib.mkOption {
+              type = lib.types.str;
+              default = name;
+              description = "Launcher name for a Zen app (Chrome names its own from the manifest).";
+            };
+            icon = lib.mkOption {
+              type = lib.types.str;
+              default = "applications-internet";
+              description = "Icon name for a Zen app's launcher (Chrome fetches its own).";
+            };
+          };
+        }
+      )
+    );
+    default = { };
+    description = "The web apps, by name (SSOT). Read by modules/home/ through osConfig.";
+  };
+
+  config = {
+    my.webApps = {
+      # Google ships the desktop app for Windows and macOS only (docs/notes/apps/gemini.md).
+      gemini = {
+        url = "https://gemini.google.com/app";
+        engine = "chrome";
+      };
+      # Zen for the TABS the official app lacks; the app stays for Codex (docs/notes/apps/chatgpt.md).
+      chatgpt = {
+        url = "https://chatgpt.com";
+        engine = "zen";
+        label = "ChatGPT (tabs)";
+        icon = "chatgpt"; # the official app's icon, already installed
+      };
+    };
+
+    # Merged with the spellcheck keys into the same /etc/opt/chrome/policies JSON. Chrome applies it
+    # only while running; dropping an entry uninstalls the app at its next policy refresh.
+    programs.chromium.extraOpts.WebAppInstallForceList = lib.mapAttrsToList (_: a: {
+      inherit (a) url;
       default_launch_container = "window";
       create_desktop_shortcut = false; # the launcher entry is enough; nothing on a desktop
-    }
-  ];
+    }) onChrome;
+  };
 }

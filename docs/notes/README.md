@@ -156,6 +156,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [spotifast](apps/spotifast.md) | the native Spotify client, why the release binary, and the theme that must be a real file |
 | [apps-and-mime](apps/apps-and-mime.md) | media, office, MangoHud, OpenAL, and the CANONICAL mimetype |
 | [zen](apps/zen.md) | the launch guard, and the NSS check that had to be written backwards |
+| [web-apps](apps/web-apps.md) | sites lighter than their vendor app, one list, Chrome PWA or a Zen profile with tabs |
 | [crypto](apps/crypto.md) | Stack Wallet and Bisq 2, the threat model with no LUKS, and the first purchase |
 | [fastfetch](apps/fastfetch.md) | boxes drawn from the key, and a donut.c-style logo rendered at build time |
 

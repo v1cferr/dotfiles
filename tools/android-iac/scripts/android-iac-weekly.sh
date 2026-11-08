@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # The weekly unattended audit: a push to the phone (notify, ntfy) on drift or missing evidence,
 # and after two weeks in a row the phone could not be reached: docs/notes/hardware/android-iac.md
-set -uo pipefail
+set -euo pipefail # writeShellApplication sets it anyway; every expected failure is caught below
 
 state="${XDG_STATE_HOME:-$HOME/.local/state}/android-iac"
 misses="$state/weekly-misses"
 mkdir -p "$state"
 
-out="$(android-iac audit </dev/null 2>&1)"
-code=$?
+code=0
+out="$(android-iac audit </dev/null 2>&1)" || code=$? # 1 and 3 are answers, not crashes
 printf '%s\n' "$out" # the journal keeps the whole run: journalctl --user -u android-iac-weekly
 
 # The rows a person should read: what drifted, and what could not be proven.

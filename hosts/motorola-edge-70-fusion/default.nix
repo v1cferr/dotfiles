@@ -38,8 +38,44 @@
   # stays ON by my choice since 08/11/2026, so only USB debugging is held off: see the README.
   manualSettings.global.adb_enabled = "0";
 
-  # What phase 2 may change itself, reversibly; `android-iac plan` lists it, nothing applies it yet.
-  managed.settings.global.stay_on_while_plugged_in = "0"; # a harmless first key: the screen sleeps
+  # What android-iac may change itself, reversibly: `plan`, `apply --dry-run`, then `apply`.
+  managed = {
+    settings.global.stay_on_while_plugged_in = "0"; # a harmless first key: the screen sleeps
+    # Debloat, chosen on 08/11/2026: `pm disable-user`, undone by `android-iac rollback`. Factory
+    # packages say nothing about me, so this list is public; the code refuses the protected floor.
+    packagesDisabled = [
+      # Ads and app installers: they push "suggested" apps.
+      "com.aura.oobe.motorola" # ironSource Aura, app picks at setup
+      "com.dti.motorola" # Digital Turbine Ignite
+      "com.facebook.appmanager"
+      "com.facebook.services"
+      "com.facebook.system"
+      "com.motorola.demo" # the retail demo mode
+      "com.motorola.paks"
+      "com.motorola.paks.notification"
+      "com.motorola.playautoinstallext" # Play Auto Install, promoted apps
+      "com.motorola.smartfeed"
+      # Telemetry and Motorola/Lenovo extras: losing them only loses the feature.
+      "com.lenovo.qira" # Lenovo's AI assistant
+      "com.lenovo.qiracore"
+      "com.motorola.android.fmradio"
+      "com.motorola.appforecast"
+      "com.motorola.attvowifi" # AT&T, a US carrier
+      "com.motorola.bach.modemstats"
+      "com.motorola.bug2go" # bug reports to Motorola
+      "com.motorola.genie" # Device Help
+      "com.motorola.help"
+      "com.motorola.help.extlog"
+      "com.motorola.journal"
+      "com.motorola.lifetimedata"
+      "com.motorola.livewallpaper3"
+      "com.motorola.migrateassist" # moving data from the old phone, done
+      "com.motorola.motocare"
+      "com.motorola.timeweatherwidget"
+      "com.motorola.vzw.pco.extensions.pcoreceiver" # Verizon, a US carrier
+      "com.motorola.wifi.motowifimetrics"
+    ];
+  };
 
   # System packages whose disabled state breaks the phone, banking or NFC payments.
   packages.mustBeEnabled = [

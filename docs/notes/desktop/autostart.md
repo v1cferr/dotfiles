@@ -52,6 +52,14 @@ Two defenses came out of it:
    no limit at all: with `RestartSec=5` it made 2 starts per 10 s, always under the default
    `burst=5`, so the factory brake never got to act.
 
+## Background, and why a rebuild does not touch them
+
+Every app launches with its tray-only flag, so login opens no window. The other way a window
+jumped up was the 08/11/2026 rebuild: the switch started the new units while Discord and ZapFast
+were already open, the second launch handed off to the live instance, and that instance RAISED
+its window. `X-SwitchMethod = "keep-old"` keeps a changed unit's running process, so the new
+definition applies at the next login. A brand new unit is still started once by the switch.
+
 ## The per-app notes
 
 **Discord**: the binary is `Discord`, capitalized, which is what its own `.desktop` uses. On since

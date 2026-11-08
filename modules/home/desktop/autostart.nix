@@ -71,6 +71,9 @@ in
           # 10s) never acted with RestartSec=5, which is how 4145 restarts went unnoticed.
           StartLimitIntervalSec = 300;
           StartLimitBurst = 3;
+          # A rebuild never relaunches a running app: a second launch hands off to the live instance,
+          # which RAISES its window. The new unit applies at the next login.
+          X-SwitchMethod = "keep-old";
         };
         Service = {
           ExecStart = app.exec;

@@ -175,6 +175,7 @@ in
         ".config/Code"
         ".config/discord"
         ".config/obsidian"
+        ".config/obs-studio" # scenes, profiles and stream keys
         ".config/OpenRGB" # the saved RGB profiles
         ".config/org.coolercontrol.CoolerControl"
         ".local/share/org.coolercontrol.CoolerControl"

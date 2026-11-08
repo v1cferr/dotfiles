@@ -36,3 +36,59 @@ screen_reader_detection_done = true
 # the one consumer that cannot read `my.memory.servers.general.url`, so the port is a literal.
 [mcp_servers.basic-memory]
 url = "http://127.0.0.1:8765/mcp"
+
+[mcp_servers.node_repl]
+args = []
+command = "/nix/store/nhl8ad45kyfaglf3h0rn5fpnqzr3jr13-chatgpt-26.1029.61003/lib/chatgpt/resources/cua_node/bin/node_repl"
+env_vars = ["BROWSER_USE_ACCESS_EXECUTOR_ID", "BROWSER_USE_ACCESS_PIPE_PATH", "BROWSER_USE_ACCESS_VERIFYING_IDENTITY"]
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = "/nix/store/nhl8ad45kyfaglf3h0rn5fpnqzr3jr13-chatgpt-26.1029.61003/lib/chatgpt/resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/nix/store/fisi9algzl2pcxb2xfhgp2yw5mzjfdwg-nodejs-slim-24.21.0/bin/node"
+NODE_REPL_TRUSTED_CODE_PATHS = "/home/v1cferr/.codex:/nix/store/nhl8ad45kyfaglf3h0rn5fpnqzr3jr13-chatgpt-26.1029.61003/lib/chatgpt/resources/cua_node/lib/node_modules"
+CODEX_HOME = "/home/v1cferr/.codex"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab,mcpapps"
+BROWSER_USE_TINYSKY_ENABLED = "1"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = ""
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = ""
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.1029.61003"
+NODE_REPL_TRUSTED_SERVICES = '{"browser":"/home/v1cferr/.codex/plugins/cache/openai-bundled/browser/26.1029.61003/scripts/browser-service.mjs"}'
+CODEX_CLI_PATH = "/nix/store/90qzsk9yqz4fihjs2nnz2zmz9g7pp1hq-codex-0.166.0/bin/codex"
+
+[marketplaces.openai-bundled]
+source_type = "local"
+source = "/home/v1cferr/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+source_type = "local"
+source = "/home/v1cferr/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."unified-computer-use@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = true
+
+[desktop]
+conversationDetailMode = "STEPS_PROSE"

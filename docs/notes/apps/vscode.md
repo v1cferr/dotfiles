@@ -158,3 +158,22 @@ there, the symlink dangles and VS Code cannot save settings, identically to `hyp
 
 The nixd config that carries a PATH (`nixd.options`/`nixpkgs`) lives in this repo's root
 `.vscode/settings.json`; it only holds with this flake as the workspace.
+
+## The terminal "+" that comes and goes
+
+An editor-area terminal shows a `+ v` (New Terminal) button in its group's toolbar, and two
+things make it disappear. Both were read from 1.145's `workbench.desktop.main.js`.
+
+The first is by design: only the ACTIVE group gets the full editor toolbar, the others keep just
+the `...`. `workbench.editor.alwaysShowEditorActions` is `true` here, so every group shows it.
+
+The second is an upstream bug. With `workbench.editor.pinnedTabsOnSeparateRow`, a group holding
+pinned AND unpinned editors draws two tab rows, each with its own editor toolbar. The terminal
+editor keeps the `+` dropdown in ONE slot (`_newDropdown`, a `MutableDisposable`), so the second
+toolbar asking for it disposes the first one's. Repro: pin a terminal, open a file unpinned in the
+same group, focus the terminal: the `+` is gone, while actions without a custom view item (split,
+Claude) stay. A group with a single row is fine.
+
+The separate pinned row stays, and the fallback is the keyboard: `` ctrl+shift+` `` inside a
+terminal editor runs `workbench.action.createTerminalEditorSameGroup` (new terminal in THAT
+group); anywhere else it is still the stock panel terminal.

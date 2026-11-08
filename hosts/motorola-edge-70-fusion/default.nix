@@ -117,6 +117,9 @@
       "com.motorola.aiservices" # Moto AI's models (com.motorola.aicore stays: the camera uses it)
       "com.motorola.mobiledesktop.core" # Ready For, the phone on a PC or TV
       "com.motorola.systemui.desk" # Ready For's desktop UI
+      # Factory preloads: their APK sits in the read-only /product/preinstall, so an uninstall comes
+      # back with an update; disabled, they stay off. The sealed app list must not name them.
+      "com.zhiliaoapp.musically" # TikTok
     ];
   };
 

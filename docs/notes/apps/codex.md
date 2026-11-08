@@ -46,7 +46,7 @@ OpenAI's docs list the same order.
 
 So the repo owns the SYSTEM layer: [`modules/home/shell/codex/config.toml`](../../../modules/home/shell/codex/config.toml),
 installed read-only by [`modules/nixos/services/codex.nix`](../../../modules/nixos/services/codex.nix).
-`~/.codex/config.toml` is a plain local file that Codex and the ChatGPT app own, not versioned.
+`~/.codex/config.toml` is a plain local file that Codex owns, not versioned.
 
 **Why not the mirror any more.** Until 08/11/2026 `~/.codex/config.toml` was an
 `mkOutOfStoreSymlink` to the repo file, the same contract as [Claude Code's `settings.json`](claude-code.md),
@@ -55,6 +55,8 @@ so every runtime write landed as a `git diff`. The ChatGPT app broke it: at laun
 `/nix/store` paths tied to the app's version. Each app bump was a diff of machine state that no
 one decided, in a public repo. The symlink did keep working through writes (openai/codex#6646 was
 fixed before 19/01/2026, and `toml_edit` keeps comments); the problem was who writes, not how.
+The app left the repo the same day ([chatgpt](chatgpt.md)); its blocks were cut from the live file,
+and the system layer stayed: Codex itself still persists into `~/.codex/config.toml`.
 
 What this costs, on purpose:
 

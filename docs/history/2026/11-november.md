@@ -1,6 +1,16 @@
 # History: november 2026
 
-7 entries. Index in [README.md](../README.md).
+8 entries. Index in [README.md](../README.md).
+
+- [x] ChatGPT as a tabbed web app; the desktop app left (08/11/2026; asked 08/11/2026). How and
+      why: [notes/apps/chatgpt.md](../../notes/apps/chatgpt.md), [notes/apps/web-apps.md](../../notes/apps/web-apps.md).
+      • THE APP WAS THE COST: Electron on OpenAI's `owl` runtime, 22 processes, about 1.6 GB RSS,
+        long chats lagging, and no tabs.
+      • ONE LIST: `my.webApps` holds every web app with its engine, Chrome PWA (Gemini) or a Zen
+        profile with tabs (ChatGPT).
+      • WHAT WENT WITH IT: pkgs/chatgpt and its overlay, the autostart hide marker, the Electron
+        spellcheck seed, and the app's blocks in `~/.codex/config.toml`. Codex stays as the CLI.
+      • FOUND ON THE WAY: Gemini's launcher pointed at a deleted scratch profile since 04/11.
 
 - [x] The bar as mirrored glass cells (04/11/2026; asked 04/11/2026). How and why:
       [notes/desktop/bar.md](../../notes/desktop/bar.md#the-glass-cells-04112026).

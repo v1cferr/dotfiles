@@ -1,6 +1,6 @@
 # Codex CLI config, the DECLARED layer: installed read-only as /etc/codex/config.toml, Codex's
-# system layer. ~/.codex/config.toml stays Codex's own (/model, approvals, the ChatGPT app's
-# servers) and overrides any key it repeats. Why the split: docs/notes/apps/codex.md
+# system layer. ~/.codex/config.toml stays Codex's own (/model, approvals, trusted projects)
+# and overrides any key it repeats. Why the split: docs/notes/apps/codex.md
 
 # The ChatGPT subscription is the credential, never an API key pasted into a shell (rule 12).
 forced_login_method = "chatgpt"

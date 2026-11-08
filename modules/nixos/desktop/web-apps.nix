@@ -1,6 +1,11 @@
 # WEB APPS (SSOT): sites lighter than their vendor's app; Chrome's via policy, Zen's from
 # modules/home/apps/web-apps.nix. Why web apps and why two engines: docs/notes/apps/web-apps.md
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   apps = config.my.webApps;
@@ -36,7 +41,7 @@ in
             icon = lib.mkOption {
               type = lib.types.str;
               default = "applications-internet";
-              description = "Icon name for a Zen app's launcher (Chrome fetches its own).";
+              description = "Icon name or absolute path for a Zen app's launcher (Chrome fetches its own).";
             };
           };
         }
@@ -53,12 +58,16 @@ in
         url = "https://gemini.google.com/app";
         engine = "chrome";
       };
-      # Zen for the TABS the official app lacks; the app stays for Codex (docs/notes/apps/chatgpt.md).
+      # Zen for the TABS the official app lacks; Codex is the CLI (docs/notes/apps/chatgpt.md).
       chatgpt = {
         url = "https://chatgpt.com";
         engine = "zen";
-        label = "ChatGPT (tabs)";
-        icon = "chatgpt"; # the official app's icon, already installed
+        label = "ChatGPT";
+        # The icon theme has none; homarr-labs/dashboard-icons (Apache-2.0), pinned by commit.
+        icon = "${pkgs.fetchurl {
+          url = "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/59f1e9a4108f4f510f41e9588f078631de1e1405/svg/chatgpt.svg";
+          hash = "sha256-Wo2tKGTMHIEJ6650vqRH3y8wuXi9rVZ0kkfEBuHLIic=";
+        }}";
       };
     };
 

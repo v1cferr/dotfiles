@@ -8,7 +8,7 @@ true/false in the panel plus `rebuild`. It mirrors the idiom of `modules/nixos/s
 
 | Place | For what | Why separate |
 | --- | --- | --- |
-| `my.autostart` (here) | GUI apps with no service of their own: ChatGPT, Discord, Spotifast, LocalSend, ZapFast | LocalSend has a NixOS module, but only for the package and the firewall; what BRINGS IT UP is this panel |
+| `my.autostart` (here) | GUI apps with no service of their own: Discord, Spotifast, LocalSend, ZapFast | LocalSend has a NixOS module, but only for the package and the firewall; what BRINGS IT UP is this panel |
 | `my.services.<n>` | real services with a module or daemon (dropbox, jellyfin, ollama, sunshine, restic) | keys in `modules/nixos/services/toggles.nix`, values in `hosts/<host>/services.nix` |
 | `hypr/lua/autostart.lua` | session infrastructure that NEEDS the compositor's `exec-once`: the lock, quickshell, wl-clip-persist | only the compositor knows the right moment |
 
@@ -61,7 +61,7 @@ its window. `X-SwitchMethod = "keep-old"` keeps a changed unit's running process
 definition applies at the next login. A brand new unit is still started once by the switch.
 
 `keep-old` was not enough, and Discord kept jumping up on EVERY rebuild. The reason, measured:
-Chromium-based apps (Discord, ChatGPT) move their own process into an `app-<name>-<pid>.scope`,
+Chromium-based apps (Discord) move their own process into an `app-<name>-<pid>.scope`,
 so the unit's cgroup empties within 2 s and the unit reads `inactive`. Home Manager's switch
 starts every inactive unit a target wants, so each rebuild launched a second instance, which
 handed off to the live one and raised its window. Two guards now:
@@ -72,22 +72,11 @@ handed off to the live one and raised its window. Two guards now:
   name, e.g. `.Discord-wrappe`): an app already running skips the launch as "condition failed",
   which is a skip and not a failure.
 
-## `hide = true`: background for an app with no tray flag
+## No app without a tray flag
 
-The rule is that login opens NO window. Most apps have a tray-only flag. ChatGPT has neither a
-tray on Linux nor a start-hidden flag (`--no-startup-window` was measured on 08/11/2026 with a
-throwaway profile: the window opened anyway), so the compositor hides it instead.
-
-- The unit's `ExecStartPost` touches `$XDG_RUNTIME_DIR/autostart-hide/$MAINPID`. The `chatgpt`
-  wrapper is a binary `execv`, so the main PID IS the Wayland client the window belongs to.
-- `hypr/lua/autostart.lua` hooks `window.open`: when `os.remove` of the window's PID marker
-  succeeds, the window moves to `special:minimized` with `follow = false`, so focus stays put.
-- Bring it back with SUPER+CTRL+M, or by launching it again (the single instance raises it).
-- Keyed by PID, not class, so opening ChatGPT by hand later is never hidden, and a marker that
-  never meets a window dies with the runtime dir at logout.
-
-Measured with a throwaway kitty carrying a marker: it opened in `special:minimized` and the marker
-was gone.
+The rule is that login opens NO window, so an app joins this panel only with a tray-only flag.
+The one exception was the ChatGPT desktop app (no tray, no start-hidden flag), hidden by the
+compositor through a PID marker. It left the repo on 08/11/2026 and the marker went with it.
 
 ## The per-app notes
 

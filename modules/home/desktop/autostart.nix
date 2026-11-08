@@ -20,35 +20,15 @@ let
     zapfast
     ;
 
-  # ChatGPT is THE one modules/home/apps/chatgpt.nix installs (the Codex override), by store path.
-  chatgpt = lib.findFirst (
-    p: (p.pname or "") == "chatgpt"
-  ) (throw "autostart: chatgpt is not in home.packages") config.home.packages;
-
-  # For an app with NO tray-only flag: leaves a marker named after its PID, and the hook in
-  # hypr/lua/autostart.lua sends that PID's first window to special:minimized, unfocused.
   # Exits 1 (systemd: "condition failed", a skip and not a failure) when the app is already up, so a
   # second launch never hands off to the live instance, which would RAISE its window.
   notRunning = writeShellScript "autostart-not-running" ''
     ! ${procps}/bin/pgrep -u "$(${coreutils}/bin/id -u)" -x "$1" >/dev/null
   '';
 
-  hideMarker = writeShellScript "autostart-hide-marker" ''
-    ${coreutils}/bin/mkdir -p "$XDG_RUNTIME_DIR/autostart-hide"
-    ${coreutils}/bin/touch "$XDG_RUNTIME_DIR/autostart-hide/$MAINPID"
-  '';
-
   # The apps table: adding one is 1 entry here plus 1 line in the panel below. Every app opens in
-  # the BACKGROUND: its own tray-only flag when it has one, `hide = true` when it does not.
+  # the BACKGROUND, through its own tray-only flag.
   apps = {
-    chatgpt = {
-      # No tray and no start-hidden flag (`--no-startup-window` measured: ignored), so the window
-      # is hidden by the compositor. Bring it back with SUPER+CTRL+M or by launching it again.
-      exec = "${chatgpt}/bin/chatgpt";
-      desc = "ChatGPT and Codex";
-      proc = "ChatGPT";
-      hide = true;
-    };
     discord = {
       # `--start-minimized` = the tray only, like the others. Keep the app's own "Open Discord" on
       # startup Off, which is a second owner (rule 15).
@@ -86,7 +66,6 @@ in
     # THE PANEL: edit here to turn on/off what opens at login.
     # Dropbox is not here: it is a sync SERVICE, toggled in hosts/<host>/services.nix.
     my.autostart = {
-      chatgpt = true; # ChatGPT, its window sent to special:minimized
       discord = true; # chat/voice
       localsend = false; # the LAN file receiver, hidden in the tray
       spotifast = false; # music
@@ -118,7 +97,6 @@ in
           RemainAfterExit = true;
         }
         // lib.optionalAttrs (app ? proc) { ExecCondition = "${notRunning} ${app.proc}"; }
-        // lib.optionalAttrs (app.hide or false) { ExecStartPost = "${hideMarker}"; }
         // lib.optionalAttrs (app ? successExit) { SuccessExitStatus = app.successExit; };
         Install.WantedBy = [ "graphical-session.target" ];
       }

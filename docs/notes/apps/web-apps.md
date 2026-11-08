@@ -6,8 +6,8 @@ reads it through `osConfig` for the Zen side.
 ## Why web apps
 
 The vendors' desktop apps for these services are a Chromium of their own (Electron or worse) and
-add little over the site. Measured on 08/11/2026: the ChatGPT app is 22 processes and about
-1.6 GB RSS ([chatgpt](chatgpt.md)); Gemini has no Linux app at all ([gemini](gemini.md)). A site
+add little over the site. Measured on 08/11/2026: the ChatGPT app was 22 processes and about
+1.6 GB RSS, and it left ([chatgpt](chatgpt.md)); Gemini has no Linux app at all ([gemini](gemini.md)). A site
 inside a browser that is already running costs a tab or a window, not another runtime.
 
 This is a stopgap, not a verdict on desktop apps. Discord's CTO confirmed on 04/11/2026 a full

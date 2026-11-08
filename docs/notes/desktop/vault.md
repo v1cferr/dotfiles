@@ -61,7 +61,7 @@ different ids for the same app:
 | --- | --- |
 | Discord | `discord`, `vesktop` |
 | Telegram | `TelegramDesktop`, `org.telegram.desktop` |
-| ChatGPT | `chatgpt` |
+| ChatGPT (the `chatgpt-web` web app) | `chatgpt` |
 | Obsidian | `obsidian`, `md.Obsidian` |
 | Zen | `zen*` |
 | LibreWolf | `librewolf` |

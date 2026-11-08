@@ -8,6 +8,6 @@
     # ./pkgs/codex, the OFFICIAL release binary: even unstable lags upstream by a release.
     package = pkgs.codex;
     # `settings` stays EMPTY on purpose: it would make ~/.codex/config.toml a read-only store
-    # file, and Codex and the ChatGPT app PERSIST into it at runtime (/model, approvals, servers).
+    # file, and Codex PERSISTS into it at runtime (/model, approvals, servers).
   };
 }

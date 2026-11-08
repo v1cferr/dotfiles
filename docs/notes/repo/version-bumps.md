@@ -3,7 +3,6 @@
 Modules: [`tools/vendored-bump/package.nix`](../../../tools/vendored-bump/package.nix),
 [`tools/vendored-bump/mk-vendored-bump.nix`](../../../tools/vendored-bump/mk-vendored-bump.nix),
 [`pkgs/vscode/bump.nix`](../../../pkgs/vscode/bump.nix),
-[`pkgs/chatgpt/bump.nix`](../../../pkgs/chatgpt/bump.nix),
 [`pkgs/curseforge/bump.nix`](../../../pkgs/curseforge/bump.nix),
 [`pkgs/codex/bump.nix`](../../../pkgs/codex/bump.nix),
 [`pkgs/antigravity-cli/bump.nix`](../../../pkgs/antigravity-cli/bump.nix),
@@ -41,7 +40,7 @@ Each bump is the `passthru.updateScript` of the package it bumps, the nixpkgs co
 package knows how to update itself". VS Code's replaces nixpkgs' `update-vscode.sh`, which edits
 nixpkgs and not this repo. `vendored-bump` is built from `overlayLocalPkgs` in
 [`flake.nix`](../../../flake.nix): every local package whose `updateScript` is not null, plus VS
-Code and ChatGPT (overrides of unstable's, so not in `localPkgs`), each called by STORE PATH.
+Code (an override of unstable's, so not in `localPkgs`), each called by STORE PATH.
 
 Until 26/09/2026 the alias listed the four by NAME, which cost two things. Adding a package meant
 editing a 250-character string in `zsh.nix`, and each script had to be on the PATH, so one that was
@@ -89,7 +88,6 @@ Start from the package closest in SHAPE, since `latest` and `resolve` are what d
 | --- | --- |
 | a GitHub release asset | [`pkgs/codex/`](../../../pkgs/codex/bump.nix): a HEAD on `/releases/latest`, `prefetch` |
 | a version API with the hash in it | [`pkgs/vscode/`](../../../pkgs/vscode/bump.nix): one JSON kept in `$tmp`, `sri` |
-| an apt repository | [`pkgs/chatgpt/`](../../../pkgs/chatgpt/bump.nix): the `Packages` index kept in `$tmp`, `sri` |
 | a manifest per release | [`pkgs/antigravity-cli/`](../../../pkgs/antigravity-cli/bump.nix): `sri` on the published sha512 |
 | only a pointer url | [`pkgs/curseforge/`](../../../pkgs/curseforge/bump.nix): the version from somewhere cheap, `prefetch` |
 | a GitHub release among other release lines | [`pkgs/stack-wallet/`](../../../pkgs/stack-wallet/bump.nix): the API filtered by tag, `sri` on the asset digest |

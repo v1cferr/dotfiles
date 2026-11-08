@@ -44,7 +44,7 @@ input differ between CI and home, and none of the compiled ones do.
 
 ## Private, with a read-only key at home
 
-The bucket is private on purpose: many pushed packages are unfree (VS Code, Codex, ChatGPT,
+The bucket is private on purpose: many pushed packages are unfree (VS Code, Codex,
 CurseForge, Steam's FHS root), and a public cache would redistribute them. Two R2 tokens, scoped
 to the bucket:
 

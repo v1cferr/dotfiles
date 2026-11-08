@@ -32,17 +32,6 @@ let
     };
   };
 
-  # The same shape for ChatGPT: unstable's recipe, the src from pkgs/chatgpt (the channel trails
-  # OpenAI's apt repo by weeks). `.override` survives, so the module can hand it pkgs.codex.
-  overlayChatgpt = final: prev: {
-    unstable = prev.unstable // {
-      chatgpt = import ../pkgs/chatgpt/package.nix {
-        inherit (final) lib callPackage;
-        inherit (prev.unstable) chatgpt;
-      };
-    };
-  };
-
   # btop with Intel Xe: TEMPORARY. nixpkgs' btop has GPU on, but its Intel backend is i915-ONLY and
   # the B580 is xe. REMOVE when PR #1457 lands in the channel: docs/notes/repo/flake.md
   overlayBtopXe = _: prev: {
@@ -177,8 +166,8 @@ let
             nixpkgs.lib.getAttrs (builtins.attrNames (localPkgs final)) final
           )
           // {
-            # Not ./pkgs packages, but their src bumps the same way.
-            inherit (final.unstable) vscode chatgpt;
+            # Not a ./pkgs package, but its src bumps the same way.
+            inherit (final.unstable) vscode;
           };
       };
     };
@@ -198,7 +187,6 @@ in
 [
   overlayUnstable
   overlayVscode # AFTER overlayUnstable: it patches that `unstable.vscode`
-  overlayChatgpt # the same, for `unstable.chatgpt`
   overlayBtopXe # temporary: Intel Xe GPU (Arc B580) until PR #1457 merges
   overlayOpenrgbArc # temporary: the Arc B580's RGB, until the merge requests land
   overlayLocalPkgs

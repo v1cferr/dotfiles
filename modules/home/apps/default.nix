@@ -24,7 +24,6 @@
     ./zen.nix # Zen: the browser plus the launch guard (a locked screen closes it)
     ./zapfast.nix # ZapFast: native WhatsApp client, the browser tab stays as the fallback
     ./spotifast.nix # Spotifast: native Spotify client, its colors from the palette
-    ./chatgpt.nix # ChatGPT: OpenAI's official Linux app (unstable), sharing the Codex CLI
     ./web-apps.nix # the Zen side of my.webApps: a launcher plus a profile per app (ChatGPT tabs)
     ./virt-manager.nix # the libvirt GUI (the daemon is in modules/nixos/services/libvirt.nix)
     ./crypto.nix # Stack Wallet plus Bisq 2: self-custody and P2P buying, both opened by hand

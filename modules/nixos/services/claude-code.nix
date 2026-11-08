@@ -94,6 +94,10 @@ in
     Move PROGRESSIVELY: leave the repository building, running and committed as you advance,
     instead of changing everything at once and validating only at the end.
 
+    Markdown tables are ALIGNED (markdownlint MD060 `aligned`, MD055 `leading_and_trailing`):
+    every row opens and closes with a pipe, and the pipes line up with the header's, padded with
+    spaces. A repo with no markdownlint config gets one with these 2 rules.
+
     In STUDY projects, help me organize, explain and plan, but do not replace the practical
     part. Implementing it and getting it wrong myself is the point of those repositories.
   '';

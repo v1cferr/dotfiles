@@ -90,6 +90,11 @@ DialogueUI is the NPC dialogue of choice because Spoken has a narrator style mad
 - **Mastercraft overlaps three add-ons.** It sells grey junk, fishes and records gathering nodes.
   Angleur and GatherMate2 were dropped for it on 08/11/2026. Dejunk stays, because Mastercraft
   never destroys an item and has no price threshold or lists, so its own `autoJunk` is off.
+- **OneForAll is kept for its dungeon and gear data**: boss loot with drop chances, dungeon maps
+  on M, quest chains and the Gear Planner. Its Quality of Life tab repeats Leatrix, Dejunk,
+  BlizzMove and others, but every helper there ships off, so it stays off. Its Gear Value tooltip
+  (`gearValue`) is turned off too, because Pawn already scores gear. Its dungeon map cannot show
+  the player: the client returns no map position inside an instance, for any add-on.
 - **`/reload` is enough.** Tested on 06/11/2026 with the game open: a switch, then `/reload`,
   picked up NEW add-on folders too, not just changed files. No client restart needed.
 - **Required dependencies are checked at build**, from the TOC the Forever client loads. Run-time

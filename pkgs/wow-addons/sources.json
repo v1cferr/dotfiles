@@ -289,5 +289,12 @@
     "version": "9510591",
     "url": "https://edge.forgecdn.net/files/9510/591/Polestar-0.3.5.zip",
     "hash": "sha256-75GE5l0e1re11DWLjgB9C75i+y08fnfjTZqYhTAW02w="
+  },
+  "oneforall": {
+    "source": "curseforge",
+    "projectId": 1714201,
+    "version": "9528695",
+    "url": "https://edge.forgecdn.net/files/9528/695/OneForAll-6.2.2.zip",
+    "hash": "sha256-YuR63jrpvY+GHZUTV1H08TnqaEnodmzwVnTo1OEDwxs="
   }
 }

@@ -41,10 +41,6 @@
     SystemMaxUse=2G
     SystemMaxFileSize=128M
   '';
-  # 3 builds x 4 cores = the 12 threads, never more. The default (12 x all cores) ran ~5 GiB of
-  # cc1plus beside a Rust build and pushed 20 GiB into swap on 05/11/2026.
-  nix.settings.max-jobs = 3;
-  nix.settings.cores = 4;
   # Idle priority: a build yields CPU and disk to the session, so it never freezes the stream.
   nix.daemonCPUSchedPolicy = "idle";
   nix.daemonIOSchedClass = "idle";

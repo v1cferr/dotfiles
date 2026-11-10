@@ -35,6 +35,11 @@ in
 
   hardware.cpu.intel.updateMicrocode = true; # an Intel CPU on this board
 
+  # 3 builds x 4 cores = the 12 threads, never more. The default (12 x all cores) ran ~5 GiB of
+  # cc1plus beside a Rust build and pushed 20 GiB into swap on 05/11/2026.
+  nix.settings.max-jobs = 3;
+  nix.settings.cores = 4;
+
   # The GPU fan's kernel patch: true = manual control, but every kernel bump is an hour's local
   # build; false = the cached kernel, and the card runs its stock curve. The board's fans stay either way.
   my.fans.gpuControl = false;

@@ -1,5 +1,5 @@
 # The t480s's accounts: cesar beside the shared v1cferr, and the password hashes of both.
-# Why he is not in wheel and why the hashes are files: docs/decisions/0018-a-shared-laptop.md
+# Why the hashes are files and whose home is whose: docs/decisions/0018-a-shared-laptop.md
 { config, ... }:
 
 let
@@ -14,7 +14,10 @@ in
   users.users.cesar = {
     isNormalUser = true;
     description = "Cesar";
-    extraGroups = [ "networkmanager" ];
+    extraGroups = [
+      "wheel" # the machine is his too; the SYSTEM is still declared here, so sudo cannot drift it
+      "networkmanager"
+    ];
     hashedPasswordFile = passwordFile "cesar";
   };
 

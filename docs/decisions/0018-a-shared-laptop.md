@@ -42,7 +42,8 @@ person is a commit in this repo.
 **Two homes, two owners.** Mine is `modules/home/`, applied by the NixOS module as on the desk.
 Cesar's is standalone Home Manager from his own repository: he runs `home-manager switch` as
 himself, needs no `sudo` for it, and neither home can break the other or the system build. His
-account is not in `wheel`.
+account is in `wheel` since 10/11/2026: the machine is his too. What `sudo` cannot do is drift
+the system, since whatever is not declared here is gone at the next rebuild.
 
 **GDM is the greeter**, with no autologin, offering both GNOME and Hyprland.
 

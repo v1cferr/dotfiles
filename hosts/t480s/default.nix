@@ -15,6 +15,11 @@
   # The house's router, so `ssh router` works from here too; this machine does not manage it.
   my.router = import ../cudy-wr3000;
 
+  # The desk's own key: it is not in users.nix, which lists who logs INTO an account from outside.
+  users.users.v1cferr.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK2NY1qOnqUqQhPs6sTK5MUCL+onwz1pOjzQo9p6rE+z v1cferr@nixos-seagate"
+  ];
+
   # SSH for administration, by key only and for me only: it is how the desk deploys this machine.
   services.openssh = {
     enable = true;

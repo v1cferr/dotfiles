@@ -47,8 +47,6 @@ finished work. What was closed is in the [august history](history/2026/08-august
       • SECRETS: the laptop reads none, so it has no VPN and no cache key. The likely answer is a
         second sops file with its own recipients; review by 2027-01-31.
       • SECURE BOOT and the TPM unlock, both manual: [the install guide](guides/t480s-install.md).
-      • THE KEYBOARD is US and the host says so for the TTY and the greeter, but Hyprland's layout
-        is a literal in `input.lua`, still ABNT2. It becomes a `my.keyboard` option (rule 11).
       • WHERE CESAR DECLARES a system-level wish: he has `sudo`, but the system is this repo, so
         today it is a commit of mine. His apps belong in his own Home Manager.
 

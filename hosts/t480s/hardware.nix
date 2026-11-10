@@ -23,11 +23,13 @@
     secondaryName = "HDMI";
   };
 
-  # The keyboard is US, as Lenovo shipped it: the TTY, the passphrase prompt and the greeter.
-  # Hyprland's own layout is still the desk's, in modules/home/desktop/hypr/lua/input.lua.
-  console.keyMap = "us";
-  console.earlySetup = true;
-  services.xserver.xkb.layout = "us";
+  # The keyboard is US, as Lenovo shipped it: the TTY, the greeter and Hyprland all follow.
+  my.keyboard = {
+    layout = "us";
+    variant = "";
+    console = "us";
+  };
+  console.earlySetup = true; # the keymap is loaded in the initrd, for the LUKS passphrase prompt
 
   # The passphrase prompt and a later TPM2 enrollment (`systemd-cryptenroll`) both want this.
   boot.initrd.systemd.enable = true;

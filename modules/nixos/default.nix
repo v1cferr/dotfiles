@@ -9,7 +9,6 @@
     ./network # NetworkManager, the domain/subnet/ingress interfaces, the tunnel, Tor
     ./desktop # Hyprland, xkb, the portal (dark mode), gnome-keyring
     ./services # snapshots (btrbk), hooks (Claude Code), media (Jellyfin/qBit), AI (Ollama/duo)
-    ./gaming # Steam plus Proton-GE plus gamemode (a system-level FHS-wrap/firewall)
     ./packages.nix # environment.systemPackages (system apps/tools)
   ];
 }

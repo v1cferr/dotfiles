@@ -10,6 +10,7 @@
     ../../modules/nixos/network/router-log.nix # the router's syslog received here (router only, UDP 5514), kept 30 days
     ../../modules/nixos/network/vpn.nix # the FAI (nxBender/SonicWall) plus UFSCar (openconnect/GlobalProtect) VPNs, on demand
     ../../modules/nixos/desktop/lightdm-autologin.nix # LightDM logging in by itself, so Sunshine has a session to stream
+    ../../modules/nixos/gaming # Steam plus Proton-GE plus gamemode (a system-level FHS-wrap/firewall)
   ];
 
   # linger: the user's systemd --user comes up at BOOT with no login, so the user services run

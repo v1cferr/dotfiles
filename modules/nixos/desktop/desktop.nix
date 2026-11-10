@@ -50,7 +50,7 @@ in
   services.displayManager.defaultSession = "hyprland";
   # The system's xkb covers only the greeter (LightDM/X11) and Xwayland apps.
   services.xserver.xkb = {
-    layout = "br"; # the "br" default variant is ABNT2
+    layout = lib.mkDefault "br"; # the "br" default variant is ABNT2; a host with another keyboard says so
     variant = "";
   };
   # Electron/Chromium apps run natively on Wayland instead of Xwayland.

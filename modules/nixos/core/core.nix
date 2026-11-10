@@ -1,6 +1,6 @@
 # THE CORE: Nix/flakes, the GC ceilings, the journal cap, nix-ld and the locale.
 # Why each ceiling is the number it is: docs/notes/repo/core.md
-{ config, ... }:
+{ config, lib, ... }:
 
 {
   # ── Nix / flakes ─────────────────────────────────────────────────────────
@@ -71,5 +71,6 @@
     "en_US.UTF-8/UTF-8"
     "pt_BR.UTF-8/UTF-8"
   ];
-  console.keyMap = "br-abnt2"; # the keyboard on the TTY (the GUI one is in desktop.nix)
+  # The keyboard on the TTY (the GUI one is in desktop.nix). A default: a host with another one says so.
+  console.keyMap = lib.mkDefault "br-abnt2";
 }

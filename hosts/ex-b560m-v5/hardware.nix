@@ -15,6 +15,7 @@ in
     ../../modules/nixos/hardware/mx-master-3s.nix # a Logitech MX Master 3S through logiops (gestures, DPI)
     ../../modules/nixos/hardware/deathadder-v2.nix # a Razer DeathAdder V2: hidraw for the user, no driver
     ../../modules/nixos/hardware/peripheral-rgb.nix # the keyboard's and the mouse's LEDs (my.rgb.peripherals)
+    ../../modules/nixos/hardware/power-log.nix # a CSV a minute of the measurable draw (CPU plus the Arc), read by `power-report`
   ];
 
   # The keyboard (a Redragon Magic Wand Pro, which OpenRGB sees as EVision) and the mouse as they

@@ -51,6 +51,8 @@ in
       inherit update; # bumps the lock plus the vendored versions
       # As the USER first (it holds the SSH key for private inputs), then root.
       upgrade = ''update && rebuild "$@"'';
+      # Another machine's commits, applied here. Fast-forward only: a local edit stops it loudly.
+      pull-rebuild = ''git -C ${flake} pull --ff-only && rebuild "$@"'';
     };
 
     shellAliases = {

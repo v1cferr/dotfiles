@@ -109,6 +109,15 @@ in
         IdentityFile = "~/.ssh/id_ed25519";
       };
 
+      # The shared ThinkPad T480s (hosts/t480s), at home: the router's DNS answers its DHCP name.
+      # Key only, and only me: docs/decisions/0018-a-shared-laptop.md
+      t480s = {
+        HostName = "t480s";
+        User = "v1cferr";
+        Port = 22;
+        IdentityFile = "~/.ssh/id_ed25519";
+      };
+
       # A support VM at FAI.
       fai-vm = faiResilience // {
         HostName = "200.136.209.248";

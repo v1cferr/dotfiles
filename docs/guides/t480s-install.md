@@ -43,8 +43,12 @@ letters, digits and spaces, which sit on the same keys in every layout this hous
 
 ## After the first boot
 
-- `ssh v1cferr@<address>` works by key; a rebuild from the desk is
-  `nixos-rebuild switch --flake .#t480s --target-host v1cferr@<address> --sudo --ask-sudo-password`.
+- Clone this repo on the laptop at the SAME path as on the desk,
+  `~/Projects/GitHub/v1cferr/dotfiles`: Hyprland's and Quickshell's configs are live links into
+  the checkout, and without it the session comes up with no config (10/11/2026).
+- From then on the laptop applies what the desk committed with `pull-rebuild`, and a local edit
+  with `rebuild`; from the desk it is `ssh t480s`. Version bumps (`update`, `upgrade`) stay on
+  the desk, so the two machines never race on `flake.lock`.
 - Each person changes their own password with `passwd`. The files in `/var/lib/login-passwords/`
   only seeded the accounts.
 - Cesar's home is his: standalone Home Manager from his repository, with no `sudo`. The first

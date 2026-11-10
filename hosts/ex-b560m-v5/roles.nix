@@ -11,4 +11,8 @@
     ../../modules/nixos/network/vpn.nix # the FAI (nxBender/SonicWall) plus UFSCar (openconnect/GlobalProtect) VPNs, on demand
     ../../modules/nixos/desktop/lightdm-autologin.nix # LightDM logging in by itself, so Sunshine has a session to stream
   ];
+
+  # linger: the user's systemd --user comes up at BOOT with no login, so the user services run
+  # 24/7 on this always-on machine even with no graphical or SSH session open.
+  users.users.v1cferr.linger = true;
 }

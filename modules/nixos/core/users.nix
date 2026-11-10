@@ -11,9 +11,6 @@
   users.users.v1cferr = {
     isNormalUser = true;
     description = "Victor";
-    # linger: the user's systemd --user comes up at BOOT with no login, so the user services run
-    # 24/7 on this always-on machine even with no graphical or SSH session open.
-    linger = true;
     extraGroups = [
       "wheel"
       "networkmanager"

@@ -7,6 +7,6 @@
     ./fonts.nix # the SSOT of the UI font (my.fonts.ui) plus fontconfig plus the MS metrics
     ./spellcheck.nix # the SSOT of the spellcheck languages (my.spellcheck.languages) plus the hunspell dictionaries
     ./web-apps.nix # my.webApps (SSOT): sites lighter than their vendor app; Chrome installs its share
-    ./desktop.nix # LightDM, Hyprland, xkb, the portal (dark mode), gnome-keyring
+    ./desktop.nix # Hyprland, xkb, the portal (dark mode), gnome-keyring; the greeter is the host's
   ];
 }

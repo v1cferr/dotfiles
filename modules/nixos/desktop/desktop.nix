@@ -1,5 +1,5 @@
-# DESKTOP: Hyprland on Wayland, with LightDM as the greeter. In a Wayland session the keyboard and
-# the monitors are HYPRLAND config, not the system's xkb: docs/notes/desktop/desktop.md
+# DESKTOP: Hyprland on Wayland; the greeter is the host's choice. In a Wayland session the keyboard
+# and the monitors are HYPRLAND config, not the system's xkb: docs/notes/desktop/desktop.md
 { pkgs, lib, ... }:
 
 let
@@ -35,11 +35,10 @@ let
   };
 in
 {
-  services.xserver.enable = true; # it enables LightDM (an X11 greeter) plus Xwayland
+  services.xserver.enable = true; # the X server an X11 greeter needs, plus Xwayland
   # xserver installs xterm by default. kitty is the terminal, and Dolphin's KIO fallback that used
   # to land on xterm is pinned to kitty (docs/notes/apps/dolphin.md).
   services.xserver.excludePackages = [ xterm ];
-  services.xserver.displayManager.lightdm.enable = true;
   # Unstable ON PURPOSE: the compositor tracks the latest RELEASE (not upstream main). 26.05 froze
   # on 0.55.4, whose scrolling fullscreen kept misc.vrr = 2 from ever firing. The portal follows it.
   programs.hyprland = {
@@ -48,12 +47,6 @@ in
     portalPackage = pkgs.unstable.xdg-desktop-portal-hyprland;
   };
 
-  # AUTOLOGIN, and it is not laziness: Sunshine captures a LIVE session, so with nobody logged in
-  # there is nothing to stream. The security trade and the mitigation are in the notes.
-  services.displayManager.autoLogin = {
-    enable = true;
-    user = "v1cferr";
-  };
   services.displayManager.defaultSession = "hyprland";
   # The system's xkb covers only the greeter (LightDM/X11) and Xwayland apps.
   services.xserver.xkb = {
@@ -78,11 +71,9 @@ in
     "org.freedesktop.impl.portal.Screenshot" = [ "wlr" ];
   };
 
-  # KEYRING (org.freedesktop.secrets). MIND THE AUTOLOGIN: PAM never types a password, so the
+  # KEYRING (org.freedesktop.secrets). Under an autologin PAM never types a password, so the
   # unlock comes from a TPM-sealed one (modules/home/desktop/keyring.nix). See the notes.
   services.gnome.gnome-keyring.enable = true;
-  # Only for an INTERACTIVE login (a rescue path); inert under autologin.
-  security.pam.services.lightdm.enableGnomeKeyring = true;
   programs.seahorse.enable = true; # the "Passwords and Keys" GUI, to manage/change the keyring's password
 
   # hyprlock's PAM. WITHOUT this it does not unlock and it LOCKS YOU OUT. The package and config

@@ -1,7 +1,8 @@
 # The desktop: Hyprland, autologin, portals, keyring
 
-`modules/nixos/desktop/desktop.nix`. A Wayland compositor. LightDM (an X11 greeter) launches the Hyprland
-session; Xwayland covers X11 apps.
+`modules/nixos/desktop/desktop.nix`. A Wayland compositor; Xwayland covers X11 apps. The greeter
+is the host's choice: on the desk LightDM (an X11 greeter) launches the Hyprland session and
+logs in by itself, from `modules/nixos/desktop/lightdm-autologin.nix`.
 
 Careful: in a Wayland session the keyboard and the monitors do NOT come from the system's
 xkb/xrandr. They are Hyprland config (`input.kb_layout` for ABNT2 and the `monitor=` lines for the

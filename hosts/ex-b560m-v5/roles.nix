@@ -8,5 +8,6 @@
     ../../modules/nixos/network/fai-gateway.nix # NAT plus forward: the home LAN goes out through the FAI VPN
     ../../modules/nixos/network/router-log.nix # the router's syslog received here (router only, UDP 5514), kept 30 days
     ../../modules/nixos/network/vpn.nix # the FAI (nxBender/SonicWall) plus UFSCar (openconnect/GlobalProtect) VPNs, on demand
+    ../../modules/nixos/desktop/lightdm-autologin.nix # LightDM logging in by itself, so Sunshine has a session to stream
   ];
 }

@@ -1,5 +1,5 @@
 # REMOTE ACCESS: the exposed SSH with its second factor, fail2ban, the login alert, WoL, no suspend.
-# What defends the open port and what was left out: docs/notes/network/network.md
+# A ROLE, imported by the host that is reached from outside: docs/notes/network/network.md
 { config, pkgs, ... }:
 
 let

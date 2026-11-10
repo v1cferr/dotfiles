@@ -8,6 +8,7 @@
     ./services.nix # THE PANEL: which optional services this machine turns on (my.services.*)
     ./hardware.nix # THIS machine's hardware: kernel modules, microcode, extra disks, monitors, devices
     ./bios-aspm.nix # `bios-aspm`: the ASPM bytes this BIOS hides from its menus (an exception, see the guide)
+    ./roles.nix # the ROLES this desk plays beyond a plain workstation (remote access, gateway, games)
   ];
 
   networking.hostName = "ex-b560m-v5";

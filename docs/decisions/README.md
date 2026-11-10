@@ -29,3 +29,4 @@ Each record follows the same short shape, after [Michael Nygard's ADR](https://a
 | [0015](0015-limine-over-grub.md)                       | Limine replaces GRUB, so the initrd is verified too                  | accepted                                                                     |
 | [0016](0016-bitwarden-is-the-secrets-source.md)        | Bitwarden is the single source of secrets, home included             | accepted                                                                     |
 | [0017](0017-android-device-management.md)              | The phone is audited over ADB, read-only, against a declared posture | accepted                                                                     |
+| [0018](0018-a-shared-laptop.md)                        | The laptop is one system with two homes, and a host picks its roles  | accepted, the secrets part to review by 2027-01-31                           |

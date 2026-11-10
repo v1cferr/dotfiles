@@ -57,6 +57,7 @@ export const navigation: NavItem[] = [
       { title: "0015 Limine over GRUB", doc: "decisions/0015-limine-over-grub.md" },
       { title: "0016 Bitwarden is the secrets source", doc: "decisions/0016-bitwarden-is-the-secrets-source.md" },
       { title: "0017 Android device management", doc: "decisions/0017-android-device-management.md" },
+      { title: "0018 A shared laptop", doc: "decisions/0018-a-shared-laptop.md" },
     ],
   },
   { title: "How the notes work", doc: "notes/README.md" },

@@ -29,3 +29,4 @@ in full and a guide that stopped working is a bug.
 | [wireguard-moonlight](wireguard-moonlight.md)               | the tunnel MTU and Moonlight test, and why it cannot run from home                        |
 | [cesar-windows-manual-steps](cesar-windows-manual-steps.md) | what has to exist INSIDE my brother's Windows                                             |
 | [context-exports](context-exports.md)                       | getting each provider's export onto disk for the context repository, one web UI at a time |
+| [t480s-install](t480s-install.md)                           | installing the shared laptop from the desk, and the steps that stay manual                |

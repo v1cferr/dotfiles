@@ -236,8 +236,10 @@ flowchart TD
 home-manager entering as a MODULE and not as a separate output is what makes one `drvPath` cover
 both trees, which is the measurement rule 19 leans on: 35 modules swept and the hash did not move.
 
-`ex-b560m-v5` is the ONLY host: an NVMe Kingston KC3000 on an ASUS EX-B560M-V5, btrfs with
-subvolumes ready for impermanence, declarative disk through disko.
+`ex-b560m-v5` is the desk: an NVMe Kingston KC3000 on an ASUS EX-B560M-V5, btrfs with
+subvolumes ready for impermanence, declarative disk through disko. Since 10/11/2026 there is a
+second host, `t480s`, a shared ThinkPad with the same layout inside LUKS
+([decision 0018](../../decisions/0018-a-shared-laptop.md)).
 
 **`hostPlatform` instead of nixosSystem's `system` argument.** nixpkgs itself calls that one a
 "legacy" output and zeroes it in the flake wrapper: «Allow system to be set modularly in

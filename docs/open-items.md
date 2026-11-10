@@ -41,10 +41,19 @@ finished work. What was closed is in the [august history](history/2026/08-august
         looks like it did nothing. Iterate with the Browser Toolbox (`devtools.chrome.enabled`),
         then move the result into the Nix file.
 
-- [ ] What the layout move left shared on purpose, to split the day a SECOND host exists (opened
-      30/09/2026). [Decision 0009](decisions/0009-modules-hosts-tools-layout.md) made hosts pick
-      their device modules; these three stayed where they are because splitting them now would
-      cut working modules for a machine that does not exist yet.
+- [ ] The t480s is declared and built, not yet installed or lived in (opened 10/11/2026). What
+      [decision 0018](decisions/0018-a-shared-laptop.md) left open, in the order it will hurt:
+      • SECRETS: the laptop reads none, so it has no VPN and no cache key. The likely answer is a
+        second sops file with its own recipients; review by 2027-01-31.
+      • SECURE BOOT and the TPM unlock, both manual: [the install guide](guides/t480s-install.md).
+      • THE KEYBOARD: the console and the greeter assume ABNT2, which is unverified for this
+        machine, and the initrd's passphrase prompt may use neither.
+      • CESAR IS NOT IN `wheel`, so every system-level wish of his is a commit of mine.
+
+- [ ] What the layout move left shared on purpose, to split now that a SECOND host exists (opened
+      30/09/2026, due since 10/11/2026). [Decision 0009](decisions/0009-modules-hosts-tools-layout.md)
+      made hosts pick their device modules; these three stayed where they were because splitting
+      them then would have cut working modules for a machine that did not exist yet.
       • THE SPEAKER EQ in `modules/nixos/hardware/audio.nix` targets the Edifier G1500 by node
         name. It is inert without that speaker, so it costs nothing today; it becomes a device
         module the host imports, like the mice.

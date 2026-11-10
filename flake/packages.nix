@@ -161,6 +161,19 @@ in
       ;
   };
 
+  # THE LAPTOP'S INSTALL: `nix run .#t480s-install -- nixos@<address>`. It ERASES that machine's
+  # disk; the paths it fills come from the host's config (rule 11): docs/guides/t480s-install.md
+  t480s-install =
+    let
+      cfg = self.nixosConfigurations.t480s.config;
+    in
+    pkgs.callPackage ../hosts/t480s/install.nix {
+      passwordFiles = nixpkgs.lib.mapAttrs (_: user: user.hashedPasswordFile) (
+        nixpkgs.lib.filterAttrs (_: user: user.hashedPasswordFile != null) cfg.users.users
+      );
+      luksKeyFile = cfg.disko.devices.disk.kioxia.content.partitions.luks.content.passwordFile;
+    };
+
   # THE LIMINE DRILL: the boot modules under OVMF Secure Boot on throwaway keys, plus a Windows
   # chainload. A package for the same reason as vm-boot: docs/notes/repo/vm-boot.md
   vm-limine = import ./vm-limine.nix { inherit inputs pkgs; };

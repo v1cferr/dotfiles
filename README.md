@@ -76,7 +76,8 @@ a specific host: `sudo nixos-rebuild switch --flake .#<host>`.
 
 ## Architecture
 
-One flake, one host. The host picks from `modules/nixos/` (shared, machine-agnostic), home-manager enters
+One flake, two hosts: the desk (`ex-b560m-v5`) and a shared laptop (`t480s`). A host picks from
+`modules/nixos/` (shared, machine-agnostic) and imports the roles only it plays, home-manager enters
 as a NixOS module, so a single `rebuild` applies both halves, and `pkgs/` is overlaid on top.
 
 <details>

@@ -243,6 +243,7 @@ export const navigation: NavItem[] = [
       { title: "WireGuard and Moonlight", doc: "guides/wireguard-moonlight.md" },
       { title: "CESAR Windows manual steps", doc: "guides/cesar-windows-manual-steps.md" },
       { title: "Context exports", doc: "guides/context-exports.md" },
+      { title: "Installing the t480s", doc: "guides/t480s-install.md" },
     ],
   },
   {

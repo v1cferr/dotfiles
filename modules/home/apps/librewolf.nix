@@ -58,7 +58,12 @@ in
   # written here. No profile yet, nothing to link: the next activation does it.
   home.activation.librewolfTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     root="$HOME/.config/librewolf/librewolf"
-    rel=$(sed -n 's/^Path=//p' "$root/profiles.ini" 2>/dev/null | head -1)
+    # The file is tested FIRST: on a home LibreWolf never ran in, sed exits 2, and under the
+    # activation's `pipefail` that aborted every step after this one (the t480s, 10/11/2026).
+    rel=""
+    if [ -f "$root/profiles.ini" ]; then
+      rel=$(sed -n 's/^Path=//p' "$root/profiles.ini" | head -1)
+    fi
     if [ -n "$rel" ] && [ -d "$root/$rel" ]; then
       run mkdir -p "$root/$rel/chrome"
       run ln -sfn ${userChrome} "$root/$rel/chrome/userChrome.css"

@@ -56,6 +56,9 @@ in
   sops.defaultSopsFile = ../../../secrets/secrets.yaml;
   sops.age.keyFile = "/var/lib/sops-nix/key.txt";
 
+  # The login password is the vault's first consumer: the hash never reaches git or the store.
+  users.users.v1cferr.hashedPasswordFile = config.sops.secrets.v1cferr_password_hash.path;
+
   # One sops.secrets.<name> per index entry, merged with the hand-declared ones.
   sops.secrets =
     (lib.mapAttrs (_key: _item: { }) syncedMap)

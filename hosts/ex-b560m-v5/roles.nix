@@ -4,6 +4,7 @@
 
 {
   imports = [
+    ../../modules/nixos/core/secrets.nix # the sops base plus the sops.secrets from Bitwarden plus the sync-secrets command
     ../../modules/nixos/network/remote-access.nix # the exposed SSH plus TOTP, fail2ban, the login alert, WoL, no suspend
     ../../modules/nixos/network/fai-gateway.nix # NAT plus forward: the home LAN goes out through the FAI VPN
     ../../modules/nixos/network/router-log.nix # the router's syslog received here (router only, UDP 5514), kept 30 days

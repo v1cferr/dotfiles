@@ -1,5 +1,5 @@
-# USER and SHELL: zsh as the login shell plus the v1cferr account; the password hash comes from
-# sops and the SSH public keys live here. No note: the home-dir trap is in disko.md, cited below.
+# USER and SHELL: zsh as the login shell plus the v1cferr account and its SSH public keys; where the
+# password hash comes from is the host's. No note: the home-dir trap is in disko.md, cited below.
 { config, pkgs, ... }:
 
 {
@@ -7,8 +7,7 @@
   # The interactive config and the prompt live in modules/home/shell/.
   programs.zsh.enable = true;
 
-  # THE USER, a declared capability. The password hash comes through sops (outside git); the SSH
-  # public keys are public, so they sit here in the clear.
+  # THE USER, a declared capability. The SSH public keys are public, so they sit here in the clear.
   users.users.v1cferr = {
     isNormalUser = true;
     description = "Victor";
@@ -20,7 +19,6 @@
       "networkmanager"
     ];
     shell = pkgs.zsh; # the login shell is zsh (the interactive config is in modules/home/shell/zsh.nix)
-    hashedPasswordFile = config.sops.secrets.v1cferr_password_hash.path;
     openssh.authorizedKeys.keys = [
       # the key that gets into the Arch today (~/.ssh/authorized_keys)
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKPvFX6AAslYtCXeUnNmSIKL4GESHvgO+irlnJ5+2ltD dev.victorferreira@gmail.com"

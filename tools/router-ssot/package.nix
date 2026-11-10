@@ -65,7 +65,7 @@ writeShellApplication {
       --arg host "$(first 'csrf_allowed_origins\s*=\s*"https://([\d.]+):' "$sunshine" '$1')" \
       --arg faiSubnets "$(nix_list modules/nixos/network/fai-gateway.nix faiSubnets)" \
       --arg faiHosts "$(nix_list modules/nixos/network/fai-gateway.nix faiTunnelHosts)" \
-      --arg sshPort "$(first 'ports\s*=\s*\[\s*(\d+)\s*\]' modules/nixos/network/network.nix '$1')" \
+      --arg sshPort "$(first 'ports\s*=\s*\[\s*(\d+)\s*\]' modules/nixos/network/remote-access.nix '$1')" \
       --arg sshHosts "$hosts" \
       --arg hydraPort "$(first 'torrentPort\s*=\s*(\d+)' modules/nixos/gaming/hydralauncher.nix '$1')" \
       --arg mirror "$mirror" '
@@ -158,7 +158,7 @@ writeShellApplication {
             end),
           # The exposed port is one number in two configs, and the repo owns it.
           (if [$fw | anon("redirect")[] | select(.dest_ip == $host and .dest_port == $sshPort)] | length == 0 then
-              [["ssh", "no redirect sends \($sshPort) to \($host)", "services.openssh.ports in modules/nixos/network/network.nix owns that number"]]
+              [["ssh", "no redirect sends \($sshPort) to \($host)", "services.openssh.ports in modules/nixos/network/remote-access.nix owns that number"]]
             else [] end),
           # The Hydra torrent port, TCP and UDP, or peers cannot dial in. IPv4 only: the app binds no IPv6.
           (if $hydraPort == "" then

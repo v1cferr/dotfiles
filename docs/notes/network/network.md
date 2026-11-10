@@ -1,11 +1,13 @@
 # network and remote access
 
 Modules: [`modules/nixos/network/network.nix`](../../../modules/nixos/network/network.nix),
+[`modules/nixos/network/remote-access.nix`](../../../modules/nixos/network/remote-access.nix),
 [`modules/nixos/network/fai-gateway.nix`](../../../modules/nixos/network/fai-gateway.nix),
 [`modules/nixos/network/localsend.nix`](../../../modules/nixos/network/localsend.nix)
 
 NetworkManager, the exposed SSH, fail2ban, dynamic DNS and "never suspend". The theme: this is a
-machine for remote access.
+machine for remote access. Since 10/11/2026 `network.nix` holds only what any host wants, and
+everything about being reached from outside is `remote-access.nix`.
 
 The whole house as the router's mirror declared it on 01/10/2026
 ([`firewall.conf`](../../../hosts/cudy-wr3000/uci/firewall.conf),

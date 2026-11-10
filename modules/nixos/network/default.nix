@@ -9,7 +9,8 @@
     ./fai-gateway.nix # NAT plus forward: the home LAN goes out through the FAI VPN (the manual counterpart is in docs/guides/)
     ./nethogs.nix # nethogs as a capability wrapper (wheel only): the network panel's per-app traffic
     ./localsend.nix # LocalSend: the package plus 53317 (TCP/UDP) opened ONLY to the home LAN
-    ./network.nix # NetworkManager, the exposed SSH, fail2ban, dynamic DNS, no-sleep
+    ./network.nix # NetworkManager, BBR and the redirect hardening
+    ./remote-access.nix # the exposed SSH plus TOTP, fail2ban, the login alert, WoL, no suspend
     ./router.nix # `router-sync`: it mirrors the OpenWrt's UCI into the repo (visibility, not push)
     ./router-log.nix # the router's syslog received here (router only, UDP 5514), kept 30 days
     ./tunnel.nix # the Cloudflare Tunnel (outbound only); its ingress is the `expose = "tunnel"` entries

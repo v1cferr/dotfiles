@@ -186,7 +186,7 @@ hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = tr
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
--- brightness = hyprsunset's gamma (a desktop with no backlight); the OSD is Quickshell's own.
+-- brightness = the panel's backlight, or hyprsunset's gamma where there is none; the OSD is Quickshell's.
 hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightness-osd up"),   { locked = true, repeating = true })
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightness-osd down"), { locked = true, repeating = true })
 -- Brightness (gamma): SUPER+Vol up = brighter, SUPER+Vol down = darker, SUPER+SHIFT+B resets.

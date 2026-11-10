@@ -12,6 +12,7 @@ let
   # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
+    brightnessctl
     coreutils
     findutils
     jq
@@ -89,16 +90,31 @@ let
     '';
   };
 
-  # brightness-osd: "brightness" through hyprsunset's gamma, since this desktop has no backlight.
-  # It CLAMPS to an absolute [floor, ceil], because hyprsunset only clamps the ceiling.
+  # brightness-osd: a real backlight when the machine has one (a laptop panel), else "brightness"
+  # through hyprsunset's gamma, CLAMPED to [floor, ceil] since hyprsunset only clamps the ceiling.
   brightnessOsd = writeShellApplication {
     name = "brightness-osd";
     runtimeInputs = [
+      brightnessctl
       hyprland
       coreutils
       qsPkg
     ];
     text = ''
+      # A panel with a backlight: logind sets it for the active session, so no group or udev rule.
+      shopt -s nullglob
+      panels=(/sys/class/backlight/*)
+      if [ "''${#panels[@]}" -gt 0 ]; then
+        case "''${1:-up}" in
+          up)    brightnessctl --quiet set 5%+ ;;
+          down)  brightnessctl --quiet --min-value=1 set 5%- ;;
+          reset) brightnessctl --quiet set 100% ;;
+        esac
+        pct="$(brightnessctl --machine-readable info | cut -d, -f4 | tr -dc '0-9')"
+        qs ipc call osd brightness "''${pct:-0}" 100 >/dev/null 2>&1 || true
+        exit 0
+      fi
+
       step=10
       floor=20  # the floor: never leaves the screen black or glitched
       ceil=150  # the ceiling is hyprsunset.nix's max-gamma

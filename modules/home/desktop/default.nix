@@ -18,9 +18,7 @@
     ./vicinae # the launcher (SUPER+Q) plus command palette, themed from the palette
     ./cheatsheet.nix # SUPER+H: the keybind list in Vicinae, GENERATED from keybinds.lua at runtime
     ./wallpaper.nix # hyprpaper: a random DARK photo per monitor, one pool per orientation
-    ./backlight.nix # DDC/CI: both panels held at one declared brightness and white point
     ./hyprsunset.nix # the blue light filter (a systemd service plus profiles by time of day)
-    ./keyring.nix # the "Login" keyring unlocked at start from a TPM-sealed password (autologin)
     ./lockscreen # hyprlock (the lock screen) plus hypridle (idle: dim plus lock)
     ./quickshell.nix # the shell/bar/OSD/media plus NOTIFICATIONS in QML; hot-reload through mkOutOfStoreSymlink
     ./theme.nix # dark mode (prefer-dark), icons, cursor, and Qt through the recolored Kvantum

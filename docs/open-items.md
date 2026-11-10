@@ -57,9 +57,11 @@ finished work. What was closed is in the [august history](history/2026/08-august
       • THE SPEAKER EQ in `modules/nixos/hardware/audio.nix` targets the Edifier G1500 by node
         name. It is inert without that speaker, so it costs nothing today; it becomes a device
         module the host imports, like the mice.
-      • THE HOME MANAGER SIDE has no per-host layer: the Razer OSD, the DDC backlight of the two
-        panels and the Windows games disk reach every host. The answer is a
-        `hosts/<host>/home.nix` that adds `home-manager.users.v1cferr.imports`.
+      • THE HOME MANAGER SIDE got its per-host layer on 10/11/2026: `hosts/<host>/home.nix` adds
+        `home-manager.users.v1cferr.imports`, and the desk's holds the DDC backlight, the Razer
+        OSD, the autologin keyring, the two SFTP mounts and the weekly drill. STILL SHARED: the
+        Windows games disk and the WoW add-ons, because Bottles, glance-feed and disk-insight
+        read `my.games` and would need to live without it first.
       • THE ROUTER'S DHCP RESERVATION still names this machine `v1cferr-nixos`. Renaming it is a
         change on the device (uci, then `router-sync pull`), not a layout one.
 

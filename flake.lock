@@ -330,6 +330,26 @@
         "type": "github"
       }
     },
+    "nixos-hardware": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794222723,
+        "narHash": "sha256-jehPADpSIsWnyNHw/s44OHF9l6Y75QmW74sqO9cEe0A=",
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "rev": "919c16cf46a7acf9b44b2c2444bc39aa094eaa85",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixos-hardware",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1793633738,
@@ -493,6 +513,7 @@
         "git-hooks": "git-hooks",
         "home-manager": "home-manager",
         "mattpocock-skills": "mattpocock-skills",
+        "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "pyproject-build-systems": "pyproject-build-systems",

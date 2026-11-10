@@ -1,5 +1,5 @@
 {
-  description = "My declarative system: NixOS (ex-b560m-v5) + home-manager, unified";
+  description = "My declarative systems: NixOS (ex-b560m-v5, t480s) + home-manager, unified";
 
   inputs = {
     # SYSTEM BASE: the STABLE channel (a release, like Debian/Ubuntu, ~6 months).
@@ -20,6 +20,13 @@
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Per-model hardware quirks, for the laptop: the T480s profile brings the Intel graphics stack,
+    # TRIM, the TrackPoint and the fix for its power-limit throttling.
+    nixos-hardware = {
+      url = "github:NixOS/nixos-hardware";
+      inputs.nixpkgs.follows = "nixpkgs"; # dedup: its nixpkgs only feeds its own tests
     };
 
     # Encrypted secrets versioned in the repo (passwords, tokens...). The age master
@@ -129,9 +136,11 @@
     in
     {
       nixosConfigurations = {
-        # The ONLY host: an NVMe Kingston KC3000 on an ASUS EX-B560M-V5, btrfs through disko.
+        # The desk: an NVMe Kingston KC3000 on an ASUS EX-B560M-V5, btrfs through disko.
         #   sudo nixos-rebuild switch --flake .#ex-b560m-v5
         ex-b560m-v5 = hosts.mkHost ./hosts/ex-b560m-v5;
+        # The shared laptop: a ThinkPad T480s, the same btrfs layout inside LUKS.
+        t480s = hosts.mkHost ./hosts/t480s;
       };
 
       packages.${system} = import ./flake/packages.nix {

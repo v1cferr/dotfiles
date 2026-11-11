@@ -223,6 +223,12 @@ The VPS needs nothing: its sshd allows forwarding by default. The fingerprint pi
 because the TLS session is end to end; the VPS only sees ciphertext. The relay runs as my user so
 it reuses my key and the `vps` block of `ssh.nix`, and `PartOf=` takes it down with the VPN. The
 trade: the FAI VPN now depends on the VPS being up, and `vpn diagnose fai` checks the relay first.
+
+That dependency is no longer total. On 2026-11-11 the VPS stopped answering anything (ping, 22,
+80, 443) while the portal answered directly with its allowlisted cert, and the VPN, the password
+rotation and every Acuttis punch went down with the VPS. `vpn-fai-up` now waits its fifteen
+seconds for the relay and, if the port never opened, dials the portal directly and logs that it
+did. The direct path loses packets; a lossy tunnel still beats none.
 To go back to the direct path, revert the commit that added the relay.
 
 ## Removed on 30/07: the `menu` subcommand

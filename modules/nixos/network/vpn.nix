@@ -42,7 +42,9 @@ let
   # The portal is reached through an SSH forward on the VPS: the direct path loses 12-70% of its
   # packets at UFSCar's edge (AS52888) and TCP-in-TCP turns that into resets, while home->VPS->portal
   # measured 0% (2026-10-27). Note: docs/notes/network/vpn.md.
-  faiPortal = "200.133.233.101:4433";
+  faiPortalHost = "200.133.233.101";
+  faiPortalPort = 4433;
+  faiPortal = "${faiPortalHost}:${toString faiPortalPort}";
   faiUser = "victor.ferreira";
   faiDomain = "fai2008";
   faiRelayPort = 14433;
@@ -51,11 +53,19 @@ let
   # cert swapped between this probe and the login fails closed.
   faiUp = writeShellScript "vpn-fai-up" ''
     # The relay starts first (Requires=), but its port opens only once ssh has logged in.
+    server=127.0.0.1
+    port=${toString faiRelayPort}
     for _ in $(${coreutils}/bin/seq 1 15); do
-      (exec 3<>/dev/tcp/127.0.0.1/${toString faiRelayPort}) 2>/dev/null && break
+      (exec 3<>/dev/tcp/$server/$port) 2>/dev/null && break
       ${coreutils}/bin/sleep 1
     done
-    fp="$(echo | ${coreutils}/bin/timeout 10 ${openssl}/bin/openssl s_client -connect 127.0.0.1:${toString faiRelayPort} 2>/dev/null \
+    # A dead VPS must not take the VPN with it: the direct path is lossy, not closed.
+    if ! (exec 3<>/dev/tcp/$server/$port) 2>/dev/null; then
+      echo "the VPS relay never listened, going to the portal directly" >&2
+      server=${faiPortalHost}
+      port=${toString faiPortalPort}
+    fi
+    fp="$(echo | ${coreutils}/bin/timeout 10 ${openssl}/bin/openssl s_client -connect "$server:$port" 2>/dev/null \
       | ${openssl}/bin/openssl x509 -noout -fingerprint -sha1 | ${coreutils}/bin/cut -d= -f2 | ${coreutils}/bin/tr 'A-F' 'a-f')"
     case "$fp" in
       ${builtins.concatStringsSep " | " faiFingerprints}) ;;
@@ -64,7 +74,7 @@ let
     esac
     # $1: another config, so `rotate-fai-password` tests a new password through this same path.
     exec ${nxbender}/bin/nxBender -c "''${1:-${config.sops.templates."nxbender-fai.conf".path}}" \
-      -s 127.0.0.1 -P ${toString faiRelayPort} -f "$fp"
+      -s "$server" -P "$port" -f "$fp"
   '';
 
   # A new AD password, end to end: tested on a real tunnel BEFORE it reaches Bitwarden, then the

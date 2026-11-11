@@ -259,12 +259,12 @@ component never holds a size, an opacity or a duration of its own (rule 11).
 | -------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | Spacing, a 4 px grid | `sp1` `sp2` `sp3` `sp4` `sp6`                                                                                        | 4, 8, 12, 16, 24                                                                                                                 |
 | Radii, concentric    | `radiusControl`, `radiusSurface`                                                                                     | 8, and 8 + `sp1` = 12                                                                                                            |
-| The bar              | `barHeight`, `barTop`, `barCell`, `barCellY`, `barSlant`, `barGap`, `barPad`, `barEdge`, `barCenterWidth`, `barLogo` | 34, 0, 24, 5, 8 (1:3 over the cell), 4, 16, `screenInset` = 12, 72, 20 ([bar.md](bar.md#the-glass-cells-04112026))               |
+| The bar              | `barHeight`, `barTop`, `barCell`, `barCellY`, `barGap`, `barPad`, `barEdge`, `barCenterWidth`, `barLogo`             | 34, 0, 24, 5, 4, 8, `screenInset` = 12, 40, 20 ([bar.md](bar.md#the-continuous-strip-11112026))                                  |
 | Controls off the bar | `barControl`                                                                                                         | 28 (a panel's icon button, a calendar arrow)                                                                                     |
 | Insets               | `bandTop`, `screenInset`                                                                                             | the bar plus 8 = 42; `my.theme.gaps.outer` = 12                                                                                  |
 | Type (px, all mono)  | `fontMicro` `fontSmall` `fontBody` `fontLabel` `fontTitle`                                                           | 10, 11, 12, 13, 14                                                                                                               |
 | Glass                | `colSurfaceBar`, `colSurfaceCard`, `colSurfacePop`                                                                   | the palette's surface at 72% (the bar and the band); the bg at 92% and 96%                                                       |
-| Cells                | `colCellFill` `colCellEdge`, the hover, press and open pairs, `colCompFill` `colCompEdge`, `colBarAccent`            | text at 7% and 14%, brighter on hover, the accent at 16% and 50% when open, the compartment a step above, the accent line at 90% |
+| A bar item's states  | `colCellHoverFill`, `colCellPressFill`, `colCellOpenFill`                                                            | nothing at rest; text at 12% on hover and 16% pressed; the accent at 16% while its panel is open                                 |
 | Edges                | `colEdge`, `colSheen`, `hairline`                                                                                    | border at 55%, text at 6%, 1 px                                                                                                  |
 | States               | `colHoverFill`, `colPressFill`, `colSelectFill`, `opacityDisabled`                                                   | text at 8% and 14%, accent at 18%, 0.4                                                                                           |
 | Motion               | `motionHover` `motionNormal` `motionSlow`, `hoverIntent`                                                             | [motion.md](motion.md); the intent is 200 ms                                                                                     |
@@ -382,7 +382,7 @@ at about 4.0. Measured, it does better, since HyprGlass darkens more than that e
 to 0.85 is one line in `kitty.nix`.
 
 **Every shell surface went to the windows' recipe on 18/10/2026**, at the owner's request that the
-whole desktop read as one material: the band first, then the bar, the logo's compartment and the
+whole desktop read as one material: the band first, then the bar and the
 panels, all at kitty's 0.70 and on HyprGlass's `window` preset instead of `ui` and `panel`. Only
 under `clear-gradient`; `perceptible` keeps its denser numbers. The panels were the doubtful part:
 they open over anything, a white page included, and hold the most running text, and the measurement

@@ -10,9 +10,9 @@ the band's bell and the power menu are gone; their functions are all here.
 
 | Part          | Holds                                                                                                   |
 | ------------- | ------------------------------------------------------------------------------------------------------- |
-| Header        | the title, a do-not-disturb toggle and a clear-all button, both as icons with a name                    |
+| Header        | the title, then four icons with a name: idle timeouts, the away screen, do-not-disturb, clear all       |
 | Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen)        |
-| Hardware      | CPU and GPU temperature, RAM, disk: four cards (v2.3)                                                   |
+| Status        | the weather, CPU and GPU temperature, RAM, disk: five cards (11/11/2026)                                |
 | Power         | the Balanced/Gaming/Eco profile, what its last apply did, and five memory and GPU readings (18/10/2026) |
 | Boot          | Secure Boot, the loader and the integrity check, as `boot-trust` proved them (22/10/2026)               |
 | Screenshots   | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3)                  |
@@ -190,8 +190,10 @@ are often scaled down by the app they are pasted into; the original file is the 
 
 ## Hardware
 
-A row of four cards (v2.3): CPU and GPU temperature, RAM and disk use, each with what it is read from
-(`coretemp`, `xe`, the bytes used, the space free). It READS the bar's own snapshot (the `/proc` and
+A row of five cards under `STATUS` (four until 11/11/2026): the weather, then CPU and GPU
+temperature, RAM and disk use, each with what it is read from (the sky in words, `coretemp`, `xe`,
+the bytes used, the space free). The weather card is how the forecast panel opens from here since
+the weather left the bar; with no data it reads `n/a` and opens nothing. It READS the bar's own snapshot (the `/proc` and
 hwmon read every 2 s, and `df` every 30 s): no read of its own. A sensor the machine does not publish
 shows `n/a` with `no sensor`, never a number. Colors follow the states catalog
 ([theme.md](theme.md#states)): a temperature against ITS OWN ceiling (70% warning, 80% degraded, 90%
@@ -236,8 +238,7 @@ guarantees, so a green "success" would be a guess.
 
 ## The unseen dot
 
-A 6 px dot beside the logo, at a FIXED spot to the right of the SVG (never over it, never moving
-it), shown only while a notification arrived with the Center closed and has not been seen. Red when
+A 6 px dot on the logo's upper right corner, at a FIXED spot (never moving it), shown only while a notification arrived with the Center closed and has not been seen. Red when
 one of those is critical, the accent otherwise. Opening the Center marks them seen; a notification
 that is only in the history never lights it, and neither does one carried over a hot reload.
 

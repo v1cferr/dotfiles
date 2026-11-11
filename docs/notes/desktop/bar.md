@@ -3,128 +3,138 @@
 `modules/home/desktop/quickshell/bar/`. The desktop's bar, the only one; Waybar left in the migration to
 Quickshell. It is loaded by `shell.qml` (`Bar {}`), and the popovers live in files next to it.
 
-It shows: the workspaces per monitor plus the title, the NixOS logo (the way into notifications and
-the session, [nixos-center.md](nixos-center.md)), the clock, cpu/temp, audio (Pipewire), Spotifast
-(Mpris), the network, the VPN and Tor, the weather, the tray, and on the standing monitor the
-operational alerts.
+It shows: the workspaces per monitor plus the title and Spotifast (Mpris), the NixOS logo (the way
+into notifications and the session, [nixos-center.md](nixos-center.md)), the network, the VPN and
+Tor, audio (Pipewire), the notification state, the tray and the clock, and on the standing monitor
+the operational alerts. The CPU, the disk and a stopped hypridle show only while they need a look;
+the weather, the temperatures and the rest of the telemetry are one hover or one click away.
 
-## The glass cells (04/11/2026)
+## The continuous strip (11/11/2026)
 
-The bar is ONE frosted strip, 34 px tall, across each monitor, holding one slanted glass cell per
-module. Cells left of the logo lean `\`, cells right of it lean `/`, so two neighbors always leave a
-parallel 4 px slit and the whole bar mirrors about the logo. It replaced the 40 px Powerline (one
-surface cut by 1 px dividers) after a bake-off of real renders: the owner wanted it "modern and
-harmonious, symmetric and pixel perfect".
+The bar is ONE frosted strip, 34 px tall, flush with the top of each monitor, and its items sit bare
+on it: a glyph and a label, no cell around them. The official logo stands alone on the exact center.
+It replaced the mirrored slanted cells of 04/11/2026 (one parallelogram per module), which read as a
+row of segments; the owner asked for a quieter, continuous menu bar that keeps every capability.
 
-| Part        | What it is                                                                                                                                                                                                    |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The surface | `colSurfaceBar` (the palette's surface at 72% over the blur), a 1 px `colSheen` row on top, a 1 px `colEdge` row at the foot                                                                                  |
-| A cell      | `widgets/SlantCell.qml`: a parallelogram 24 px tall at y 5, leaning 8 px across it (an exact 1:3 slope)                                                                                                       |
-| The center  | `LogoSlot.qml`: the `\_/` compartment, rows 2 to 31 (3 px past the cells above and below), 72 px on the cells' top row, the 20 px logo with 5 px of air, and the 24 px accent line on the bar's foot under it |
-| Controls    | `widgets/Pill.qml`, a `SlantCell` holding a glyph and a label                                                                                                                                                 |
+| Part        | What it is                                                                                                                         |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| The surface | `colSurfaceBar` (the palette's surface at 72% over the blur), a 1 px `colSheen` row on top, a 1 px `colEdge` row at the foot       |
+| The window  | `BarStrip.qml`, one per monitor: the surface, the geometry, the logo and a region on each side                                     |
+| The regions | `BarLeft.qml` (workspaces, title, media) and `BarRight.qml` (alerts, status, bell, tray, clock), each given its room as one number |
+| The center  | `LogoSlot.qml`: a 40 px slot holding the 20 px logo, 7 px of air above and below it                                                |
+| Controls    | `widgets/Pill.qml`: a glyph and a label, with a rounded highlight (24 px tall, the control's 8 px radius) only in the states below |
 
-**Every number is an integer.** A cell's width is its content plus 16 px on each side, rounded up to
-4 px (`Theme.barCellWidth`), so a changing value rarely moves a neighbor. Fills sit on whole-pixel
-vertices and the 1 px edges half a pixel inside them, so the top and bottom rules are exactly one
-row (rows 5 and 28). The first and last cells start 12 px from the screen's edges (`barEdge`, the
-same as Hyprland's `gaps_out` and the band's inset), so the bar, the band's cards and the windows
-share one column.
+`Bar.qml` keeps what it always held besides the view: the data, the panel coordinator and the IPC.
+The band, the NixOS Center and every popover read its root, so the window moved out of it into
+`BarStrip.qml` and takes that root as `host`. Nothing reads data twice: the bell reads `Notifs`, the
+Center's new buttons call the same functions the bar's items did.
 
-**Mirrored slants are parallel only across the compartment.** Two cells leaning toward each other
-would meet at the bottom; that is why the compartment's sides follow the cells' own lines, and why
-two mirrored buttons elsewhere need a small `\_/` gap (20 px at the top, 4 at the bottom), never a
-plain slit.
+**Every number is an integer.** An item's width is its content plus 8 px on each side, rounded up to
+4 px (`Theme.barCellWidth`), so a changing value rarely moves a neighbor, and two highlights stay
+4 px apart (`barGap`). The regions start 4 px from the screen's edges, so an item's CONTENT, not
+its highlight, sits 12 px in (`barEdge`, the same as Hyprland's `gaps_out` and the band's inset):
+the bar's text, the band's cards and the windows share one column.
 
-### Cells
+### Items
 
-The states (the set the bake-off called S1): neutral at rest and on hover, the accent only while a
-cell's panel is open.
+Nothing at rest; the accent only while an item's panel is open.
 
-| State                 | Looks                                                                                                                                |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| rest                  | `colCellFill` and `colCellEdge`, the palette's text at 7% and 14%                                                                    |
-| hover                 | the same, brighter (`colCellHoverFill`, `colCellHoverEdge`)                                                                          |
-| open (`selected`)     | `colCellOpenFill` and `colCellOpenEdge` (the accent) plus the 24 px accent line on the bar's foot, the same line the compartment has |
-| needs a look (`tint`) | the cell in that state's color at 16%, its edge at 50%: the CPU pegged, the disk, an operational chip                                |
-| off by choice (`off`) | a faded cell, content at 55%: muted, VPN down, hypridle off, no weather                                                              |
+| State                 | Looks                                                                                           |
+| --------------------- | ----------------------------------------------------------------------------------------------- |
+| rest                  | content alone                                                                                   |
+| hover                 | a neutral highlight, `colCellHoverFill` (the palette's text at 12%), `colCellPressFill` pressed |
+| open (`selected`)     | `colCellOpenFill`, the accent at 16%                                                            |
+| needs a look (`tint`) | the highlight in that state's color at 16%: the CPU pegged, the disk, an operational chip       |
+| off by choice (`off`) | content at 55%: muted, VPN down                                                                 |
 
-**Measured on 04/11/2026**, from captures of the live bars: the accent line under the logo spans
-x 1268 to 1291 on the ASUS (center 1280.0) and 528 to 551 on the LG (center 540.0); the first cell
-starts at x 12 and the last ends 12 px from the ASUS's right edge; the bar layer is 34 px on both
-monitors, the ASUS reserving 34 px and the LG 672. In a shapes-only render the center's left half,
-mirrored, differs from its right half in 23 of 6,800 pixels, by at most 0.7 of 255 (antialiasing on
-the diagonals).
+The highlight fades over `motionHover`, the workspace highlight slides over `motionNormal`, and both
+are zero under `my.theme.motion = "off"` ([motion.md](motion.md)). Nothing on the bar animates on its own.
 
-**The logo sits on the screen's EXACT center, and nothing beside it can move it.** Its compartment's
-x is `floor(width / 2) - 36`, computed from the bar's width alone, never from its neighbors: on the
-ASUS the logo's center is x 1280, on the LG x 540. Each side is capped at what is left of it before
-the center group (`leftRoom`, `rightRoom`), so it can never reach it.
+**The logo sits on the screen's EXACT center, and nothing beside it can move it.** Its slot's x is
+`floor(width / 2) - 20`, computed from the bar's width alone, never from its neighbors. Each side is
+capped at what is left of it before the slot (`leftRoom`, `rightRoom`), so it can never reach it.
+`centerLeft` and `centerRight` are the only two numbers the sides read about the center: a center
+that grows one day (media, a volume change, a notification) widens those two and nothing else.
 
-## The distribution (18/10/2026)
+## The distribution (11/11/2026)
 
-The main monitor reads `Workspaces, title, media | time, logo, date | weather, CPU, network, VPN,
-sound, idle and away, tray`, and the standing monitor `Workspaces, title | logo | operational chips`.
-Since 18/10/2026 (v2.3) the temperature is not on the bar: it is in the NixOS Center's hardware row,
-which opens the temperatures panel ([nixos-center.md](nixos-center.md#hardware)). The disk shows only
-when it needs a look (below).
+The main monitor reads `Workspaces, title, media | logo | alerts, network, VPN, sound, bell, tray,
+clock`, and the standing monitor `Workspaces, title | logo | operational chips`.
 
-**The center group is placed, never centered as a group.** The time (`HH:mm`) and the date (`dd/MM`)
-sit in two MIRRORED cells of ONE width, measured once from a template (`TextMetrics` over `00:00`, the
-same font, size and weight for both; the face is mono, so every minute and every date is that wide),
-and their x comes from the compartment: the time's `\` cell ends one 4 px slit before it, the
-date's `/` cell starts one slit after it. So the logo stays on the screen's center whatever the
-strings hold, and a new minute or day moves nothing. The group's outer edges (`centerLeft`,
-`centerRight`) are pure functions of the bar's width; each side's room is what lies between them and
-the 12 px edge, less a 16 px gap. On the compact bar the center group is the compartment alone.
+**What left the strip, and where it went.** The bar held fifteen permanent cells; secondary
+telemetry now waits one hover or one click away.
+
+| It was on the bar     | Now                                                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| The weather           | the clock's right click, and a card in the NixOS Center; the band still shows it on the LG                     |
+| The CPU reading       | on the bar only while pegged (90% and up), tinted; otherwise the Center's cards and the usage panel            |
+| The idle toggle       | a button in the Center's header; on the bar only while hypridle is OFF, in `colWarn`, where a click re-arms it |
+| The away button       | a button in the Center's header (and its keybinding, unchanged)                                                |
+| The time and the date | one clock on the right edge instead of two cells beside the logo                                               |
+| The temperature       | already in the Center since 18/10/2026 ([nixos-center.md](nixos-center.md#hardware))                           |
+
+**The alerts are the leftmost items of the right side**, so one appearing or leaving moves nothing
+else. The disk shows when the root filesystem is past 90% or under 20 GB free (warning), past 95% or
+under 5 GB free (critical), read from the `df` the bar already runs every 30 s; it and the CPU open
+the CPU and memory panel.
+
+**The bell exists only while there is a state to show** (`NotifIndicator.qml`): do-not-disturb on
+(the struck bell, `colAlert`) or notifications not seen yet (the count, up to `9+`, red when one is
+critical). A click opens the NixOS Center under the logo, a right click flips do-not-disturb. The
+6 px dot on the logo's corner stays, on both monitors.
 
 **The left side splits its room by rules that read the room alone, never a text.** With a player up
 the media takes up to 220 px, the title keeps at least 240; with less room the media shrinks toward
 120, then becomes its icon alone, and only then does the title give way, hiding under 120 px instead
-of becoming a stub. Without a player the media cell is gone and the title gets its
-room. Since no level reads a song's or a title's text, a track change can never flip one. The
-title's own width comes from `TextMetrics` and is rounded UP to 64 px steps (its text left-aligned),
-so most focus changes do not move the media beside it. The hover hint keeps the full title.
+of becoming a stub. The workspaces never fold. Without a player the media item is gone and the title
+gets its room. Since no level reads a song's or a title's text, a track change can never flip one.
+The title's own width comes from `TextMetrics` and is rounded UP to 64 px steps (its text
+left-aligned), so most focus changes do not move the media beside it. The hover hint keeps the full title.
 
-**The right side folds the same way it did, the tray protected.** `rightRow.measure(level)` no longer
-counts the time, the date or the media; it counts the weather, the CPU (and the disk when shown), network and VPN,
-volume, hypridle and away, and the tray. Level 1 drops the network's numbers and the VPN's name (the
-icons and their panels stay), level 2 the weather. The tray is never folded.
+**The right side folds once, the tray protected.** `measure(level)` in `BarRight.qml` sums the
+clock, the tray, the volume, network and VPN, plus the bell and the alerts that are up, from implicit
+widths and text metrics that do not depend on the level. When that would cross the logo the
+network's numbers and the VPN's name go (the icons and their panels stay). Icons and alerts never fold.
 
-**The tray is pinned to the right edge** (`TrayStrip.qml`, its own file since this change): anchored
-12 px from the edge in one `/` cell, growing left, and the rest of the right side anchored to ITS
-left edge with a width from the item count alone (`count` x 20 px icons, the spacing and 12 px of
-padding, on the 4 px module), never from the delegates. So a
-throughput, a temperature or a VPN name changing width moves only what is left of it. No overflow
-menu was built: on the ASUS the right side has room for about a dozen more icons before even level 1,
-and an overflow nobody needs is code to keep.
+**The tray sits before the clock** (`TrayStrip.qml`), its width from the item count alone (`count`
+x 20 px icons and 4 px between them), never from the delegates, and the clock's from a template.
+So a throughput or a VPN name changing width moves only what is left of it. No overflow menu was
+built: on the ASUS the right side has room for dozens of icons before it folds.
 
-**Popovers.** The calendar, from the time or the date, hangs from the logo, so it opens centered on
-the screen and never jumps between the two; the media panel hangs from the media pill wherever it now
-is (`popLeft`, clamped to the screen), with no change to `Mpris.qml`. Every other panel kept its anchor.
-
-**The disk, only when it needs a look.** A chip next to the CPU appears when the root filesystem is
-past 90% or under 20 GB free (warning), past 95% or under 5 GB free (critical), read from the `df`
-the bar already runs every 30 s; it opens the CPU and memory panel, which holds the disk detail.
+**Popovers.** The calendar and the weather hang from the clock; the NixOS Center, and the panels its
+cards open, from the logo; the media panel from the media item (`popLeft`, with no change to
+`Mpris.qml`). Every other panel hangs from its own item. A panel stops the screen's inset (12 px)
+short of the screen's edges; until 11/11/2026 it could sit flush against one.
 
 **The main monitor gone.** The standing monitor's bar shows the tray at its right edge, the alerts
-moving left of it, only while no screen is wide enough for the full bar (`wideUp`), so the tray never
+left of it, only while no screen is wide enough for the full bar (`wideUp`), so the tray never
 disappears with the monitor that held it, and is never shown twice.
 
-**Measured on 18/10/2026**, from captures of the live bars, before and after:
+**Measured on 11/11/2026**, in a second Quickshell on a copy of the tree inside a headless sway
+(wlroots `gles2`, a 2560x1440 and a 1080x1920 output, `hyprctl` stubbed, a private D-Bus session),
+the tree before the change against the tree after it:
 
-| Check                                                    | Before                                        | After                                                                                  |
-| -------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------- |
-| The blue line under the logo, ASUS                       | 1257 to 1302, center 1280.0                   | the same                                                                               |
-| The same, LG                                             | 517 to 562, center 540.0                      | the same                                                                               |
-| The last tray icon's right edge                          | 17 px from the ASUS edge (the clock was last) | 15 px: the 8 px margin plus 6 px inside the 28 px control                              |
-| Tray icons across six captures 2 s apart                 |                                               | each on the same x (2402, 2435, 2468, 2499, 2530)                                      |
-| The right group's left edge, same captures               |                                               | x 1892 every time                                                                      |
-| `qs log` after the swap                                  |                                               | no binding loop, no error                                                              |
-| v2.3, the time and the date (ink of `16:05` and `18/10`) |                                               | 1193 to 1226 and 1333 to 1366: 53 px from the center inside, 87 outside, on both sides |
+| Check                                                   | Before                        | After                               |
+| ------------------------------------------------------- | ----------------------------- | ----------------------------------- |
+| The logo's ink, 2560 px output                          | x 1270 to 1289, center 1280.0 | the same; rows 8 to 25, center 17.0 |
+| The same, 1080 px output                                |                               | x 530 to 549, center 540.0          |
+| The same at 1600 px, a 100-character title and a player |                               | x 790 to 809, center 800.0          |
+| First and last ink column, 2560 px output               |                               | 13 and 2547: 12 px from each edge   |
+| Idle, six 20 s windows of `/proc/<pid>/stat`, two runs  | 3.65% to 4.95% of a core      | 3.70% to 4.80% of a core            |
+| RSS / PSS after about 90 s, two runs                    | 375/295 and 377/293 MiB       | 324/240 and 371/287 MiB             |
+| `qs log`                                                |                               | no error, no binding loop           |
+| `qs ipc call bar hide`                                  |                               | the 34 rows hold one color          |
 
-Not verified by hand: a long song or title, no player at all, many tray icons, a monitor unplugged,
-and opening each popover from its new place; the rules above are what bound those, and they are the
-owner's to try at the desk.
+The idle cost did not move: both means are 4.1% of a core, inside the spread between windows. The
+memory is not a finding either, since the two runs of the new tree differ by more than the trees do.
+Opened over IPC and read from captures: the calendar and the weather under the clock, the NixOS
+Center under the logo with its two new buttons and its weather card, the bell with a count of 2 (one
+critical) and with do-not-disturb on.
+
+Not verified, because the harness has no Hyprland, no tray and no pointer: the blur under the strip,
+real tray icons and XEmbed menus, the workspace clicks, hover and the clock's right click by hand,
+fullscreen windows, Flameshot hiding the bar, a monitor unplugged, and the live session's CPU and
+GPU cost. Those are the owner's to try at the desk once the branch is live.
 
 **The official logo** is `nix-snowflake`, the two-blue snowflake from
 [nixos-artwork](https://github.com/NixOS/nixos-artwork) that `nixos-icons` installs into hicolor on
@@ -191,13 +201,14 @@ layer-surface pattern as the tray menu, for the same Hyprland #6682 reason
 ([quickshell.md](quickshell.md#traymenu-why-a-layer-surface-and-not-a-popupwindow)).
 
 **Placed from the screen's edge.** Every bar panel uses `exclusionMode: Ignore` with its top at
-`Theme.bandTop` (the bar's 4 px gap, its 30 px, and 4 px more), so it lands the same 4 px under the
+`Theme.bandTop` (the bar's 34 px and 8 px more), so it lands the same 8 px under the
 bar on both monitors; relying on the reserved zone would drop it under the whole glance band on the
 standing monitor, whose bar reserves the band's strip ([dash.md](dash.md)). The media panel follows
 the rule too, hung under its pill through `qs ipc call mpris toggleAt <x>`.
 
-**Two clicks changed meaning**, and both old actions moved to the right click: the weather's
-forecast site (it was the left click) and the network's `nm-connection-editor` (same).
+**One click changed meaning**, and its old action moved to the right click: the network's
+`nm-connection-editor`. The weather's forecast site, which had moved the same way, left with the
+weather's pill on 11/11/2026; the clock's right click opens the weather panel instead.
 
 **Tested on 17/10/2026** with a virtual pointer and keyboard (`wlrctl` and `wtype` from nixpkgs, not
 installed), reading the mapped `qs-panel` layers after each step: nothing at 80 ms of hover and the
@@ -209,9 +220,9 @@ weather's panel; the power menu closing a pin.
 ## Checking without a mouse (the IPC handler, 18/10/2026)
 
 `qs ipc call bar panel <key>` opens a panel PINNED by its coordinator key (`weather`, `cal`, `usage`,
-`net`, `temp`, `center`, and `ops-ci`, `ops-svc`, `ops` on the standing monitor's bar), hung from the
-logo; `qs ipc call bar close` closes whatever is open. It checks a panel's content and glass, not its
-anchor under the pill. `qs ipc call notif expand` and `collapse` open or fold every group in the
+`net`, `temp`, `center`, and `ops-ci`, `ops-svc`, `ops` on the standing monitor's bar): the calendar
+and the weather under the clock, every other under the logo; `qs ipc call bar close` closes whatever
+is open. It checks a panel's content and glass, not its anchor under the pill. `qs ipc call notif expand` and `collapse` open or fold every group in the
 NixOS Center's history. Never during a fullscreen game: a pinned panel takes a focus grab.
 
 ## Hiding the bar (the IPC handler)
@@ -222,25 +233,26 @@ LIVE bar draws on top, giving the "duplicated bar" effect. There is no window ru
 (an open feature request, hyprwm/Hyprland#4847), so the only path is hiding. See
 [`flameshot.md`](../apps/flameshot.md).
 
-`visible: false` unmaps the layer surface, so the 30 px strip stops capturing clicks, which matters
+`visible: false` unmaps the layer surface, so the 34 px strip stops capturing clicks, which matters
 for selecting a region at the top of the screen.
 
 **Do NOT name the handler "show"**: it collides with the `qs ipc show` subcommand and the CLI never
 calls the function. The same trap is documented in `shell.qml`, in the vpn `IpcHandler`.
 
-## The workspace rail (18/10/2026, glass cells 04/11/2026)
+## The workspace rail (18/10/2026, bare since 11/11/2026)
 
 `WorkspaceStrip.qml`, the ADAPTIVE WORKSPACE RAIL: each monitor's workspaces as two-digit numbers
-(`01` to `04` on the ASUS, `05` to `08` on the LG) in ONE `\` cell, every number one width measured
-from `00`, under one sliding inner `\` of the cell's own slope (18 px tall, a 6 px lean).
+(`01` to `04` on the ASUS, `05` to `08` on the LG), bare on the strip, every number one width
+measured from `00`, the active one under one rounded highlight that slides (24 px tall, the
+control's 8 px radius).
 
 | State                              | Looks                                                             |
 | ---------------------------------- | ----------------------------------------------------------------- |
-| active                             | accent bold number on the sliding inner shape (the accent at 22%) |
+| active                             | accent bold number on the sliding highlight (`colCellOpenFill`)   |
 | occupied                           | bold `text` number, and its apps' icons on the full bar           |
 | empty                              | `dim` number                                                      |
 | a window opened there              | a steady 8 px yellow tick under the number (`colWarn`)            |
-| a window there asked for attention | the active shape in `colCrit`, the number in red                  |
+| a window there asked for attention | the highlight in `colCrit` at 22%, the number in red              |
 
 **The apps.** Each number carries its apps' icons, one per window class in
 Hyprland's order (`wsApps` in `Bar.qml`, read from the toplevels' IPC object), up to three (two on
@@ -249,8 +261,8 @@ lookup the lock screen uses. A Steam game's class says nothing (`hl` for Northga
 `steam_app_<id>` under Proton), so `data/SteamIcons.qml` reads `SteamAppId` from the window's
 process, once per pid, and shows the `steam_icon_<id>` Steam installed. A Wine app has no .desktop
 entry, so `data/WineIcons.qml` falls back to the icon Bottles extracted, `<bottle>/icons/<Program>.png`, matched by the program's name and
-then by its executable in `bottle.yml`). An app with several windows there gets one 4 px slant per window
-under its icon, up to three, on the cell's 1:3 (accent on the active workspace, `subtext` on the
+then by its executable in `bottle.yml`). An app with several windows there gets one 4 px mark per window
+under its icon, up to three (accent on the active workspace, `subtext` on the
 others): no width, so a second window never moves the rail. A click on an icon focuses that app's
 window (`hl.dsp.focus({ window = "address:0x..." })`, with `cursor.no_warps` on for that one call so
 the pointer stays on the bar); with several, each click focuses the next one, wrapping, and from
@@ -274,7 +286,7 @@ keeps the logo at x 540 and holds:
 - **Left:** that monitor's workspaces, and the window title when it fits cleanly.
 - **Right:** the operational alerts (`OpsIndicator.qml`) and nothing else. No clock: the band right
   under it shows the time at 72 px. Nothing the band's cards already show is repeated. The one
-  exception is the tray, and only with no wide screen up ([the distribution](#the-distribution-18102026)).
+  exception is the tray, and only with no wide screen up ([the distribution](#the-distribution-11112026)).
 
 **On the standing monitor the bar reserves the band's strip too.** Its `exclusiveZone` there is the
 whole top share (672 px at 35%), and the band draws inside that strip ignoring other zones. Two
@@ -327,15 +339,16 @@ pipelines with their ages, and both actions.
 
 ## The clock
 
-The time AND the date are ALWAYS visible, on each side of the logo on the main monitor (18/10/2026;
-before, at the right end after the weather): `HH:mm` and `dd/MM`, the same font, size and weight in
-`text`, in mirrored slots (v2.3; the first version had `Dom, 18 out` in a lighter weight). The SECONDS left the bar but not
-the clock: `timeStr` keeps `HH:mm:ss` for the band's big clock, and the bar reads `barTimeStr`, which
-only changes once a minute. Never on the standing monitor (the band shows it). Both open the
-calendar, hung from the logo.
+The date and the time are ONE item on the main monitor's right edge, after the tray (11/11/2026;
+from 18/10/2026 they sat in two cells on each side of the logo): `qua 11/11  20:00`, in `text`, its
+width fixed by a template of the same length (the face is mono), so a new minute or day moves
+nothing. The SECONDS are not on the bar: `timeStr` keeps `HH:mm:ss` for the band's big clock, and
+the bar reads `dateStr` and `barTimeStr`, which change once a day and once a minute. Never on the
+standing monitor (the band shows it). A hover or a click opens the calendar, hung from the clock; a
+right click opens the weather panel, since the weather left the bar.
 
-Both are numeric, so no locale can change them; where a weekday or a month is spelled (the calendar,
-the band) it comes from local `dowAbbr` and `monAbbr`, NOT from Qt's `"ddd"`, which follows the
+The weekday comes from local `dowAbbr`, as every spelled weekday or month does (the calendar, the
+band, `monAbbr`), NOT from Qt's `"ddd"`, which follows the
 PROCESS' locale. There is no year; whoever needs it has the calendar on hover.
 
 ## The system snapshot: one read per tick
@@ -553,8 +566,8 @@ Right click on the pill is still the shortcut for taking everything down.
 ### The hover hint: every item answers a hover
 
 Asked for on 10/10/2026: everything on the bar shows something under the cursor. The pills with a
-panel of their own (weather, clock, temperature, usage, VPN, network) already did; the rest (the
-window title, Spotifast, volume, hypridle, away, the operational alerts and each tray icon) get
+panel of their own (the clock, a pegged CPU, VPN, network) already did; the rest (the
+window title, Spotifast, volume, the bell, a stopped hypridle, the disk and each tray icon) get
 `HintPopover.qml`, a small card with the state and what each button does. The click keeps doing
 what it did, so a hover never fires an action.
 
@@ -705,7 +718,7 @@ that separates this panel from a guess.
 Open-Meteo, and the coordinates plus the WMO code to pt-BR table are the SSOT in `my.weather`
 (`modules/home/desktop/weather.nix`), read through a generated JSON the same way the palette is.
 
-The pill's ICON derives from the integer `weather_code`, NEVER from the label. It used to regex the
+The weather's ICON derives from the integer `weather_code`, NEVER from the label. It used to regex the
 en-US prose, so translating the label to pt-BR would have turned every icon into the default cloud
 in total silence. That trap, the 4-degree disagreement with the lock screen that motivated the
 SSOT, and the measured failure paths are in [`weather.md`](weather.md).
@@ -714,7 +727,7 @@ SSOT, and the measured failure paths are in [`weather.md`](weather.md).
 
 Since 18/10/2026 the calendar is its own subject: the verified holiday registry, the year and month
 views, the filters and the source checks are in [calendar.md](calendar.md). What stays here is its
-contract with the bar: the time and the date open it, hung from the logo; `calYear`, `calTodayM`
+contract with the bar: the clock opens it, hung from the clock; `calYear`, `calTodayM`
 and `calTodayD` live in the Bar and roll over on the SystemClock's first beat after midnight
 (`updateClock()` against `calDayKey`), which the panel and the band's month card both follow.
 

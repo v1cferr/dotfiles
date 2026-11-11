@@ -28,7 +28,7 @@ Singleton {
     property var popups: []
     // How many notifications to keep; past it the oldest go, but never a critical or resident one.
     readonly property int historyLimit: 100
-    // Arrived while the Center was closed, and not seen yet: the dot beside the logo.
+    // Arrived while the Center was closed, and not seen yet: the dot on the logo, and the count on the bar's bell.
     property int unseen: 0
     property bool unseenCritical: false
 

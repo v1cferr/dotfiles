@@ -192,11 +192,12 @@ bottom/top-left on the main monitor, near the Spotifast pill.
 
 ### `Pill.qml`
 
-The bar's control. Since 04/11/2026 it is a slanted glass cell (`SlantCell.qml`, 24 px on the 1:3
-grid; its states: [bar.md](bar.md#cells)), and it can draw a vector
+The bar's control. Since 11/11/2026 it is bare content, a glyph and a label, with a rounded
+highlight only on hover, on an open panel or on a state that needs a look (its states:
+[bar.md](bar.md#items)), and it can draw a vector
 `image` in place of the glyph. Its `sub` is secondary text in the SAME pill, after the label and in
-a discreet color, for two pieces of data that travel together without becoming two pills (the date
-next to the time). It comes AFTER on purpose: the label is the main information and sits on the
+a discreet color, for two pieces of data that travel together without becoming two pills (the rate's
+unit next to the rates). It comes AFTER on purpose: the label is the main information and sits on the
 left edge, which is where the eye enters the pill, so `sub` does not compete for that spot.
 
 ### `widgets/`: the shell's shared vocabulary
@@ -251,9 +252,9 @@ OPENING A SUBMENU, which likewise makes the card grow after being shown.
 
 **The price is positioning by hand**: a layer surface has no `anchor.rect` and no
 `PopupAdjustment.Slide`, so the X comes from the clicked icon and the edge clamp is explicit. Since
-the tray sits at the RIGHT END, in practice it is the clamp that rules and the menu touches the
-edge, which is what `PopupAdjustment.Slide` did on its own. The Y comes for free: the bar reserves
-`exclusiveZone 30`, and a layer surface with no zone of its own is already positioned BELOW what is
+the tray sits near the RIGHT END, in practice it is often the clamp that rules and the menu touches
+the edge, which is what `PopupAdjustment.Slide` did on its own. The Y comes for free: the bar
+reserves its own height (`exclusiveZone`, 34 px), and a layer surface with no zone of its own is already positioned BELOW what is
 reserved.
 
 **The hover has two signals**, and that is deliberate. The background is an AREA signal; the accent

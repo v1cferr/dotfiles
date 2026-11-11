@@ -133,9 +133,10 @@ not in the registry; Lei SP 9.497/1997 must be re-read when ALESP answers; every
 
 ## The panel
 
-`CalendarPopover.qml` opens on a hover of the time or the date, pins on a click, closes on Escape
-or a click outside: the bar's coordinator, unchanged. It is hung from the logo, so the time and the
-date open the same panel in the same place.
+`CalendarPopover.qml` opens on a hover of the bar's clock, pins on a click, closes on Escape
+or a click outside: the bar's coordinator, unchanged. It is hung from the clock, on the bar's right
+edge, the screen's inset away from the edge (11/11/2026; from the logo before, when the time and the
+date sat on each side of it).
 
 | View     | Holds                                                                                               |
 | -------- | --------------------------------------------------------------------------------------------------- |

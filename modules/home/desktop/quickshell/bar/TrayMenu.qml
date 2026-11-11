@@ -32,7 +32,7 @@ PanelWindow {
         left: true
     }
     margins {
-        top: 4 // 4px below the bar; its exclusiveZone 30 is already discounted
+        top: 4 // 4px below the bar; its exclusive zone is already discounted
         // It aligns with the icon and clamps at the edge, which is what PopupAdjustment.Slide used to do.
         left: {
             const sw = root.screen ? root.screen.width : 1920;

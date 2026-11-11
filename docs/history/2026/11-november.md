@@ -1,6 +1,18 @@
 # History: november 2026
 
-8 entries. Index in [README.md](../README.md).
+9 entries. Index in [README.md](../README.md).
+
+- [x] The bar as one continuous strip of bare items (11/11/2026; asked 11/11/2026). How and why:
+      [notes/desktop/bar.md](../../notes/desktop/bar.md#the-continuous-strip-11112026).
+      • THE CELLS ARE GONE: an item is its glyph and label; a rounded highlight shows only on
+        hover, on an open panel (the accent) or on a state that needs a look.
+      • THREE REGIONS: workspaces, title and media | the logo alone on the center | alerts,
+        network, VPN, sound, a bell, the tray and ONE clock on the right edge.
+      • NOTHING LOST, LESS SHOWN: the weather on the clock's right click and in the NixOS Center,
+        idle and away in the Center's header; CPU, disk and a stopped hypridle only when they matter.
+      • Bar.qml KEEPS THE DATA: the window moved to BarStrip.qml, the sides to BarLeft and BarRight.
+      • MEASURED in a headless sway, before against after: the logo on x 1280.0 and 540.0, idle
+        4.1% of a core on both trees. The live session's cost is not measured yet.
 
 - [x] ChatGPT as a tabbed web app; the desktop app left (08/11/2026; asked 08/11/2026). How and
       why: [notes/apps/chatgpt.md](../../notes/apps/chatgpt.md), [notes/apps/web-apps.md](../../notes/apps/web-apps.md).
@@ -13,7 +25,7 @@
       • FOUND ON THE WAY: Gemini's launcher pointed at a deleted scratch profile since 04/11.
 
 - [x] The bar as mirrored glass cells (04/11/2026; asked 04/11/2026). How and why:
-      [notes/desktop/bar.md](../../notes/desktop/bar.md#the-glass-cells-04112026).
+      [notes/desktop/bar.md](../../notes/desktop/bar.md).
       • A BAKE-OFF OF SIX ROUNDS on real renders (four directions, the glass family, the center,
         room for the logo, the cell states) picked it before anything touched the live shell.
       • ONE INTEGER GRID: 34 px, 24 px cells on a 1:3 slant, 4 px slits, a 12 px edge shared with

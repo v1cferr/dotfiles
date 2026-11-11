@@ -48,6 +48,8 @@ let
   faiUser = "victor.ferreira";
   faiDomain = "fai2008";
   faiRelayPort = 14433;
+  # The relay's far end, as the `vps` block of ssh.nix names it; only probed, never trusted.
+  faiVpsHost = "vps.v1cferr.dev";
 
   # Pins whichever allowlisted cert the portal serves NOW; nxBender still enforces that pin, so a
   # cert swapped between this probe and the login fails closed.
@@ -55,10 +57,13 @@ let
     # The relay starts first (Requires=), but its port opens only once ssh has logged in.
     server=127.0.0.1
     port=${toString faiRelayPort}
-    for _ in $(${coreutils}/bin/seq 1 15); do
-      (exec 3<>/dev/tcp/$server/$port) 2>/dev/null && break
-      ${coreutils}/bin/sleep 1
-    done
+    # A VPS whose sshd does not answer at all is not waited for: the punches run on a deadline.
+    if ${coreutils}/bin/timeout 3 ${bash}/bin/bash -c 'exec 3<>/dev/tcp/${faiVpsHost}/22' 2>/dev/null; then
+      for _ in $(${coreutils}/bin/seq 1 15); do
+        (exec 3<>/dev/tcp/$server/$port) 2>/dev/null && break
+        ${coreutils}/bin/sleep 1
+      done
+    fi
     # A dead VPS must not take the VPN with it: the direct path is lossy, not closed.
     if ! (exec 3<>/dev/tcp/$server/$port) 2>/dev/null; then
       echo "the VPS relay never listened, going to the portal directly" >&2
@@ -226,7 +231,7 @@ let
       # Per-VPN metadata: the unit plus the portal (host/port) that has to be up.
       vpn_meta() {
         case "$1" in
-          fai)    echo "vpn-fai.service 127.0.0.1 ${toString faiRelayPort}" ;; # the portal, through the VPS relay
+          fai)    echo "vpn-fai.service ${faiPortalHost} ${toString faiPortalPort}" ;; # the portal itself: the VPS relay is optional
           ufscar) echo "vpn-ufscar.service acessoremoto-scl.ufscar.br 443" ;;
           *)      return 1 ;;
         esac
@@ -309,9 +314,6 @@ let
         if ! tcp_open 1.1.1.1 443 4; then
           verdict="NO INTERNET on this machine"
           detail="1.1.1.1:443 did not open, so the problem is your network, before the VPN"
-        elif [ "$id" = fai ] && ! systemctl is-active --quiet vpn-fai-relay.service; then
-          verdict="THE VPS RELAY IS DOWN, the FAI portal is not even tried"
-          detail="see: journalctl -u vpn-fai-relay (the VPS is unreachable, or my key was refused)"
         elif ! tcp_open "$host" "$port"; then
           verdict="THE VPN PORTAL IS DOWN, it is not your machine"
           detail="$host:$port refuses the connection and the internet from here is fine"
@@ -580,7 +582,7 @@ in
     serviceConfig = {
       Type = "simple";
       User = "v1cferr";
-      ExecStart = "${openssh}/bin/ssh -N -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -L 127.0.0.1:${toString faiRelayPort}:${faiPortal} vps";
+      ExecStart = "${openssh}/bin/ssh -N -o BatchMode=yes -o ConnectTimeout=5 -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -L 127.0.0.1:${toString faiRelayPort}:${faiPortal} vps";
       Restart = "always";
       RestartSec = 5;
     };

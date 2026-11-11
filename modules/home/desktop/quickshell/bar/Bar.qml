@@ -1495,11 +1495,12 @@ Scope {
             root.popScreen = barWin.screen;
         }
     }
-    // margin.left to center the popover under the element, clamped inside the screen by sp1
+    // margin.left to center the popover under the element, kept the screen's inset from its edges
     function popLeft(popW) {
         const scr = root.popScreen || root.screenPrimary;
         const sw = scr ? scr.width : 1920;
-        return Math.round(Math.max(Theme.barTop, Math.min(root.popCenterX + Theme.barTop - popW / 2, sw - popW - Theme.barTop)));
+        const m = Theme.screenInset;
+        return Math.round(Math.max(m, Math.min(root.popCenterX - popW / 2, sw - popW - m)));
     }
 
     // ===== Contextual expansion: ONE coordinator for every panel the bar opens =====

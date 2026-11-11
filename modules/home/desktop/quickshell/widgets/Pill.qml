@@ -32,7 +32,6 @@ Item {
     signal scrolledUp
     signal scrolledDown
     property alias hovered: area.containsMouse
-    property bool italic: false
     // The content at the left edge instead of centered: a pill wider than its text (the focused
     // window's title, sized in steps so its neighbors do not jump) reads from where it starts.
     property bool leftAligned: false
@@ -92,7 +91,7 @@ Item {
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontBody
             font.bold: pill.bold
-            font.italic: pill.italic
+            font.features: Theme.fontTabular
             elide: Text.ElideRight
         }
         Text {

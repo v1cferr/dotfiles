@@ -30,7 +30,6 @@ RowLayout {
         id: tmTitle
         font.family: Theme.uiFont
         font.pixelSize: Theme.fontBody
-        font.italic: true
         text: left.host.winTitle
     }
     TextMetrics {
@@ -52,7 +51,6 @@ RowLayout {
         visible: left.monitor === left.host.focusedMon && left.host.winTitle !== "" && left.titleMax >= 120
         label: left.host.winTitle
         accent: Theme.colSky
-        italic: true
         leftAligned: true
         maxWidth: left.titleMax
         // In 64 px steps from the text's own metrics, so a focus change rarely moves the media.

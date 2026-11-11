@@ -1445,10 +1445,10 @@ Scope {
         return s >= 1000 ? (s / 1000) + " Gb/s" : s + " Mb/s";
     }
 
-    // A live number padded to a fixed count of columns: the font is mono, so the pill keeps its width
-    // and its neighbors stop shifting every 2 s as the digits come and go.
+    // A live number padded to a fixed count of columns with U+2007, the space as wide as a digit, so
+    // with tabular digits the pill keeps its width and its neighbors stop shifting every 2 s.
     function tab(v, n) {
-        return ("" + v).padStart(n, " ");
+        return ("" + v).padStart(n, "\u2007");
     }
     // A rate in BITS per second, SI like an ISP plan or a speed test ("4.9M", "869M", "1.2G"), from
     // bytes per second. At most 4 columns, so the pill can pad it to a fixed width.

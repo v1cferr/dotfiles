@@ -105,6 +105,7 @@ Item {
                     }
                     font.family: Theme.uiFont
                     font.pixelSize: Theme.fontBody
+                    font.features: Theme.fontTabular
                     font.bold: btn.active || btn.exists || btn.urgent
                 }
                 // A window opened here: an 8 px yellow tick under the number. Visiting clears it.
@@ -205,6 +206,7 @@ Item {
         font.family: Theme.uiFont
         font.pixelSize: Theme.fontBody
         font.bold: true
+        font.features: Theme.fontTabular
         text: "00"
     }
 }

@@ -16,7 +16,7 @@ RowLayout {
     // The tray also lands on the band screen's bar when that is the only screen left.
     readonly property bool trayHere: !right.bar.compact || !right.host.wideUp
     readonly property int trayW: right.trayHere && tray.count > 0 ? tray.stableWidth + Theme.barGap : 0
-    // The clock's width from a template: a mono face, so every minute and every date is this wide.
+    // The clock's width from today's date and a template time: tabular digits, so no minute moves it.
     readonly property int clockW: Theme.barCellWidth(Math.ceil(tmClock.advanceWidth))
     // It folds once, when the row would cross the logo: the network's numbers and the VPN's name go.
     // Icons and alerts never fold, and the tray's width comes from its item count alone.
@@ -29,12 +29,14 @@ RowLayout {
         id: tmClock
         font.family: Theme.uiFont
         font.pixelSize: Theme.fontBody
-        text: "aaa 00/00  00:00"
+        font.features: Theme.fontTabular
+        text: right.host.dateStr + "  00:00"
     }
     TextMetrics {
         id: tmNet
         font.family: Theme.uiFont
         font.pixelSize: Theme.fontBody
+        font.features: Theme.fontTabular
         text: right.host.netPillText
     }
     TextMetrics {

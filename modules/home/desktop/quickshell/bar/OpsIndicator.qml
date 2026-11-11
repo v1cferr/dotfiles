@@ -40,6 +40,7 @@ RowLayout {
         font.family: Theme.uiFont
         font.pixelSize: Theme.fontBody
         font.bold: true
+        font.features: Theme.fontTabular
         text: "SVC · 00"
     }
 

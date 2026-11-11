@@ -36,7 +36,8 @@ Singleton {
             property string magenta: "#bb9af7"
             property string purple: "#9d7cd8"
             property string pink: "#ff007c"
-            property string uiFont: "JetBrainsMono Nerd Font" // it comes from my.fonts.ui
+            property string uiFont: "Geist" // it comes from my.fonts.shell
+            property string iconFont: "Material Symbols Rounded" // it comes from my.fonts.icons
             property string shadow: "#0f0f0f"
             property string motion: "subtle" // it comes from my.theme.motion
             property string glass: "perceptible" // it comes from my.theme.glass
@@ -230,6 +231,20 @@ Singleton {
     readonly property int compactWidth: 1600;
 
     readonly property string uiFont: pal.uiFont
+    // The bar's icons: Material Symbols by ligature name ("volume_up"), one size and weight, outlined
+    // (the FILL axis draws broken shapes on this Qt). A Nerd Font glyph inside a text still comes
+    // through fontconfig's fallback. docs/notes/hardware/fonts.md
+    readonly property string iconFont: pal.iconFont
+    readonly property int iconSymbol: 18
+    readonly property var iconAxes: ({
+            "wght": 400,
+            "opsz": 20
+        })
+    // Digits that keep one column in a proportional face (OpenType `tnum`): a changing number
+    // never moves its neighbors. Pad with U+2007, the space as wide as a digit.
+    readonly property var fontTabular: ({
+            "tnum": 1
+        })
 
     // The main monitor, falling back to the 1st available. It USED to be "DP-1", which does not exist
     // here, so it always fell into s[0] and the OSD could open on the TV.

@@ -1,5 +1,5 @@
-# FONTS: the SSOT of the UI family, `my.fonts.ui`. The modules/home/ side reads it through osConfig.
-# Why it lives here, and the fallback coverage that is a CHOICE: docs/notes/hardware/fonts.md
+# FONTS: the SSOT of the UI family and of the shell's text and icons (`my.fonts.*`), read by the
+# modules/home/ side through osConfig. Why here, and the fallback coverage: docs/notes/hardware/fonts.md
 {
   pkgs,
   lib,
@@ -14,6 +14,18 @@
     description = "The UI font family (SSOT). Read by fontconfig and, through osConfig, by the modules/home/ modules.";
   };
 
+  options.my.fonts.shell = lib.mkOption {
+    type = lib.types.str;
+    default = "Geist";
+    description = "The Quickshell shell's text family: the bar, its panels, the band and the lock. A missing glyph falls back to the UI family's proportional cut.";
+  };
+
+  options.my.fonts.icons = lib.mkOption {
+    type = lib.types.str;
+    default = "Material Symbols Rounded";
+    description = "The icon family the bar draws by ligature name.";
+  };
+
   config.fonts = {
     packages = with pkgs; [
       nerd-fonts.jetbrains-mono
@@ -25,8 +37,8 @@
       # Microsoft's metrics, so OnlyOffice opens .docx/.xlsx without the pagination shifting.
       corefonts # Arial, Times New Roman, Courier New, Verdana… (Office 2003 and earlier)
       vista-fonts # Calibri, Cambria, Consolas… (the modern .docx uses Calibri by default)
-      # The LOCK SCREEN's type, never a UI default: Geist, and icons with a weight axis (Material
-      # Symbols). docs/notes/desktop/lockscreen.md
+      # The SHELL's type, never the system's UI default: Geist, and icons with a weight axis
+      # (Material Symbols). docs/notes/hardware/fonts.md
       geist-font
       material-symbols
     ];
@@ -52,6 +64,21 @@
         ];
         emoji = [ "Noto Color Emoji" ]; # explicit: it is NixOS' default, but a silent default is not something to inherit
       };
+      # The shell's family has no icons: a Nerd Font glyph inside its text comes from the UI family's
+      # PROPORTIONAL cut, whose advances fit a proportional text (the plain cut's glyphs overlap it).
+      localConf = ''
+        <?xml version="1.0"?>
+        <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+        <fontconfig>
+          <alias binding="same">
+            <family>${config.my.fonts.shell}</family>
+            <prefer>
+              <family>${config.my.fonts.shell}</family>
+              <family>${config.my.fonts.ui} Propo</family>
+            </prefer>
+          </alias>
+        </fontconfig>
+      '';
     };
   };
 }

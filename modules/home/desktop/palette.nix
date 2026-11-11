@@ -140,7 +140,7 @@ in
       description = "The glass profile, for the shell, HyprGlass and kitty at once: `perceptible` (the baseline, near-opaque), `clear-gradient` (more see-through, a faint Tokyo Night gradient), `solid` (opaque, no blur: the fallback). docs/notes/desktop/theme.md";
     };
   };
-  # The UI FONT is `my.fonts.ui`, in modules/nixos/desktop/fonts.nix, next to its package (rule 4).
+  # The fonts are `my.fonts.*`, in modules/nixos/desktop/fonts.nix, next to their packages (rule 4).
 
   config = {
     my.theme.palette = p;
@@ -150,7 +150,8 @@ in
     home.file.".config/theme/quickshell-colors.json".text = builtins.toJSON (
       lib.mapAttrs (_: v: "#${v}") p
       // {
-        uiFont = osConfig.my.fonts.ui;
+        uiFont = osConfig.my.fonts.shell;
+        iconFont = osConfig.my.fonts.icons;
         inherit (cfg) motion glass;
         gapsOut = cfg.gaps.outer;
       }

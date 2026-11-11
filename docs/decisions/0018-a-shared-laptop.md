@@ -45,7 +45,11 @@ himself, needs no `sudo` for it, and neither home can break the other or the sys
 account is in `wheel` since 10/11/2026: the machine is his too. What `sudo` cannot do is drift
 the system, since whatever is not declared here is gone at the next rebuild.
 
-**GDM is the greeter**, with no autologin, offering both GNOME and Hyprland.
+**GDM is the greeter**, with no autologin, offering GNOME, Hyprland and an **own session**: one
+entry that runs `~/.config/session/start` from the home of whoever logs in. A greeter only lists
+sessions the SYSTEM declares, so without it every compositor Cesar wanted to try would be a
+commit of mine; with it he picks one from his own Home Manager. A full desktop environment
+still needs system services, and stays a request.
 
 **The laptop's disk is encrypted** with LUKS under the same btrfs layout as the desk. It is the
 case [0006](0006-no-disk-encryption.md) names as the default, a machine that leaves the house;

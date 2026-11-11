@@ -51,6 +51,9 @@ letters, digits and spaces, which sit on the same keys in every layout this hous
   the desk, so the two machines never race on `flake.lock`.
 - Each person changes their own password with `passwd`. The files in `/var/lib/login-passwords/`
   only seeded the accounts.
+- The greeter's "Own session" entry runs `~/.config/session/start` of whoever logs in. An
+  executable script there that ends in `exec <compositor>` is all it takes, and Home Manager can
+  write it (`home.file.".config/session/start"` with `executable = true`).
 - Cesar's home is his: standalone Home Manager from his repository, with no `sudo`. The first
   run, before the `home-manager` command exists, is
   `nix run home-manager/release-26.05 -- switch --flake <his repository>`.

@@ -93,6 +93,13 @@ BarPanel {
         const diskWarn = b.diskTotal > 0 && (b.diskPct >= 90 || b.diskFree < 20 * 1073741824);
         return [
             {
+                label: "WEATHER",
+                value: b.wHas ? b.wTemp + "°C" : "n/a",
+                caption: b.wHas ? b.wText : "no data",
+                tone: b.wHas ? Theme.colText : Theme.colUnknown,
+                panel: b.wHas ? "weather" : ""
+            },
+            {
                 label: "CPU",
                 value: cpu ? cpu.temp + "°C" : "n/a",
                 caption: cpu ? cpu.chip : "no sensor",
@@ -202,7 +209,7 @@ BarPanel {
             visible: !center.asking
             spacing: Theme.sp3
 
-            // ── Header: the title, then do-not-disturb and clear as icons ──
+            // ── Header: the title, then the idle timeouts, the away screen, do-not-disturb and clear ──
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.sp2
@@ -213,6 +220,30 @@ BarPanel {
                     font.family: Theme.uiFont
                     font.pixelSize: Theme.fontLabel
                     font.letterSpacing: 1
+                }
+                IconButton {
+                    // hypridle: on is the normal state. Off shows on the bar too, so it is never forgotten.
+                    glyph: center.bar.hypridleIcon
+                    tint: center.bar.hypridleOn ? Theme.colSubtext : Theme.colWarn
+                    active: !center.bar.hypridleOn
+                    tips: tips
+                    name: "Idle timeouts"
+                    stateText: center.bar.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"
+                    action: center.bar.hypridleOn ? "Click to disable" : "Click to enable"
+                    onClicked: center.bar.toggleIdle()
+                }
+                IconButton {
+                    // The away screen (Away.qml) covers the bar and this panel, so it only ever turns it on.
+                    glyph: "󰽥"
+                    tint: Theme.colSubtext
+                    tips: tips
+                    name: "Away screen"
+                    stateText: "Screens and LEDs dark, the PC keeps working"
+                    action: "Click to go away · Enter comes back"
+                    onClicked: {
+                        center.bar.closePanels();
+                        Away.enter();
+                    }
                 }
                 IconButton {
                     glyph: Notifs.dnd ? "󰂛" : "󰂚"
@@ -307,7 +338,7 @@ BarPanel {
                 color: Theme.colEdge
             }
             Text {
-                text: "HARDWARE"
+                text: "STATUS"
                 color: Theme.colDim
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontSmall
@@ -321,6 +352,11 @@ BarPanel {
                     delegate: Rectangle {
                         id: hwCard
                         required property var modelData
+                        // A card with no data behind it has no panel to open.
+                        function open() {
+                            if (hwCard.modelData.panel !== "")
+                                center.bar.togglePanel(hwCard.modelData.panel, null, null, center.bar.popBar);
+                        }
                         Layout.fillWidth: true
                         Layout.preferredWidth: 0
                         implicitHeight: hwCol.implicitHeight + 2 * Theme.sp2
@@ -364,10 +400,10 @@ BarPanel {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             // The detail panel, from the same bar and still under the logo (no new anchor).
-                            onClicked: center.bar.togglePanel(hwCard.modelData.panel, null, null, center.bar.popBar)
+                            onClicked: hwCard.open()
                         }
                         KeyTarget {
-                            onActivated: center.bar.togglePanel(hwCard.modelData.panel, null, null, center.bar.popBar)
+                            onActivated: hwCard.open()
                         }
                     }
                 }

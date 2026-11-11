@@ -1029,6 +1029,9 @@ Scope {
         root.hypridleOn = on;
         root.hypridleIcon = on ? "󰒳" : "󰒲";
     }
+    function toggleIdle() {
+        root.launch(["sh", "-c", "systemctl --user is-active --quiet hypridle.service && systemctl --user stop hypridle.service || systemctl --user start hypridle.service"]);
+    }
     Process {
         id: hypridleProc
         // hypridle runs as a systemd --user service (modules/home/desktop/lockscreen/default.nix).

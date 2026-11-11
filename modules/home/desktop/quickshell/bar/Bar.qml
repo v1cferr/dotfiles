@@ -46,8 +46,8 @@ Scope {
         }
 
         // Open a panel PINNED, by its coordinator key, so a check needs no mouse: the operational
-        // ones on the standing monitor's bar, the rest on the main one, hung from the logo (its
-        // content and its glass, not its anchor under the pill). `close` closes whatever is open.
+        // ones on the standing monitor's bar, the rest on the main one, the calendar and the weather
+        // under the clock and every other under the logo. `close` closes whatever is open.
         function panel(key: string): void {
             root.openForTest(key);
         }
@@ -73,11 +73,10 @@ Scope {
     }
 
     // The clock. timeStr keeps the seconds for the band's big clock (dash/Dashboard.qml); the bar
-    // shows HH:mm and dd/MM beside the logo, both numeric, so no locale can change them.
+    // shows dateStr and HH:mm on its right edge.
     property string dateStr: ""
     property string timeStr: ""
     property string barTimeStr: ""
-    property string barDateStr: ""
     SystemClock {
         id: sysClock
         precision: SystemClock.Seconds
@@ -87,7 +86,6 @@ Scope {
         root.dateStr = root.dowAbbr[d.getDay()] + " " + Qt.formatDateTime(d, "dd/MM");
         root.timeStr = Qt.formatDateTime(d, "HH:mm:ss");
         root.barTimeStr = Qt.formatDateTime(d, "HH:mm"); // the same string all minute: no change signal
-        root.barDateStr = Qt.formatDate(d, "dd/MM");
         const dk = Qt.formatDate(d, "yyyy-MM-dd");
         if (dk !== root.calDayKey) {
             root.calDayKey = dk;
@@ -939,12 +937,6 @@ Scope {
                 lines: [root.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"],
                 action: root.hypridleOn ? "Click to disable" : "Click to enable"
             };
-        if (key === "away")
-            return {
-                title: "Away screen",
-                lines: ["Screens and LEDs dark, the PC keeps working"],
-                action: "Click to go away · Enter comes back"
-            };
         if (key === "disk")
             return {
                 title: "Disk " + root.diskPct + "% used",
@@ -1613,7 +1605,8 @@ Scope {
         root.vpnPopVisible = false;
         root.popBar = b;
         root.popScreen = scr;
-        root.popCenterX = Math.floor(b.width / 2);
+        // The calendar and the weather hang from the clock; every other panel from the logo.
+        root.popCenterX = key === "cal" || key === "weather" ? b.clockCenterX : Math.floor(b.width / 2);
         root.panelShown = "";
         root.pinned = key;
         root.hideMedia();

@@ -1,4 +1,5 @@
-// The bar's RIGHT region, read from the edge inward: the clock, the tray, then sound, VPN and network, then the alerts that show only while they need a look. The standing
+// The bar's RIGHT region, read from the edge inward: the clock, the tray, the notification state,
+// then sound, VPN and network, then the alerts that show only while they need a look. The standing
 // screen keeps its operational chips instead. docs/notes/desktop/bar.md
 import QtQuick
 import QtQuick.Layouts
@@ -53,7 +54,7 @@ RowLayout {
     function measure(level) {
         let w = right.clockW + volPill.implicitWidth;
         let n = 2;
-        const extra = [[!right.host.hypridleOn, idlePill], [right.cpuPegged, cpuPill], [diskPill.shown, diskPill]];
+        const extra = [[!right.host.hypridleOn, idlePill], [right.cpuPegged, cpuPill], [diskPill.shown, diskPill], [bell.active, bell]];
         for (const e of extra)
             if (e[0]) {
                 w += e[1].implicitWidth;
@@ -166,6 +167,13 @@ RowLayout {
         onRightClicked: right.host.launch(["pavucontrol"])
         onScrolledUp: right.host.setVol(0.05)
         onScrolledDown: right.host.setVol(-0.05)
+    }
+    NotifIndicator {
+        id: bell
+        visible: !right.bar.compact && bell.active
+        host: right.host
+        barContent: right.barContent
+        barWindow: right.bar
     }
 
     // ── The tray, then the clock on the edge ──

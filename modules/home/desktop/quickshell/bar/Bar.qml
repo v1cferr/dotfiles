@@ -937,6 +937,12 @@ Scope {
                 lines: [root.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"],
                 action: root.hypridleOn ? "Click to disable" : "Click to enable"
             };
+        if (key === "notif")
+            return {
+                title: "Notifications",
+                lines: [Notifs.unseen > 0 ? Notifs.unseen + " not seen yet" : "Nothing new", Notifs.dnd ? "Do Not Disturb: toasts are held, critical ones still show" : ""].filter(l => l !== ""),
+                action: "Click for the NixOS Center · right-click to turn Do Not Disturb " + (Notifs.dnd ? "off" : "on")
+            };
         if (key === "disk")
             return {
                 title: "Disk " + root.diskPct + "% used",
@@ -1033,8 +1039,8 @@ Scope {
         }
     }
 
-    // Notifications: Quickshell is the daemon (Notifs.qml plus Notifications.qml). The bell reads
-    // Notifs.barIcon/dnd and calls the toggles on the singleton.
+    // Notifications: Quickshell is the daemon (Notifs.qml plus Notifications.qml). The bar's bell
+    // (NotifIndicator.qml) reads the singleton and calls its toggles.
 
     // ===== Weather (Open-Meteo; the coords and the pt-BR table are my.weather) =====
     property string wTemp: ""

@@ -963,7 +963,7 @@ Scope {
         return null;
     }
     // A workspace: its number, how many windows, and which apps, each with its own count past one
-    // (the rail's slants stop at three, so the exact number lives here). Hyprland's toplevels, on hover.
+    // (the rail's marks stop at three, so the exact number lives here). Hyprland's toplevels, on hover.
     function wsHint(id) {
         const apps = root.wsApps(id);
         const names = apps.map(a => a.windows.length > 1 ? a.cls + " · " + a.windows.length + " windows" : a.cls);

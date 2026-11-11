@@ -158,18 +158,18 @@ Singleton {
     // Concentric radii: a surface is a control plus sp1 of padding, so its corner is the control's plus sp1.
     readonly property int radiusControl: 8
     readonly property int radiusSurface: radiusControl + sp1
-    // The bar: a 34 px glass strip of slanted cells, mirrored about the logo, on one integer grid.
+    // The bar: one continuous 34 px glass strip. Its items are bare content on one integer grid; a
+    // rounded highlight appears only on hover, on an open panel or on a state that needs a look.
     readonly property int barHeight: 34
     readonly property int barTop: 0 // flush with the screen's top edge
-    readonly property int barCell: 24 // a cell's height, at barCellY: (34 - 24) / 2
+    readonly property int barCell: 24 // an item's highlight height, at barCellY: (34 - 24) / 2
     readonly property int barCellY: (barHeight - barCell) / 2
-    readonly property int barSlant: sp2 // a cell's lean: 8 px over 24, an exact 1:3 slope
-    readonly property int barGap: sp1 // the parallel slit between two cells
-    readonly property int barPad: sp4 // a cell's content to its slanted edges
-    readonly property int barEdge: screenInset // the first and last cell: the band's and the windows' column
-    readonly property int barCenterWidth: 72 // the logo's compartment on the cells' top row
+    readonly property int barGap: sp1 // between two items' highlights
+    readonly property int barPad: sp2 // an item's content to its highlight's edges
+    readonly property int barEdge: screenInset // the first and last item: the band's and the windows' column
+    readonly property int barCenterWidth: 40 // the logo's slot, on the screen's exact center
     readonly property int barLogo: 20
-    // A cell's width from its content, on a 4 px module, so a changing value rarely moves a neighbor.
+    // An item's width from its content, on a 4 px module, so a changing value rarely moves a neighbor.
     function barCellWidth(content) { return Math.ceil((content + 2 * theme.barPad) / 4) * 4; }
     // A control's height off the bar (a panel's icon button, a calendar arrow).
     readonly property int barControl: 28
@@ -204,17 +204,10 @@ Singleton {
     readonly property color colSurfacePop: theme.glassBg(theme.glassClear ? "b3" : "f5") // dense text: never a gradient
     readonly property color colEdge: aa(pal.border, "8c") // a surface's hairline
     readonly property color colSheen: aa(pal.text, "0f") // the 1 px light along a surface's top edge
-    readonly property color colBarAccent: aa(pal.accent, "e6") // the 24 px line on the bar's foot: open, or the logo
-    // A cell's states (S1): neutral at rest and on hover, the accent only when its panel is open.
-    readonly property color colCellFill: aa(pal.text, "12")
-    readonly property color colCellEdge: aa(pal.text, "24")
+    // A bar item's states: nothing at rest, a neutral fill on hover, the accent only when its panel is open.
     readonly property color colCellHoverFill: aa(pal.text, "1f")
-    readonly property color colCellHoverEdge: aa(pal.text, "42")
     readonly property color colCellPressFill: aa(pal.text, "29")
     readonly property color colCellOpenFill: aa(pal.accent, "29")
-    readonly property color colCellOpenEdge: aa(pal.accent, "80")
-    readonly property color colCompFill: aa(pal.text, "1c") // the logo's compartment, a step above a cell
-    readonly property color colCompEdge: aa(pal.text, "33")
     // States of a control on glass: a neutral fill, so the accent stays free to mean "active".
     readonly property color colHoverFill: aa(pal.text, "14")
     readonly property color colPressFill: aa(pal.text, "24")

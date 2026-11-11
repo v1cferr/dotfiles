@@ -14,7 +14,7 @@ PanelWindow {
     screen: modelData
     WlrLayershell.namespace: "qs-bar" // the glass blur rule matches it (appearance.lua)
 
-    // ONE glass strip, edge to edge, holding a row of slanted cells mirrored about the logo.
+    // ONE glass strip, edge to edge; its items sit bare on it, the logo on its exact center.
     anchors {
         top: true
         left: true
@@ -117,7 +117,6 @@ PanelWindow {
         Pill {
             id: clockPill
             visible: !bar.compact
-            lean: -1
             x: bar.clockX
             anchors.verticalCenter: parent.verticalCenter
             width: bar.clockW
@@ -174,7 +173,6 @@ PanelWindow {
             }
             Pill {
                 id: winPill
-                lean: -1
                 visible: bar.modelData && bar.modelData.name === bar.host.focusedMon && bar.host.winTitle !== "" && bar.titleMax >= 120
                 label: bar.host.winTitle
                 accent: Theme.colSky
@@ -187,7 +185,6 @@ PanelWindow {
             }
             Pill {
                 id: spPill
-                lean: -1
                 visible: bar.mediaHere
                 icon: "󰝚"
                 label: bar.mediaIconOnly ? "" : bar.host.spText

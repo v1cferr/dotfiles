@@ -1,15 +1,14 @@
-// The bar's control: one slanted glass cell (SlantCell) holding a glyph and a label. Its states, S1:
-// neutral at rest and on hover, the accent only while its panel is open, a tinted cell for a state
-// that needs a look. docs/notes/desktop/bar.md#cells. Its OWN file, since an inline component's
-// handlers lose the root id on this Qt.
+// The bar's control: a glyph and a label, bare on the strip. A rounded highlight shows only on hover,
+// while its panel is open (the accent) or for a state that needs a look (a tint).
+// docs/notes/desktop/bar.md#items. Its OWN file, since an inline component's handlers lose the root id.
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
 
-SlantCell {
+Item {
     id: pill
     property string icon: ""
-    // A vector icon in place of the glyph (the NixOS logo); `icon` stays the fallback if it fails.
+    // A vector icon in place of the glyph; `icon` stays the fallback if it fails.
     property url image: ""
     property string label: ""
     // Secondary text in the SAME pill, AFTER the label on purpose: the label is the main information
@@ -24,9 +23,9 @@ SlantCell {
     property int maxWidth: 0
     // Pinned: its panel is open by a click, so the control stays lit while the pointer is elsewhere.
     property bool selected: false
-    // A state that needs a look (attention, a failure): the whole cell takes its color, readable from afar.
+    // A state that needs a look (attention, a failure): the highlight takes its color, readable from afar.
     property color tint: "transparent"
-    // Off by choice (muted, a VPN down on purpose): a faded cell, never a failure.
+    // Off by choice (muted, a VPN down on purpose): faded content, never a failure.
     property bool off: false
     signal clicked
     signal rightClicked
@@ -41,16 +40,25 @@ SlantCell {
     readonly property bool tinted: pill.tint.a > 0
     readonly property bool imageOk: pill.image != "" && img.status === Image.Ready
     implicitWidth: (pill.maxWidth > 0) ? Math.min(Theme.barCellWidth(prow.implicitWidth), pill.maxWidth) : Theme.barCellWidth(prow.implicitWidth)
-    fill: area.pressed ? Theme.colCellPressFill : pill.selected ? Theme.colCellOpenFill : pill.tinted ? Qt.alpha(pill.tint, area.containsMouse ? 0.24 : 0.16) : area.containsMouse ? Theme.colCellHoverFill : pill.off ? Qt.alpha(Theme.colText, 0.04) : Theme.colCellFill
-    edge: pill.selected ? Theme.colCellOpenEdge : pill.tinted ? Qt.alpha(pill.tint, 0.5) : area.containsMouse ? Theme.colCellHoverEdge : pill.off ? Qt.alpha(Theme.colText, 0.1) : Theme.colCellEdge
-    marked: pill.selected
+    implicitHeight: Theme.barCell
 
-    // On the cell's center line (half a slant in from the top edge), whole pixels.
+    // The highlight. At rest it is the hover fill at zero alpha, so the fade never passes through black.
+    Rectangle {
+        anchors.fill: parent
+        radius: Theme.radiusControl
+        color: area.pressed ? Theme.colCellPressFill : pill.selected ? Theme.colCellOpenFill : pill.tinted ? Qt.alpha(pill.tint, area.containsMouse ? 0.24 : 0.16) : area.containsMouse ? Theme.colCellHoverFill : Qt.alpha(Theme.colCellHoverFill, 0)
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.motionHover
+            }
+        }
+    }
+
     RowLayout {
         id: prow
         anchors.verticalCenter: parent.verticalCenter
         // Never left of the padding: a clipped label (elided) starts at the pad, like a left-aligned one.
-        x: Math.round(pill.leftAligned ? Theme.barPad + pill.dx / 2 : Math.max(Theme.barPad, (pill.width - prow.implicitWidth) / 2) + pill.dx / 2)
+        x: Math.round(pill.leftAligned ? Theme.barPad : Math.max(Theme.barPad, (pill.width - prow.implicitWidth) / 2))
         width: Math.min(prow.implicitWidth, pill.width - 2 * Theme.barPad)
         spacing: Theme.sp1
         opacity: pill.off ? 0.55 : 1

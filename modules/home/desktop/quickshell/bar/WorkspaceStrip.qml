@@ -1,16 +1,14 @@
-// The ADAPTIVE WORKSPACE RAIL: one monitor's workspaces in ONE "\" cell, the active one under a
-// sliding inner "\" of the same slope. Each number carries its apps' icons (one per app, up to 3,
-// 2 on the standing screen, then +N; a click focuses that window); occupied reads bright, empty dim;
-// a new window is a yellow tick under the number and a request for attention the active shape in
-// red, neither pulsing.
+// The ADAPTIVE WORKSPACE RAIL: one monitor's workspaces, bare on the strip, the active one under a
+// rounded highlight that slides. Each number carries its apps' icons (one per app, up to 3, 2 on the
+// standing screen, then +N; a click focuses that window); occupied reads bright, empty dim; a new
+// window is a yellow tick under the number and a request for attention a red highlight, neither pulsing.
 // The rail, its model (orphans of a gone secondary) and the 0.55 dispatch trap: docs/notes/desktop/bar.md
 import Quickshell.Hyprland
 import QtQuick
-import QtQuick.Shapes
 import "root:/"
 import "root:/widgets"
 
-SlantCell {
+Item {
     id: strip
     required property var host // the Bar's Scope: the workspace state lives there
     property string monitor: ""
@@ -26,46 +24,18 @@ SlantCell {
     property bool placed: false // no slide in from x = 0 on the first frame
     // How many app icons a number carries before "+N": fewer on the standing screen's narrow bar.
     property int maxApps: 3
-    lean: -1
-    implicitWidth: Math.ceil((wsRow.implicitWidth + 2 * Theme.sp2) / 4) * 4
+    implicitWidth: wsRow.implicitWidth
+    implicitHeight: Theme.barCell
 
-    // An inner "\" for a button: 18 px tall at y 3, a 6 px lean, the cell's own 1:3 slope.
-    component InnerSlant: Shape {
-        id: inner
-        property real w: 0
-        property color tone: Theme.colAccent
-        preferredRendererType: Shape.CurveRenderer
-        ShapePath {
-            strokeColor: "transparent"
-            fillColor: inner.tone
-            startX: 0
-            startY: 3
-            PathLine {
-                x: inner.w
-                y: 3
-            }
-            PathLine {
-                x: inner.w + 6
-                y: 21
-            }
-            PathLine {
-                x: 6
-                y: 21
-            }
-            PathLine {
-                x: 0
-                y: 3
-            }
-        }
-    }
-
-    // The ACTIVE workspace is ONE shape that eases to its button, so a switch reads as a move.
-    InnerSlant {
+    // The ACTIVE workspace is ONE highlight that eases to its button, so a switch reads as a move.
+    Rectangle {
         id: ind
         visible: strip.act !== null
         x: wsRow.x + (strip.act ? strip.act.x : 0)
-        w: strip.act ? strip.act.width : 0
-        tone: Qt.alpha(Theme.colAccent, 0.22)
+        width: strip.act ? strip.act.width : 0
+        height: Theme.barCell
+        radius: Theme.radiusControl
+        color: Theme.colCellOpenFill
         onVisibleChanged: if (visible)
             Qt.callLater(() => strip.placed = true)
         Behavior on x {
@@ -75,7 +45,7 @@ SlantCell {
                 easing.type: Easing.OutCubic
             }
         }
-        Behavior on w {
+        Behavior on width {
             enabled: strip.placed
             NumberAnimation {
                 duration: Theme.motionNormal
@@ -86,7 +56,6 @@ SlantCell {
 
     Row {
         id: wsRow
-        x: Theme.sp2 + strip.dx / 2
         height: Theme.barCell
         Repeater {
             id: wsRep
@@ -105,20 +74,22 @@ SlantCell {
                 implicitWidth: Math.ceil((numBox.width + (btn.shown.length > 0 ? appRow.implicitWidth + Theme.sp1 : 0) + 2 * Theme.sp2) / 4) * 4
                 implicitHeight: Theme.barCell
 
-                // Asking for attention: the active shape, in the alert color, until visited.
-                InnerSlant {
+                // Asking for attention: the active highlight, in the alert color, until visited.
+                Rectangle {
                     visible: btn.urgent && !btn.active
-                    w: btn.width
-                    tone: Qt.alpha(Theme.colCrit, 0.22)
+                    anchors.fill: parent
+                    radius: Theme.radiusControl
+                    color: Qt.alpha(Theme.colCrit, 0.22)
                 }
-                InnerSlant {
+                Rectangle {
                     visible: area.containsMouse && !btn.active && !btn.urgent
-                    w: btn.width
-                    tone: Theme.colHoverFill
+                    anchors.fill: parent
+                    radius: Theme.radiusControl
+                    color: Theme.colCellHoverFill
                 }
                 Item {
                     id: numBox
-                    x: Theme.sp2 + 3 // the inner shape's center line
+                    x: Theme.sp2
                     width: Math.ceil(tmNum.advanceWidth)
                     height: Theme.barCell
                 }
@@ -164,8 +135,7 @@ SlantCell {
                             size: 16
                             tinted: !btn.active
                             readonly property var wins: appIcon.modelData.windows
-                            // Several windows of this app here: one 4 px slant per window under the icon, up to
-                            // three, on the cell's 1:3 (rows 21-22, inside the cell's bottom edge at row 23).
+                            // Several windows of this app here: one 4 px mark per window under the icon, up to three.
                             Row {
                                 visible: appIcon.wins.length > 1
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -173,32 +143,11 @@ SlantCell {
                                 spacing: 1
                                 Repeater {
                                     model: Math.min(appIcon.wins.length, 3)
-                                    Shape {
-                                        width: 5
+                                    Rectangle {
+                                        width: 4
                                         height: 2
-                                        preferredRendererType: Shape.CurveRenderer
-                                        ShapePath {
-                                            strokeColor: "transparent"
-                                            fillColor: btn.active ? Theme.colAccent : Theme.colSubtext
-                                            startX: 0
-                                            startY: 0
-                                            PathLine {
-                                                x: 4
-                                                y: 0
-                                            }
-                                            PathLine {
-                                                x: 4 + 2 / 3
-                                                y: 2
-                                            }
-                                            PathLine {
-                                                x: 2 / 3
-                                                y: 2
-                                            }
-                                            PathLine {
-                                                x: 0
-                                                y: 0
-                                            }
-                                        }
+                                        radius: 1
+                                        color: btn.active ? Theme.colAccent : Theme.colSubtext
                                     }
                                 }
                             }

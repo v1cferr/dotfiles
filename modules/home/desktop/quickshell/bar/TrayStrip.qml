@@ -9,8 +9,7 @@ import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
 
-// The icons share ONE "/" cell, the last one on the bar.
-SlantCell {
+Item {
     id: strip
     required property var host // the Bar's Scope: hints and launches go through it
     required property var barContent
@@ -18,12 +17,11 @@ SlantCell {
     // The width from the item count alone, never from the delegates: the bar budgets around it.
     readonly property int count: SystemTray.items ? SystemTray.items.values.length : 0
     readonly property int iconBox: 20
-    readonly property int stableWidth: strip.count > 0 ? Math.ceil((strip.count * strip.iconBox + (strip.count - 1) * Theme.sp1 + 2 * Theme.sp3) / 4) * 4 : 0
-    lean: 1
+    readonly property int stableWidth: strip.count > 0 ? strip.count * strip.iconBox + (strip.count - 1) * Theme.sp1 : 0
     implicitWidth: strip.stableWidth
+    implicitHeight: Theme.barCell
 
     RowLayout {
-        x: Theme.sp3 + strip.dx / 2
         height: Theme.barCell
         spacing: Theme.sp1
 
@@ -35,7 +33,7 @@ SlantCell {
                 implicitWidth: strip.iconBox
                 implicitHeight: strip.iconBox
                 radius: Theme.sp1
-                color: trayArea.containsMouse ? Theme.colHoverFill : "transparent"
+                color: trayArea.containsMouse ? Theme.colCellHoverFill : Qt.alpha(Theme.colCellHoverFill, 0)
                 Behavior on color {
                     ColorAnimation {
                         duration: Theme.motionHover

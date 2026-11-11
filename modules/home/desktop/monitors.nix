@@ -12,6 +12,10 @@ in
     return {
       primary = "${cfg.primary}",
       secondary = "${cfg.secondary}",
+      primary_mode = "${cfg.primaryMode}",
+      secondary_mode = "${cfg.secondaryMode}",
+      secondary_position = "${cfg.secondaryPosition}",
+      secondary_transform = ${toString cfg.secondaryTransform},
     }
   '';
 

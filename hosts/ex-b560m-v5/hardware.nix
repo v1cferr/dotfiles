@@ -52,6 +52,12 @@ in
     secondary = "DP-2"; # an LG ULTRAGEAR, standing on its pivot (DisplayPort)
     primaryName = "ASUS"; # the shell's labels (the NixOS Center's screenshot targets)
     secondaryName = "LG";
+    primaryMode = "2560x1440@180";
+    # NATIVE scale; rotated it is 1080x1920 LOGICAL, so x = -1080 sets it on the left and y = -240
+    # lines its middle up with the shorter primary: docs/notes/hardware/monitors.md
+    secondaryMode = "1920x1080@143.98";
+    secondaryPosition = "-1080x-240";
+    secondaryTransform = 1;
   };
 
   # EXTRA MOUNTS (the root and /boot come from disko). By UUID, since sdX/nvmeX shuffle.

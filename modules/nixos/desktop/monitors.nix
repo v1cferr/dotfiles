@@ -12,6 +12,31 @@
       type = lib.types.str;
       description = "The SECONDARY monitor's connector: on the left, workspaces 5 to 8. Set by the host.";
     };
+    # The Hyprland rule of each panel. The defaults fit ANY panel, so a host only states what its
+    # hardware needs (a refresh rate above the preferred one, a rotation, a place on the desk).
+    primaryMode = lib.mkOption {
+      type = lib.types.str;
+      default = "preferred";
+      example = "2560x1440@180";
+      description = "The main monitor's mode; it always sits at 0x0.";
+    };
+    secondaryMode = lib.mkOption {
+      type = lib.types.str;
+      default = "preferred";
+      example = "1920x1080@143.98";
+      description = "The secondary monitor's mode.";
+    };
+    secondaryPosition = lib.mkOption {
+      type = lib.types.str;
+      default = "auto";
+      example = "-1080x-240";
+      description = "Where the secondary sits relative to the main one's 0x0, in LOGICAL pixels.";
+    };
+    secondaryTransform = lib.mkOption {
+      type = lib.types.ints.between 0 7;
+      default = 0;
+      description = "The secondary's rotation, as Hyprland counts it (1 = 90 degrees).";
+    };
     # Human names for the shell's labels (the NixOS Center's screenshot targets), never for matching.
     primaryName = lib.mkOption {
       type = lib.types.str;

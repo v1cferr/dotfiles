@@ -19,7 +19,6 @@
     ./cheatsheet.nix # SUPER+H: the keybind list in Vicinae, GENERATED from keybinds.lua at runtime
     ./wallpaper.nix # hyprpaper: a random DARK photo per monitor, one pool per orientation
     ./hyprsunset.nix # the blue light filter (a systemd service plus profiles by time of day)
-    ./lockscreen # hyprlock (the lock screen) plus hypridle (idle: dim plus lock)
     ./quickshell.nix # the shell/bar/OSD/media plus NOTIFICATIONS in QML; hot-reload through mkOutOfStoreSymlink
     ./theme.nix # dark mode (prefer-dark), icons, cursor, and Qt through the recolored Kvantum
     ./xdg.nix # the default browser (Zen) through xdg.mimeApps plus $BROWSER

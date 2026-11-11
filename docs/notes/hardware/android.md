@@ -54,3 +54,37 @@ adb shell cmd package install-existing <package>
 ```
 
 A factory reset also brings every removed system app back.
+
+## The ntfy subscriptions a new phone needs
+
+A subscription lives inside the ntfy app and nowhere else: no backup carries it, and a clean
+install starts with none. Publishing keeps working, so nothing on this side fails; the alarms
+simply stop arriving. Seen with the Edge 70 Fusion, set up clean on 07/11/2026: ntfy.sh held
+every alarm about the Acuttis punches missed on 09/11 and 10/11 while the phone showed none.
+
+There are TWO topics, from two owners, and the phone subscribes to both on `ntfy.sh`:
+
+| Topic                | Where its name lives                            | What arrives                         |
+| -------------------- | ----------------------------------------------- | ------------------------------------ |
+| the machine's alarms | sops, read at `/run/secrets/ntfy_topic`         | everything sent with `notify`        |
+| the Acuttis punches  | `NOTIFY_URL` in the `acuttis-point` repo's .env | offers, reminders and missed punches |
+
+The names are the passwords ([shell](../repo/shell.md#notify-never-takes-the-caller-down)), so
+they are read from those two places and never written here:
+
+```sh
+cat /run/secrets/ntfy_topic
+grep NOTIFY_URL ~/Projects/GitHub/v1cferr/acuttis-point/.env   # the topic is the last path segment
+```
+
+The `acuttis-cmd-...` topic is NOT a subscription: the listener on this machine reads it, and the
+button on a punch notification publishes to it by itself.
+
+On the phone, after subscribing: Settings, Apps, ntfy, Battery, **Unrestricted**. Motorola delays
+a background app otherwise, and a punch window is ten minutes long. Then prove both ends:
+
+```sh
+notify "test" "the machine's topic reaches the phone"
+```
+
+and open the Acuttis subscription, which shows the last twelve hours the server kept.

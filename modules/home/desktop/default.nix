@@ -6,7 +6,7 @@
     ./palette.nix # the SINGLE SOURCE of colors (my.theme.name); it generates the data for Quickshell/Hyprland
     ./stylix.nix # Stylix APPLIES that palette to the apps it has targets for (GTK, kitty, bat...)
     ./monitors.nix # the SINGLE SOURCE of the connectors (my.monitors); it generates the data for Quickshell/Hyprland
-    ./keyboard.nix # the keyboard layout from the system (my.keyboard), as data for Hyprland
+    ./input.nix # the keyboard layout and the touchpad choices from the system, as data for Hyprland
     ./weather.nix # the SINGLE SOURCE of the coordinates plus the WMO -> pt-BR table (my.weather)
     ./calendar # the HOLIDAY REGISTRY (sourced, verified) expanded into the calendar's data
     ./glance-feed # the network cache (SQLite) behind the bar's weather, the band and the lock screen

@@ -1,5 +1,5 @@
-# KEYBOARD: the SSOT of the layout (rule 11), read by the TTY, the greeter's xkb and Hyprland.
-# No note: the default is the desk's ABNT2, and a host with another keyboard sets all three.
+# INPUT: the SSOT of the keyboard layout (the TTY, the greeter's xkb, Hyprland) and of the touchpad.
+# No note: the defaults are the desk's, and a host with other hardware sets its own.
 { config, lib, ... }:
 
 let
@@ -24,10 +24,24 @@ in
     };
   };
 
+  # Read by Hyprland only (modules/home/desktop/input.nix); a host with no touchpad ignores it.
+  options.my.touchpad = {
+    naturalScroll = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Content follows the fingers, as on a phone.";
+    };
+    tapToClick = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "A tap is a click.";
+    };
+  };
+
   config = {
     console.keyMap = cfg.console;
     # The system's xkb covers only the greeter and Xwayland apps; Hyprland reads the same option
-    # through modules/home/desktop/keyboard.nix.
+    # through modules/home/desktop/input.nix.
     services.xserver.xkb = {
       inherit (cfg) layout variant;
     };

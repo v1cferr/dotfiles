@@ -31,6 +31,9 @@
   };
   console.earlySetup = true; # the keymap is loaded in the initrd, for the LUKS passphrase prompt
 
+  # The touchpad, as I use it on a laptop.
+  my.touchpad.naturalScroll = true;
+
   # The passphrase prompt and a later TPM2 enrollment (`systemd-cryptenroll`) both want this.
   boot.initrd.systemd.enable = true;
 

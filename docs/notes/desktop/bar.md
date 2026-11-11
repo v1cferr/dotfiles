@@ -16,13 +16,14 @@ on it: a glyph and a label, no cell around them. The official logo stands alone 
 It replaced the mirrored slanted cells of 04/11/2026 (one parallelogram per module), which read as a
 row of segments; the owner asked for a quieter, continuous menu bar that keeps every capability.
 
-| Part        | What it is                                                                                                                         |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| The surface | `colSurfaceBar` (the palette's surface at 72% over the blur), a 1 px `colSheen` row on top, a 1 px `colEdge` row at the foot       |
-| The window  | `BarStrip.qml`, one per monitor: the surface, the geometry, the logo and a region on each side                                     |
-| The regions | `BarLeft.qml` (workspaces, title, media) and `BarRight.qml` (alerts, status, bell, tray, clock), each given its room as one number |
-| The center  | `LogoSlot.qml`: a 40 px slot holding the 20 px logo, 7 px of air above and below it                                                |
-| Controls    | `widgets/Pill.qml`: a glyph and a label, with a rounded highlight (24 px tall, the control's 8 px radius) only in the states below |
+| Part        | What it is                                                                                                                                      |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| The surface | `colSurfaceBar` (the palette's surface at 72% over the blur), a 1 px `colSheen` row on top, a 1 px `colEdge` row at the foot                    |
+| The window  | `BarStrip.qml`, one per monitor: the surface, the geometry, the logo and a region on each side                                                  |
+| The regions | `BarLeft.qml` (workspaces, title, media) and `BarRight.qml` (alerts, status, bell, tray, clock), each given its room as one number              |
+| The center  | `LogoSlot.qml`: a 40 px slot holding the 20 px logo, 7 px of air above and below it                                                             |
+| Controls    | `widgets/Pill.qml`: an icon and a label, with a rounded highlight (24 px tall, the control's 8 px radius) only in the states below              |
+| Type, icons | Geist for the text; Material Symbols Rounded, 18 px, outlined, named by ligature (`volume_up`) for the icons ([fonts.md](../hardware/fonts.md)) |
 
 `Bar.qml` keeps what it always held besides the view: the data, the panel coordinator and the IPC.
 The band, the NixOS Center and every popover read its root, so the window moved out of it into
@@ -156,7 +157,9 @@ centered on 1280; screenshots of both monitors show one continuous strip.
 ### Numbers that hold still
 
 The temperature, the CPU, the two network rates and the volume are padded to a fixed number of
-columns (`tab()` in `Bar.qml`); the font is mono, so the pill keeps its width. Before, `431K`
+columns (`tab()` in `Bar.qml`) with U+2007, the space as wide as a digit, and the labels ask for
+tabular digits (`Theme.fontTabular`), so the pill keeps its width in a proportional face
+([fonts.md](../hardware/fonts.md)); until 11/11/2026 the face was mono and a plain space did it. Before, `431K`
 becoming `1.3M` or `9%` becoming `41%` moved every control to their left every 2 s, since the right
 cluster is anchored to the edge. Measured on 17/10/2026: the cluster's left edge sat on the same
 pixel across six captures 2 s apart while the rates changed.
@@ -348,8 +351,8 @@ pipelines with their ages, and both actions.
 
 The date and the time are ONE item on the main monitor's right edge, after the tray (11/11/2026;
 from 18/10/2026 they sat in two cells on each side of the logo): `qua 11/11  20:00`, in `text`, its
-width fixed by a template of the same length (the face is mono), so a new minute or day moves
-nothing. The SECONDS are not on the bar: `timeStr` keeps `HH:mm:ss` for the band's big clock, and
+width measured from today's date and a template time in tabular digits, so a new minute moves
+nothing and a new day at most once. The SECONDS are not on the bar: `timeStr` keeps `HH:mm:ss` for the band's big clock, and
 the bar reads `dateStr` and `barTimeStr`, which change once a day and once a minute. Never on the
 standing monitor (the band shows it). A hover or a click opens the calendar, hung from the clock; a
 right click opens the weather panel, since the weather left the bar.

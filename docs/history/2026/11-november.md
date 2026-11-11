@@ -1,6 +1,17 @@
 # History: november 2026
 
-9 entries. Index in [README.md](../README.md).
+10 entries. Index in [README.md](../README.md).
+
+- [x] The shell in Geist, the bar's icons in Material Symbols (11/11/2026; asked 11/11/2026). How
+      and why: [notes/hardware/fonts.md](../../notes/hardware/fonts.md#the-shells-own-families-11112026).
+      • TWO OPTIONS, `my.fonts.shell` and `my.fonts.icons`: the shell leaves the mono UI family,
+        GTK, kitty and Vicinae keep it.
+      • THE 270 INLINE GLYPHS STAY: a fontconfig alias sends what Geist lacks to the Nerd Font's
+        proportional cut; the plain cut drew its icons over the next letter.
+      • NUMBERS STILL HOLD: tabular digits and U+2007 padding do what the mono face did.
+      • OUTLINED, NOT FILLED: the FILL axis drew broken shapes on this Qt.
+      • MEASURED in the headless harness: the logo still on x 1280.0 and 540.0, idle 3.8% to 4.6%
+        of a core, as before. The text switches at the next rebuild.
 
 - [x] The bar as one continuous strip of bare items (11/11/2026; asked 11/11/2026). How and why:
       [notes/desktop/bar.md](../../notes/desktop/bar.md#the-continuous-strip-11112026).

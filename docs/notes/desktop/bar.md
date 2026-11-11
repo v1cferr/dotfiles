@@ -131,10 +131,17 @@ Opened over IPC and read from captures: the calendar and the weather under the c
 Center under the logo with its two new buttons and its weather card, the bell with a count of 2 (one
 critical) and with do-not-disturb on.
 
-Not verified, because the harness has no Hyprland, no tray and no pointer: the blur under the strip,
-real tray icons and XEmbed menus, the workspace clicks, hover and the clock's right click by hand,
-fullscreen windows, Flameshot hiding the bar, a monitor unplugged, and the live session's CPU and
-GPU cost. Those are the owner's to try at the desk once the branch is live.
+**Live since 11/11/2026**, read from captures of the real bars after the merge and a `qs-restart`:
+the logo's ink on x 1270 to 1289 on the ASUS (center 1280.0) and 530 to 549 on the LG (540.0), one
+`qs-bar` layer of 34 px per monitor and the band on the LG, four tray icons and the workspaces' app
+icons drawn, nothing but INFO lines in `qs log`. Two 30 s windows of `/proc/<pid>/stat` 40 s after
+the restart gave 6.3% and 6.5% of a core, 314 MiB RSS and 244 MiB PSS, with a song playing and the
+network on its rates face. No window was taken on the old bar under the same conditions that day,
+so this number says what the bar costs, not whether the change moved it.
+
+Not verified, since nobody drove the pointer: the workspace clicks, hover and the clock's right
+click, XEmbed menus, fullscreen windows, Flameshot hiding the bar, a monitor unplugged, and the GPU
+cost. Those are the owner's to try at the desk.
 
 **The official logo** is `nix-snowflake`, the two-blue snowflake from
 [nixos-artwork](https://github.com/NixOS/nixos-artwork) that `nixos-icons` installs into hicolor on

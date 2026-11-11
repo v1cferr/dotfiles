@@ -11,7 +11,7 @@ Pill {
     property var barWindow: null
     readonly property bool active: Notifs.dnd || Notifs.unseen > 0
 
-    icon: Notifs.dnd ? "󰂛" : "󰂚"
+    icon: Notifs.dnd ? "notifications_off" : "notifications"
     label: Notifs.unseen > 0 ? (Notifs.unseen > 9 ? "9+" : "" + Notifs.unseen) : ""
     accent: Notifs.dnd ? Theme.colAlert : (Notifs.unseenCritical ? Theme.colCrit : Theme.colAccent)
     labelColor: Theme.colText

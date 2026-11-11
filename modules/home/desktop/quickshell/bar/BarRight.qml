@@ -60,10 +60,16 @@ RowLayout {
                 w += e[1].implicitWidth;
                 n++;
             }
-        const icon = Theme.iconBar;
+        const icon = Theme.iconSymbol;
         w += level >= 1 ? 2 * Theme.barCellWidth(icon) : Theme.barCellWidth(icon + Theme.sp1 + tmNet.advanceWidth + (right.host.netBusy ? tmNetUnit.advanceWidth + Theme.sp1 : 0)) + Theme.barCellWidth(icon + (tmVpn.advanceWidth > 0 ? Theme.sp1 + tmVpn.advanceWidth : 0));
         n += 2;
         return w + (n - 1) * Theme.barGap + right.trayW;
+    }
+
+    function volSymbol() {
+        if (right.host.sinkMuted || right.host.volume <= 0)
+            return "volume_off";
+        return right.host.volume <= 0.33 ? "volume_mute" : (right.host.volume <= 0.66 ? "volume_down" : "volume_up");
     }
 
     // ── The standing screen: the operational alerts, nothing the band already shows ──
@@ -80,7 +86,7 @@ RowLayout {
         // hypridle turned off by hand: nothing locks or sleeps, which must not be forgotten.
         id: idlePill
         visible: !right.bar.compact && !right.host.hypridleOn
-        icon: right.host.hypridleIcon
+        icon: "bedtime_off"
         accent: Theme.colWarn
         onHoveredChanged: right.host.hoverHint("idle", idlePill, right.barContent, right.bar, hovered)
         onClicked: right.host.toggleIdle()
@@ -89,7 +95,7 @@ RowLayout {
         // A busy CPU is not a fault: it shows only when pegged. Its panel is the answer to a hover.
         id: cpuPill
         visible: !right.bar.compact && right.cpuPegged
-        icon: "󰓅"
+        icon: "speed"
         label: right.host.tab(right.host.cpuPct, 3) + "%"
         accent: Theme.colWarn
         labelColor: Theme.colWarn
@@ -105,7 +111,7 @@ RowLayout {
         readonly property bool crit: right.host.diskTotal > 0 && (right.host.diskPct >= 95 || right.host.diskFree < 5 * 1073741824)
         readonly property bool shown: right.host.diskTotal > 0 && (diskPill.crit || right.host.diskPct >= 90 || right.host.diskFree < 20 * 1073741824)
         visible: !right.bar.compact && diskPill.shown
-        icon: "󰋊"
+        icon: "hard_drive"
         label: right.host.diskPct + "%"
         accent: diskPill.crit ? Theme.colCrit : Theme.colWarn
         labelColor: diskPill.accent
@@ -118,7 +124,7 @@ RowLayout {
     Pill {
         id: netPill
         visible: !right.bar.compact
-        icon: "󰛳"
+        icon: "lan"
         label: right.squeeze >= 1 ? "" : right.host.netPillText
         sub: right.squeeze >= 1 || !right.host.netBusy ? "" : "b/s" // ONE unit for both rates
         accent: right.host.netQuality.color
@@ -133,7 +139,7 @@ RowLayout {
         // Off by choice is neutral, never a failure. Information on hover, ACTION on click: docs/notes/desktop/bar.md
         id: vpnPill
         visible: !right.bar.compact
-        icon: "󰦝"
+        icon: "shield_lock"
         label: right.host.vpnConnected && right.squeeze < 1 ? right.host.vpnName : ""
         accent: right.host.vpnConnected ? Theme.colOk : Theme.colUnknown
         labelColor: Theme.colText
@@ -157,7 +163,7 @@ RowLayout {
     Pill {
         id: volPill
         visible: !right.bar.compact
-        icon: right.host.volIcon()
+        icon: right.volSymbol()
         label: right.host.tab(Math.round(right.host.volume * 100), 3) + "%"
         accent: right.host.sinkMuted ? Theme.colUnknown : Theme.colSubtext
         labelColor: right.host.sinkMuted ? Theme.colUnknown : Theme.colText

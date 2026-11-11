@@ -1204,15 +1204,6 @@ Scope {
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property real volume: (sink && sink.audio) ? sink.audio.volume : 0
     readonly property bool sinkMuted: (sink && sink.audio) ? sink.audio.muted : false
-    function volIcon() {
-        if (root.sinkMuted || root.volume <= 0)
-            return "󰝟";
-        if (root.volume <= 0.33)
-            return "󰕿";
-        if (root.volume <= 0.66)
-            return "󰖀";
-        return "󰕾";
-    }
     function setVol(delta) {
         if (root.sink && root.sink.audio)
             root.sink.audio.volume = Math.max(0, Math.min(1, root.sink.audio.volume + delta));

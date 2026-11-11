@@ -37,6 +37,9 @@ Item {
     // window's title, sized in steps so its neighbors do not jump) reads from where it starts.
     property bool leftAligned: false
 
+    // An icon written as a Material Symbols name ("volume_up") draws in the icon font; anything else
+    // is a glyph of the text font's fallback (a Nerd Font brand icon).
+    readonly property bool symbol: /^[a-z0-9_]+$/.test(pill.icon)
     readonly property bool tinted: pill.tint.a > 0
     readonly property bool imageOk: pill.image != "" && img.status === Image.Ready
     implicitWidth: (pill.maxWidth > 0) ? Math.min(Theme.barCellWidth(prow.implicitWidth), pill.maxWidth) : Theme.barCellWidth(prow.implicitWidth)
@@ -77,8 +80,9 @@ Item {
             visible: pill.icon !== "" && !pill.imageOk
             text: pill.icon
             color: pill.accent
-            font.family: Theme.uiFont
-            font.pixelSize: Theme.iconBar
+            font.family: pill.symbol ? Theme.iconFont : Theme.uiFont
+            font.pixelSize: pill.symbol ? Theme.iconSymbol : Theme.iconBar
+            font.variableAxes: pill.symbol ? Theme.iconAxes : ({})
         }
         Text {
             visible: pill.label !== ""

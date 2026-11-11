@@ -21,7 +21,7 @@ RowLayout {
     readonly property int alerts: (ops.ciShown ? Math.max(1, Ops.ci.count) : 0) + (ops.svcShown ? Math.max(1, Ops.svc.count) : 0)
     // The two chips' widths from a template, so a count changing never moves them, and the fold
     // decision never reads the chips it hides.
-    readonly property int chipW: Theme.barCellWidth(Math.ceil(tmChip.advanceWidth) + Theme.iconBar + Theme.sp1)
+    readonly property int chipW: Theme.barCellWidth(Math.ceil(tmChip.advanceWidth) + Theme.iconSymbol + Theme.sp1)
     readonly property bool folded: ops.ciShown && ops.svcShown && 2 * ops.chipW + ops.spacing > ops.maxWidth
     // The worse of the two, for the folded chip.
     readonly property string worst: {
@@ -43,6 +43,17 @@ RowLayout {
         text: "SVC · 00"
     }
 
+    // The bar's own icon per state, as Material Symbols names; the band and the panel keep Ops.icon.
+    function symbol(state) {
+        return ({
+                fail: "cancel",
+                degraded: "warning",
+                stale: "history",
+                unknown: "help",
+                run: "sync",
+                ok: "check_circle"
+            })[state] || "help";
+    }
     function label(name, s) {
         return name + " · " + (s.state === "unknown" ? "?" : s.count);
     }
@@ -51,7 +62,7 @@ RowLayout {
         id: ciPill
         visible: !ops.folded && ops.ciShown
         Layout.preferredWidth: ops.chipW
-        icon: Ops.icon(Ops.ci.state)
+        icon: ops.symbol(Ops.ci.state)
         label: ops.label("CI", Ops.ci)
         bold: true
         accent: Ops.tone(Ops.ci.state)
@@ -68,7 +79,7 @@ RowLayout {
         id: svcPill
         visible: !ops.folded && ops.svcShown
         Layout.preferredWidth: ops.chipW
-        icon: Ops.icon(Ops.svc.state)
+        icon: ops.symbol(Ops.svc.state)
         label: ops.label("SVC", Ops.svc)
         bold: true
         accent: Ops.tone(Ops.svc.state)
@@ -85,7 +96,7 @@ RowLayout {
         id: foldPill
         visible: ops.folded
         Layout.preferredWidth: ops.chipW
-        icon: Ops.icon(ops.worst)
+        icon: ops.symbol(ops.worst)
         label: "OPS · " + ops.alerts
         bold: true
         accent: Ops.tone(ops.worst)
@@ -101,10 +112,11 @@ RowLayout {
     // Healthy, and confirmed by both feeds: one dim check, so a quiet bar still says it is reading.
     Text {
         visible: !ops.ciShown && !ops.svcShown
-        text: "󰄬"
+        text: "check"
         color: Theme.colDim
-        font.family: Theme.uiFont
-        font.pixelSize: Theme.iconBar
+        font.family: Theme.iconFont
+        font.pixelSize: Theme.iconSymbol
+        font.variableAxes: Theme.iconAxes
         Layout.rightMargin: Theme.sp2
     }
 }

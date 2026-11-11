@@ -35,9 +35,9 @@ RowLayout {
     }
     TextMetrics {
         id: tmMediaIcon
-        font.family: Theme.uiFont
-        font.pixelSize: Theme.iconBar
-        text: "󰝚"
+        font.family: Theme.iconFont
+        font.pixelSize: Theme.iconSymbol
+        text: "music_note"
     }
     WorkspaceStrip {
         id: wsStrip
@@ -62,7 +62,7 @@ RowLayout {
     Pill {
         id: spPill
         visible: left.mediaHere
-        icon: "󰝚"
+        icon: "music_note"
         label: left.mediaIconOnly ? "" : left.host.spText
         accent: left.host.spColor
         maxWidth: left.mediaUsed

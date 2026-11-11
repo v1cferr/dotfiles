@@ -257,7 +257,7 @@ It asks for the new password twice and then, in order:
    the environment, not argv, which every user can read.
 3. **Runs `sync-secrets`**, which still lists the differing keys and asks, then commits
    `secrets/secrets.yaml` alone.
-4. **Rebuilds**, the step without which `/run/secrets` keeps the old value.
+4. **Rebuilds** with `nh`, as `rebuild` does (root has no credentials for the binary cache), the step without which `/run/secrets` keeps the old value.
 5. **Starts `vpn-fai.service` with the saved password** and waits for the tunnel, leaving the
    unit as it found it.
 

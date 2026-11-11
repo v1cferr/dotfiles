@@ -177,7 +177,8 @@ let
       fi
 
       say "4/5 Rebuilding, so /run/secrets holds the new password"
-      sudo nixos-rebuild switch --flake "$repo#$HOSTNAME"
+      # nh, like `rebuild`: it builds as me, and only my user holds the binary cache's credentials.
+      nh os switch "$repo"
 
       say "5/5 The real unit, with the saved password"
       since="$(date '+%Y-%m-%d %H:%M:%S')"

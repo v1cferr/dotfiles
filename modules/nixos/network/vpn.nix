@@ -7,11 +7,13 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     bash
+    bitwarden-cli
     coreutils
     gawk
     gnugrep
     iproute2
     iputils
+    jq
     libnotify
     nxbender
     openconnect
@@ -41,6 +43,8 @@ let
   # packets at UFSCar's edge (AS52888) and TCP-in-TCP turns that into resets, while home->VPS->portal
   # measured 0% (2026-10-27). Note: docs/notes/network/vpn.md.
   faiPortal = "200.133.233.101:4433";
+  faiUser = "victor.ferreira";
+  faiDomain = "fai2008";
   faiRelayPort = 14433;
 
   # Pins whichever allowlisted cert the portal serves NOW; nxBender still enforces that pin, so a
@@ -58,9 +62,126 @@ let
       "") echo "no certificate from the portal (unreachable, or the VPS relay is down?)" >&2; exit 1 ;;
       *) echo "Fingerprints did not match: the portal serves $fp, which is not allowlisted" >&2; exit 1 ;;
     esac
-    exec ${nxbender}/bin/nxBender -c ${config.sops.templates."nxbender-fai.conf".path} \
+    # $1: another config, so `rotate-fai-password` tests a new password through this same path.
+    exec ${nxbender}/bin/nxBender -c "''${1:-${config.sops.templates."nxbender-fai.conf".path}}" \
       -s 127.0.0.1 -P ${toString faiRelayPort} -f "$fp"
   '';
+
+  # A new AD password, end to end: tested on a real tunnel BEFORE it reaches Bitwarden, then the
+  # vault, sops, the rebuild and a second tunnel. docs/notes/network/vpn.md
+  rotateFaiPassword = writeShellApplication {
+    name = "rotate-fai-password";
+    runtimeInputs = [
+      bitwarden-cli
+      coreutils
+      gnugrep
+      jq
+      systemd
+    ];
+    text = ''
+      repo="''${DOTFILES:-${config.programs.nh.flake}}"
+      map="$repo/secrets/bitwarden-secrets.json"
+      test_unit=vpn-fai-rotation-test
+      test_conf=/run/vpn-fai/rotation-test.conf
+
+      say() { printf '\n==> %s\n' "$*"; }
+      die() { printf 'rotate-fai-password: %s\n' "$*" >&2; exit 1; }
+
+      [ -r "$map" ] || die "no $map; set DOTFILES to the repo"
+      item="$(jq -er '.fai_vpn_password' "$map")" || die "fai_vpn_password is not in the index"
+
+      cleanup() {
+        sudo systemctl stop "$test_unit" 2>/dev/null || true
+        sudo rm -f "$test_conf"
+        # The relay is PartOf vpn-fai, so only a test run can leave it up on its own.
+        if ! systemctl is-active --quiet vpn-fai.service; then
+          sudo systemctl stop vpn-fai-relay.service 2>/dev/null || true
+        fi
+      }
+      trap cleanup EXIT INT TERM
+
+      # Waits for the tunnel a unit is bringing up, from the journal of THIS start only.
+      wait_for_tunnel() {
+        local unit="$1" since="$2" log
+        for _ in $(seq 1 60); do
+          log="$(journalctl -u "$unit" --since "$since" --no-pager -o cat 2>/dev/null || true)"
+          if grep -q 'VPN is up' <<< "$log"; then
+            return 0
+          fi
+          if grep -q 'Server returned error' <<< "$log"; then
+            grep -m1 'Server returned error' <<< "$log" >&2
+            return 1
+          fi
+          sleep 1
+        done
+        echo "no tunnel after 60s; last lines:" >&2
+        tail -5 <<< "$log" >&2
+        return 1
+      }
+
+      read -rsp "New FAI (AD) password: " password; echo
+      read -rsp "Again: " again; echo
+      [ -n "$password" ] || die "empty password"
+      [ "$password" = "$again" ] || die "the two entries differ"
+      unset again
+
+      sudo -v || die "sudo is needed for the tunnel and the rebuild"
+
+      say "1/5 Testing the new password on a real tunnel (nothing is saved yet)"
+      was_active=false
+      if systemctl is-active --quiet vpn-fai.service; then
+        was_active=true
+      fi
+      # The unit retries with the old password, and two tunnels cannot share the relay.
+      sudo systemctl stop vpn-fai.service
+      sudo systemctl start vpn-fai-relay.service
+      printf 'username = %s\ndomain = %s\npassword = %s\n' ${faiUser} ${faiDomain} "$password" |
+        sudo install -m 0600 -o root /dev/stdin "$test_conf"
+      since="$(date '+%Y-%m-%d %H:%M:%S')"
+      sudo systemd-run --quiet --collect --unit="$test_unit" -p RuntimeMaxSec=90 \
+        ${faiUp} "$test_conf"
+      if ! wait_for_tunnel "$test_unit" "$since"; then
+        die "the portal refused it or never answered; nothing was changed"
+      fi
+      echo "the tunnel came up with the new password"
+      cleanup
+
+      say "2/5 Saving it in Bitwarden (\"$item\")"
+      case "$(bw status | jq -r .status)" in
+        unauthenticated) die "Bitwarden is logged out: run 'bw login' first" ;;
+        locked) BW_SESSION="$(bw unlock --raw)" || die "could not unlock Bitwarden"; export BW_SESSION ;;
+      esac
+      bw sync >/dev/null
+      id="$(bw get item "$item" | jq -er .id)" || die "no Bitwarden item \"$item\""
+      # Through the environment, never argv: a command line is readable by every user.
+      bw get item "$id" | PW="$password" jq '.login.password = env.PW' | bw encode |
+        bw edit item "$id" >/dev/null
+      unset password
+      bw sync >/dev/null
+
+      say "3/5 Vault to sops (sync-secrets asks before overwriting)"
+      (cd "$repo" && sync-secrets)
+      if ! git -C "$repo" diff --cached --quiet -- secrets/secrets.yaml; then
+        git -C "$repo" commit -m "chore(secrets): rotate the FAI VPN password" \
+          -- secrets/secrets.yaml
+      fi
+
+      say "4/5 Rebuilding, so /run/secrets holds the new password"
+      sudo nixos-rebuild switch --flake "$repo#$HOSTNAME"
+
+      say "5/5 The real unit, with the saved password"
+      since="$(date '+%Y-%m-%d %H:%M:%S')"
+      sudo systemctl reset-failed vpn-fai.service 2>/dev/null || true
+      sudo systemctl start vpn-fai.service
+      if ! wait_for_tunnel vpn-fai.service "$since"; then
+        die "saved, but vpn-fai.service did not connect: journalctl -u vpn-fai -n 30"
+      fi
+      if [ "$was_active" = false ]; then
+        sudo systemctl stop vpn-fai.service
+      fi
+      say "Done: the FAI VPN connects with the new password"
+    '';
+  };
 
   # The `vpn` CLI: connect/disconnect, status-json (the pill), stats-json (the hover panel)
   # and diagnose/watch, whose job is to name WHOSE fault a failure is.
@@ -354,7 +475,10 @@ let
   };
 in
 {
-  environment.systemPackages = [ vpnCli ];
+  environment.systemPackages = [
+    vpnCli
+    rotateFaiPassword
+  ];
 
   # A DECLARED unit (rule 15): a loose `&` would be parented to Quickshell and vanish on a
   # shell restart, at the exact minute it should warn.
@@ -390,8 +514,8 @@ in
   # Rendered by sops into /run/secrets/rendered, never the store. Server, port and fingerprint are
   # NOT here: faiUp passes them on the command line, which overrides the file.
   sops.templates."nxbender-fai.conf".content = ''
-    username = victor.ferreira
-    domain = fai2008
+    username = ${faiUser}
+    domain = ${faiDomain}
     password = ${config.sops.placeholder.fai_vpn_password}
   '';
 

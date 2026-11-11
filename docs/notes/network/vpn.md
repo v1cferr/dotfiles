@@ -231,3 +231,29 @@ It opened a loose rofi in the middle of the screen. The UI is now a popover ANCH
 (`quickshell/bar/VpnPopover.qml`), in the shell's theme. It is not only cosmetic: the rofi menu
 built its labels with `systemctl is-active`, so it said "Disconnect" during the nxBender crash
 loop with no tunnel existing. The popover reads `status-json`, which checks the real tunnel.
+
+## Rotating the FAI password: `rotate-fai-password`
+
+The FAI login is the AD account, and when the AD asks for a new password the portal answers every
+attempt with `Password change needed`. The unit then crash-loops on the old one, and every Acuttis
+punch that needs the tunnel is refused. After resetting the password at FAI, one command:
+
+```sh
+rotate-fai-password
+```
+
+It asks for the new password twice and then, in order:
+
+1. **Tests it on a real tunnel before saving anything.** A root-only config in `/run/vpn-fai`
+   and a transient unit running the same `vpn-fai-up` the service runs, which takes that config
+   as its first argument. A refusal or a minute with no tunnel stops here, with nothing changed.
+2. **Writes it to Bitwarden**, unlocking the vault if needed. The value travels to `jq` through
+   the environment, not argv, which every user can read.
+3. **Runs `sync-secrets`**, which still lists the differing keys and asks, then commits
+   `secrets/secrets.yaml` alone.
+4. **Rebuilds**, the step without which `/run/secrets` keeps the old value.
+5. **Starts `vpn-fai.service` with the saved password** and waits for the tunnel, leaving the
+   unit as it found it.
+
+The order is the point: the vault is the source of truth (rule 11), so a wrong password must
+never reach it. A typo used to be found only after the rebuild, with the vault already wrong.

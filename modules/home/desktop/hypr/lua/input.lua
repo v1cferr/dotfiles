@@ -19,7 +19,7 @@ hl.config({
     scroll_factor = 1.0,
     touchpad = {
       natural_scroll = T.natural_scroll,
-      ["tap-to-click"] = T.tap_to_click,
+      tap_to_click = T.tap_to_click,
     },
   },
 })

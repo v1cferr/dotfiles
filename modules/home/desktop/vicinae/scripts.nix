@@ -181,7 +181,7 @@ let
         glyph = "md-lock_outline";
         title = "Lock session";
         group = "Desktop";
-        text = "loginctl lock-session";
+        text = "session-lock"; # the host's own: the lock on the desk, the greeter on the laptop
       }
       {
         name = "away-screen";

@@ -10,8 +10,9 @@ QtObject {
             key: "lock",
             icon: "󰌾",
             label: "Lock",
-            // The lock's UNIT first, then the LockedHint: `loginctl lock-session` alone only EMITS the signal.
-            cmd: ["sh", "-c", "systemctl --user start lockscreen.service; loginctl lock-session"]
+            // `session-lock` is the HOST's (the lock on the desk, the greeter on the laptop); the rest
+            // is the fallback for a profile from before it existed.
+            cmd: ["sh", "-c", "command -v session-lock >/dev/null && exec session-lock; systemctl --user start lockscreen.service; loginctl lock-session"]
         },
         {
             key: "darken",

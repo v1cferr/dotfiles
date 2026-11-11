@@ -30,8 +30,9 @@ hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("hyprctl reload"))           
 -- The cheatsheet, generated from THIS file at runtime. H and not "/" for the Moonlight reason
 -- below.
 hl.bind(mainMod .. " + H",         hl.dsp.exec_cmd("keybinds-cheatsheet"))        -- help: the shortcut list
--- lock: loginctl to logind to hypridle's lock_cmd; it never duplicates hyprlock.
-hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))      -- lock the screen
+-- lock: `session-lock` is the HOST's (the lock on the desk, the greeter on the laptop); the rest
+-- is the fallback for a profile from before that command existed.
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("command -v session-lock >/dev/null && exec session-lock; systemctl --user start lockscreen.service; loginctl lock-session")) -- lock the screen
 -- The app vault (vault.lua): hide every sensitive app now, or ask the password for the hidden ones.
 hl.bind(mainMod .. " + CTRL + L",  hl.dsp.exec_cmd("qs ipc call vault lock"))     -- vault: hide the sensitive apps
 hl.bind(mainMod .. " + CTRL + V",  hl.dsp.exec_cmd("qs ipc call vault hidden"))   -- vault: unlock the hidden apps

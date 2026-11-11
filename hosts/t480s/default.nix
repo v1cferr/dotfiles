@@ -8,6 +8,7 @@
     ./hardware.nix # THIS machine's hardware: the model profile, kernel modules, the panel
     ./users.nix # the second account (cesar) and where both password hashes come from
     ./desktop.nix # GDM as the greeter and GNOME beside the shared Hyprland
+    ./home.nix # the part of my home only this laptop has (what "lock" means with no lock)
   ];
 
   networking.hostName = "t480s";

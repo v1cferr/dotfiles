@@ -110,6 +110,16 @@ in
   };
 
   config = {
+    # `session-lock`: THE lock command, whatever asks for it (SUPER+L, the power menu, Vicinae).
+    # The unit first, then the LockedHint: `loginctl lock-session` alone only EMITS the signal.
+    home.packages = [
+      (writeShellApplication {
+        name = "session-lock";
+        runtimeInputs = [ systemd ];
+        text = "systemctl --user start lockscreen.service; loginctl lock-session";
+      })
+    ];
+
     # hyprlock: ONLY the fallback, plain on purpose (no labels, no images, nothing to fail): the
     # palette, the time and the field on every output, so it unlocks even with a monitor gone.
     programs.hyprlock = {

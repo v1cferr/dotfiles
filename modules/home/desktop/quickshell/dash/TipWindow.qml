@@ -68,7 +68,7 @@ PanelWindow {
             color: Theme.colText
             font.family: Theme.uiFont
             font.pixelSize: 13
-            font.bold: true
+            font.weight: Theme.weightStrong
         }
         Repeater {
             model: tw.t ? tw.t.lines : []

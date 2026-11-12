@@ -39,7 +39,7 @@ ColumnLayout {
                 color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: 14
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Text {
                 Layout.preferredWidth: 22
@@ -98,7 +98,7 @@ ColumnLayout {
                 color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: 14
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
         }
     }

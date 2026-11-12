@@ -48,14 +48,14 @@ ColumnLayout {
                     color: Theme.colText
                     font.family: Theme.uiFont
                     font.pixelSize: 14
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
                 Text {
                     text: disk.gib(fs.modelData.avail) + " GiB free  ·  " + Math.round(100 * fs.frac) + "%"
                     color: disk.tone(fs.frac)
                     font.family: Theme.uiFont
                     font.pixelSize: 13
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
             }
             Rectangle {
@@ -82,7 +82,7 @@ ColumnLayout {
         color: Theme.colSubtext
         font.family: Theme.uiFont
         font.pixelSize: 11
-        font.bold: true
+        font.weight: Theme.weightStrong
     }
     Text {
         visible: disk.grew.length === 0
@@ -106,7 +106,7 @@ ColumnLayout {
                 color: g.modelData.gib > 0 ? Theme.colPeach : Theme.colGreen
                 font.family: Theme.uiFont
                 font.pixelSize: 12
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Text {
                 Layout.fillWidth: true
@@ -126,7 +126,7 @@ ColumnLayout {
         color: Theme.colSubtext
         font.family: Theme.uiFont
         font.pixelSize: 11
-        font.bold: true
+        font.weight: Theme.weightStrong
     }
     Repeater {
         model: disk.heaviest

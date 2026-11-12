@@ -45,7 +45,7 @@ ColumnLayout {
             color: blk.isNow ? Theme.colAccent : Theme.colText
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontLabel
-            font.bold: true
+            font.weight: Theme.weightStrong
         }
         MouseArea {
             id: titleArea
@@ -75,7 +75,7 @@ ColumnLayout {
                 color: Theme.colDim
                 font.family: Theme.uiFont
                 font.pixelSize: blk.big ? Theme.fontBody : Theme.fontSmall
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
         }
         Repeater {
@@ -134,7 +134,7 @@ ColumnLayout {
                     color: cell.filled ? Theme.colBgSolid : (cell.cls === "holiday" || cell.cls === "optional" ? cell.tone : Theme.colText)
                     font.family: Theme.uiFont
                     font.pixelSize: blk.big ? Theme.fontTitle : Theme.fontBody
-                    font.bold: cell.filled || cell.isToday || cell.main !== null
+                    font.weight: (cell.filled || cell.isToday || cell.main !== null) ? Theme.weightStrong : Theme.weightText
                 }
                 // An observance: a dot under the number, never a fill.
                 Rectangle {

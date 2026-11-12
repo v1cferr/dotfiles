@@ -67,7 +67,7 @@ Scope {
                     text: meta.name
                     color: Theme.colText
                     font.pixelSize: 26
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                     font.letterSpacing: 1
                 }
                 Line {

@@ -47,7 +47,7 @@ BarPanel {
                             color: Theme.colText
                             font.family: Theme.uiFont
                             font.pixelSize: 28
-                            font.bold: true
+                            font.weight: Theme.weightStrong
                         }
                     }
                     Text {
@@ -100,7 +100,7 @@ BarPanel {
                                 color: Theme.colText
                                 font.family: Theme.uiFont
                                 font.pixelSize: 11
-                                font.bold: true
+                                font.weight: Theme.weightStrong
                             }
                         }
                     }
@@ -124,7 +124,7 @@ BarPanel {
                             color: Theme.colText
                             font.family: Theme.uiFont
                             font.pixelSize: 11
-                            font.bold: true
+                            font.weight: Theme.weightStrong
                         }
                         Text {
                             Layout.alignment: Qt.AlignHCenter

@@ -39,7 +39,7 @@ ColumnLayout {
             color: Theme.colText
             font.family: Theme.uiFont
             font.pixelSize: 17
-            font.bold: true
+            font.weight: Theme.weightStrong
             elide: Text.ElideRight
         }
         Text {
@@ -95,7 +95,7 @@ ColumnLayout {
                         color: Theme.colText
                         font.family: Theme.uiFont
                         font.pixelSize: 14
-                        font.bold: true
+                        font.weight: Theme.weightStrong
                         elide: Text.ElideRight
                     }
                     Text {
@@ -132,7 +132,7 @@ ColumnLayout {
                     color: Theme.colRed
                     font.family: Theme.uiFont
                     font.pixelSize: 12
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                     elide: Text.ElideRight
                 }
             }

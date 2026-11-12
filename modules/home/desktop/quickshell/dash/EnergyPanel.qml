@@ -28,7 +28,7 @@ ColumnLayout {
             color: Theme.colSubtext
             font.family: Theme.uiFont
             font.pixelSize: 13
-            font.bold: true
+            font.weight: Theme.weightStrong
         }
         Text {
             Layout.preferredWidth: 74
@@ -57,7 +57,7 @@ ColumnLayout {
         color: Theme.colPeach
         font.family: Theme.uiFont
         font.pixelSize: 13
-        font.bold: true
+        font.weight: Theme.weightStrong
         font.letterSpacing: 3
     }
     RowLayout {
@@ -74,7 +74,7 @@ ColumnLayout {
                 color: Energy.stale ? Theme.colDim : Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: 52
-                font.bold: true
+                font.weight: Theme.weightStrong
                 font.letterSpacing: -2
             }
             Text {

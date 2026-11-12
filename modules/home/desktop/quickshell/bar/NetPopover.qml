@@ -161,7 +161,7 @@ BarPanel {
             color: Theme.colText
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontBody
-            font.bold: true
+            font.weight: Theme.weightStrong
             elide: Text.ElideRight
         }
         Caption {
@@ -192,14 +192,14 @@ BarPanel {
                 color: Theme.colTeal
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontLabel
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Text {
                 text: "↑ " + pop.rate(pop.bar.netMainTx)
                 color: Theme.colPeach
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontLabel
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Item {
                 Layout.fillWidth: true
@@ -264,7 +264,7 @@ BarPanel {
                 color: pop.answered ? Theme.colText : Theme.colRed
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontLabel
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Caption {
                 Layout.fillWidth: true

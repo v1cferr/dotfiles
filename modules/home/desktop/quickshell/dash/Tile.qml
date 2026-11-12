@@ -48,7 +48,7 @@ Item {
             color: Theme.colSubtext
             font.family: Theme.uiFont
             font.pixelSize: 13
-            font.bold: true
+            font.weight: Theme.weightStrong
             font.letterSpacing: 3
         }
         RowLayout {
@@ -75,7 +75,7 @@ Item {
                 }
                 font.family: Theme.uiFont
                 font.pixelSize: tile.valueSize
-                font.bold: true
+                font.weight: Theme.weightStrong
                 font.letterSpacing: -1
                 elide: Text.ElideRight
             }

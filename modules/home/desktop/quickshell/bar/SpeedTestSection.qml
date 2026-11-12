@@ -141,7 +141,7 @@ ColumnLayout {
                 color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontLabel
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
         }
         Rectangle {
@@ -175,14 +175,14 @@ ColumnLayout {
             color: Theme.colTeal
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontLabel
-            font.bold: true
+            font.weight: Theme.weightStrong
         }
         Text {
             text: st.last ? "↑ " + st.rate(st.last.up) : ""
             color: Theme.colPeach
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontLabel
-            font.bold: true
+            font.weight: Theme.weightStrong
         }
         Item {
             Layout.fillWidth: true

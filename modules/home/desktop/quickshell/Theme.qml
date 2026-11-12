@@ -182,6 +182,10 @@ Singleton {
     readonly property real bandShare: Math.max(0.25, Math.min(0.4, dashCfg.share))
     readonly property int bandTop: barTop + barHeight + sp2
     function bandReserve(screenHeight) { return Math.round(screenHeight * theme.bandShare); }
+    // Weights: Geist's bold is too heavy at these sizes, so emphasis is a step, never 700. Every
+    // text that used to be bold takes weightStrong. docs/notes/hardware/fonts.md
+    readonly property int weightText: 400
+    readonly property int weightStrong: 500
     // Type scale (px). Mono everywhere, so a changing number never moves its neighbors.
     readonly property int fontMicro: 10 // a unit, a footnote
     readonly property int fontSmall: 11 // a bar label, a metadata line

@@ -68,7 +68,7 @@ PanelWindow {
                 color: Theme.colAccent
                 font.family: Theme.uiFont
                 font.pixelSize: 13
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
 
             Rectangle {
@@ -207,7 +207,7 @@ PanelWindow {
                 color: Theme.colLavender
                 font.family: Theme.uiFont
                 font.pixelSize: 13
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Rectangle {
                 Layout.fillWidth: true

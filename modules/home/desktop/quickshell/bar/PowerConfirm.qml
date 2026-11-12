@@ -45,7 +45,7 @@ ColumnLayout {
             color: Theme.colText
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontTitle + 2
-            font.bold: true
+            font.weight: Theme.weightStrong
             wrapMode: Text.WordWrap
         }
     }
@@ -121,7 +121,7 @@ ColumnLayout {
             color: btn.danger ? Theme.colBgSolid : Theme.colText
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontLabel
-            font.bold: btn.danger
+            font.weight: (btn.danger) ? Theme.weightStrong : Theme.weightText
         }
         MouseArea {
             id: area

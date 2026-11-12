@@ -87,7 +87,7 @@ ColumnLayout {
                         color: boot.tone(bootCard.modelData.tone)
                         font.family: Theme.uiFont
                         font.pixelSize: Theme.fontTitle
-                        font.bold: true
+                        font.weight: Theme.weightStrong
                     }
                     Text {
                         Layout.fillWidth: true

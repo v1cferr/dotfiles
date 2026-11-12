@@ -106,7 +106,7 @@ Item {
                     font.family: Theme.uiFont
                     font.pixelSize: Theme.fontBody
                     font.features: Theme.fontTabular
-                    font.bold: btn.active || btn.exists || btn.urgent
+                    font.weight: (btn.active || btn.exists || btn.urgent) ? Theme.weightStrong : Theme.weightText
                 }
                 // A window opened here: an 8 px yellow tick under the number. Visiting clears it.
                 Rectangle {
@@ -205,7 +205,7 @@ Item {
         id: tmNum
         font.family: Theme.uiFont
         font.pixelSize: Theme.fontBody
-        font.bold: true
+        font.weight: Theme.weightStrong
         font.features: Theme.fontTabular
         text: "00"
     }

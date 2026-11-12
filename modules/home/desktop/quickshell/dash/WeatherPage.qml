@@ -59,7 +59,7 @@ ColumnLayout {
                 color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: 13
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Text {
                 visible: page.alerts.length > 1
@@ -67,14 +67,14 @@ ColumnLayout {
                 color: al.tone
                 font.family: Theme.uiFont
                 font.pixelSize: 12
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Text {
                 text: page.worst ? page.when(page.worst) : ""
                 color: al.tone
                 font.family: Theme.uiFont
                 font.pixelSize: 12
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
         }
     }

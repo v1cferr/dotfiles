@@ -122,7 +122,7 @@ ColumnLayout {
                         color: chip.modelData.tone
                         font.family: Theme.uiFont
                         font.pixelSize: 22
-                        font.bold: true
+                        font.weight: Theme.weightStrong
                     }
                 }
             }
@@ -156,7 +156,7 @@ ColumnLayout {
                 color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: 14
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
         }
     }
@@ -188,7 +188,7 @@ ColumnLayout {
                 color: net.danger ? Theme.colRed : Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: 14
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
         }
     }
@@ -222,7 +222,7 @@ ColumnLayout {
                     color: Theme.colText
                     font.family: Theme.uiFont
                     font.pixelSize: 13
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
                 Text {
                     Layout.fillWidth: true
@@ -273,7 +273,7 @@ ColumnLayout {
                         color: Theme.colText
                         font.family: Theme.uiFont
                         font.pixelSize: 12
-                        font.bold: dev.modelData.new
+                        font.weight: (dev.modelData.new) ? Theme.weightStrong : Theme.weightText
                     }
                 }
             }
@@ -314,7 +314,7 @@ ColumnLayout {
                     color: Theme.colText
                     font.family: Theme.uiFont
                     font.pixelSize: 12
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
             }
         }

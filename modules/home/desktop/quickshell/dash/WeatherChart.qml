@@ -76,7 +76,7 @@ Item {
                 color: parent.index === 0 ? Theme.colAccent : Theme.colDim
                 font.family: Theme.uiFont
                 font.pixelSize: 11
-                font.bold: parent.index === 0
+                font.weight: (parent.index === 0) ? Theme.weightStrong : Theme.weightText
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -91,7 +91,7 @@ Item {
                 color: WeatherSky.temp(parent.h.temp)
                 font.family: Theme.uiFont
                 font.pixelSize: 13
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
         }
     }
@@ -260,7 +260,7 @@ Item {
                     color: parent.p >= 10 ? Theme.colText : Theme.colDim
                     font.family: Theme.uiFont
                     font.pixelSize: 11
-                    font.bold: parent.p >= 10
+                    font.weight: (parent.p >= 10) ? Theme.weightStrong : Theme.weightText
                 }
             }
         }

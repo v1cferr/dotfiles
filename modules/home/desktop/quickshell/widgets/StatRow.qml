@@ -36,6 +36,6 @@ RowLayout {
         color: sr.valueColor
         font.family: Theme.uiFont
         font.pixelSize: 12
-        font.bold: true
+        font.weight: Theme.weightStrong
     }
 }

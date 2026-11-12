@@ -79,7 +79,7 @@ BarPanel {
                 color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontBody
-                font.bold: true
+                font.weight: Theme.weightStrong
                 elide: Text.ElideRight
             }
             Text {
@@ -115,7 +115,7 @@ BarPanel {
                         color: Theme.colText
                         font.family: Theme.uiFont
                         font.pixelSize: Theme.fontBody
-                        font.bold: true
+                        font.weight: Theme.weightStrong
                     }
                     Text {
                         text: forgeBlock.modelData.state === "fail" ? forgeBlock.modelData.fail + " failing" : forgeBlock.modelData.state === "run" ? forgeBlock.modelData.run + " running" : forgeBlock.modelData.state === "ok" ? "Healthy" : forgeBlock.modelData.state === "stale" ? "Stale" : "Unknown"
@@ -189,7 +189,7 @@ BarPanel {
                     color: Theme.colText
                     font.family: Theme.uiFont
                     font.pixelSize: Theme.fontBody
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
                 Text {
                     text: Ops.svc.total > 0 ? (Ops.svc.total - Ops.svc.count) + " of " + Ops.svc.total + " up" : "No data"
@@ -263,7 +263,7 @@ BarPanel {
                         color: act.modelData.primary ? Theme.colText : Theme.colSubtext
                         font.family: Theme.uiFont
                         font.pixelSize: Theme.fontSmall
-                        font.bold: act.modelData.primary
+                        font.weight: (act.modelData.primary) ? Theme.weightStrong : Theme.weightText
                     }
                     MouseArea {
                         id: actArea

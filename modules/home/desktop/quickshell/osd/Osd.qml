@@ -213,7 +213,7 @@ Scope {
                         text: root.sinkMuted ? "muted" : Math.round(root.volume * 100) + "%"
                         color: Theme.colText
                         font.pixelSize: 14
-                        font.bold: true
+                        font.weight: Theme.weightStrong
                     }
                 }
 
@@ -250,7 +250,7 @@ Scope {
                         text: root.brightnessValue + "%"
                         color: Theme.colText
                         font.pixelSize: 14
-                        font.bold: true
+                        font.weight: Theme.weightStrong
                     }
                 }
 
@@ -261,7 +261,7 @@ Scope {
                     text: root.micMuted ? "Microphone muted" : "Microphone live"
                     color: root.micMuted ? Theme.colRed : Theme.colText
                     font.pixelSize: 15
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
 
                 // DPI mode: the value alone. No bar, because the stages live in the mouse's ONBOARD
@@ -272,7 +272,7 @@ Scope {
                     text: root.dpiValue + " DPI"
                     color: Theme.colText
                     font.pixelSize: 15
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
             }
         }

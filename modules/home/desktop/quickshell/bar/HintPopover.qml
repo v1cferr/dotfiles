@@ -43,7 +43,7 @@ PanelWindow {
             color: Theme.colText
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontBody
-            font.bold: true
+            font.weight: Theme.weightStrong
         }
         Repeater {
             model: hintPop.h ? hintPop.h.lines : []

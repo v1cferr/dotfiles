@@ -257,7 +257,7 @@ ColumnLayout {
                         color: card.modelData.tone
                         font.family: Theme.uiFont
                         font.pixelSize: Theme.fontBody
-                        font.bold: true
+                        font.weight: Theme.weightStrong
                         elide: Text.ElideRight
                     }
                     Text {

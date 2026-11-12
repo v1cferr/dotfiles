@@ -45,7 +45,7 @@ ColumnLayout {
                     color: Theme.colText
                     font.family: Theme.uiFont
                     font.pixelSize: 15
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
                 Text {
                     text: m.period
@@ -61,7 +61,7 @@ ColumnLayout {
                     color: ClaudeUsage.color(m.win, m.tone)
                     font.family: Theme.uiFont
                     font.pixelSize: 22
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
             }
             Rectangle {
@@ -129,7 +129,7 @@ ColumnLayout {
             color: Theme.colDim
             font.family: Theme.uiFont
             font.pixelSize: 12
-            font.bold: true
+            font.weight: Theme.weightStrong
             font.letterSpacing: 3
         }
         ClaudeWeek {

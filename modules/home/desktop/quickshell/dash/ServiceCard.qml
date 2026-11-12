@@ -77,7 +77,7 @@ Rectangle {
                 color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: 16
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Text {
                 visible: (card.s.expected || 0) > 1 && card.s.running < card.s.expected // a whole service says nothing
@@ -101,7 +101,7 @@ Rectangle {
                 color: Theme.colPeach
                 font.family: Theme.uiFont
                 font.pixelSize: 12
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
         }
 
@@ -117,7 +117,7 @@ Rectangle {
                 color: Theme.colBlue
                 font.family: Theme.uiFont
                 font.pixelSize: 16
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Sparkline {
                 Layout.fillWidth: true
@@ -133,7 +133,7 @@ Rectangle {
                 color: Theme.colMauve
                 font.family: Theme.uiFont
                 font.pixelSize: 16
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
         }
     }

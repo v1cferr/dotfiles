@@ -97,7 +97,7 @@ ColumnLayout {
                 color: n > 0 ? list.stateColor(modelData) : Theme.colDim
                 font.family: Theme.uiFont
                 font.pixelSize: 16
-                font.bold: n > 0
+                font.weight: (n > 0) ? Theme.weightStrong : Theme.weightText
             }
         }
         Item {
@@ -177,7 +177,7 @@ ColumnLayout {
                         color: Theme.colText
                         font.family: Theme.uiFont
                         font.pixelSize: 15
-                        font.bold: true
+                        font.weight: Theme.weightStrong
                         elide: Text.ElideRight
                     }
                     // Each workflow as a tinted name, so the one that broke is found without a click.

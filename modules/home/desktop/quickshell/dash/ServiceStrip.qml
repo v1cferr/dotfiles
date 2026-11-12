@@ -53,7 +53,7 @@ ColumnLayout {
             color: strip.all.length === 0 ? Theme.colDim : (bad === 0 ? Theme.colGreen : Theme.colPeach)
             font.family: Theme.uiFont
             font.pixelSize: 13
-            font.bold: true
+            font.weight: Theme.weightStrong
         }
         // What the order means, and a click to switch it.
         Text {

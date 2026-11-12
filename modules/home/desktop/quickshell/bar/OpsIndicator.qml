@@ -39,7 +39,7 @@ RowLayout {
         id: tmChip
         font.family: Theme.uiFont
         font.pixelSize: Theme.fontBody
-        font.bold: true
+        font.weight: Theme.weightStrong
         font.features: Theme.fontTabular
         text: "SVC · 00"
     }

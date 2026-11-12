@@ -262,7 +262,7 @@ Rectangle {
                 color: card.critical ? Theme.colCrit : Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontBody
-                font.bold: true
+                font.weight: Theme.weightStrong
                 wrapMode: Text.WordWrap
                 maximumLineCount: card.compact ? 1 : 3
                 elide: Text.ElideRight

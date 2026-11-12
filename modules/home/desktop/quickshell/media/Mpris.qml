@@ -175,7 +175,7 @@ Scope {
                             text: root.title
                             color: Theme.colText
                             font.pixelSize: 14
-                            font.bold: true
+                            font.weight: Theme.weightStrong
                             elide: Text.ElideRight
                         }
                         Text {

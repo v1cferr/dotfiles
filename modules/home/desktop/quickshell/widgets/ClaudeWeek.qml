@@ -231,7 +231,7 @@ Item {
         color: week.tone
         font.family: week.fontFamily
         font.pixelSize: week.valueSize
-        font.bold: true
+        font.weight: Theme.weightStrong
     }
 
     // The readout: the reading in force at the pointer (the step's own value).

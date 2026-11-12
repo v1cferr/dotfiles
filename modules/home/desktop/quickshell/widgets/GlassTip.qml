@@ -61,7 +61,7 @@ Item {
                 color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontBody
-                font.bold: true
+                font.weight: Theme.weightStrong
                 Layout.maximumWidth: 260
                 elide: Text.ElideRight
             }

@@ -10,7 +10,7 @@ GlyphText {
     text: arrow.glyph
     color: area.containsMouse ? Theme.colAccent : Theme.colSubtext
     font.pixelSize: 18
-    font.bold: true
+    font.weight: Theme.weightStrong
 
     MouseArea {
         id: area

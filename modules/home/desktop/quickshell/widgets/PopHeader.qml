@@ -23,7 +23,7 @@ ColumnLayout {
             color: Theme.colAccent
             font.family: Theme.uiFont
             font.pixelSize: 14
-            font.bold: true
+            font.weight: Theme.weightStrong
         }
         Item {
             Layout.fillWidth: true

@@ -150,7 +150,7 @@ BarPanel {
                 color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: 18
-                font.bold: true
+                font.weight: Theme.weightStrong
             }
             Text {
                 visible: !Holidays.hasYear(cal.year)
@@ -379,7 +379,7 @@ BarPanel {
                         color: Theme.colText
                         font.family: Theme.uiFont
                         font.pixelSize: Theme.fontTitle
-                        font.bold: true
+                        font.weight: Theme.weightStrong
                     }
                     Repeater {
                         model: cal.focusMonth === 0 ? Holidays.upcoming(cal.bar.calYear, cal.bar.calTodayM, cal.bar.calTodayD, 8, Holidays.filters) : []
@@ -414,7 +414,7 @@ BarPanel {
                                         color: Theme.colText
                                         font.family: Theme.uiFont
                                         font.pixelSize: Theme.fontBody
-                                        font.bold: Holidays.classOf(up.o) === "holiday"
+                                        font.weight: (Holidays.classOf(up.o) === "holiday") ? Theme.weightStrong : Theme.weightText
                                         elide: Text.ElideRight
                                     }
                                     Text {
@@ -434,7 +434,7 @@ BarPanel {
                                         color: Theme.colSky
                                         font.family: Theme.uiFont
                                         font.pixelSize: Theme.fontSmall
-                                        font.bold: true
+                                        font.weight: Theme.weightStrong
                                     }
                                     Text {
                                         visible: up.o.status !== "verified"

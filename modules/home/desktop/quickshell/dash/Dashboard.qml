@@ -241,7 +241,7 @@ PanelWindow {
                         color: Theme.colText
                         font.family: Theme.uiFont
                         font.pixelSize: 14
-                        font.bold: true
+                        font.weight: Theme.weightStrong
                         font.letterSpacing: 4
                     }
                     // The title on the left; where the rotation is sits on the right edge, flush with the card.
@@ -344,7 +344,7 @@ PanelWindow {
                                         color: cell.isHead ? Theme.colSubtext : (cell.isFilled ? Theme.colBgSolid : (cell.hol ? dash.host.scopeColor(cell.hol.scope) : (cell.isPast ? Theme.colDim : Theme.colText)))
                                         font.family: Theme.uiFont
                                         font.pixelSize: cell.isHead ? 13 : 18
-                                        font.bold: cell.isFilled || cell.isToday || cell.isHead
+                                        font.weight: (cell.isFilled || cell.isToday || cell.isHead) ? Theme.weightStrong : Theme.weightText
                                         font.letterSpacing: cell.isHead ? 2 : 0
                                     }
                                     Row {
@@ -364,7 +364,7 @@ PanelWindow {
                                             color: cell.isFilled ? Theme.colBgSolid : Theme.colText
                                             font.family: Theme.uiFont
                                             font.pixelSize: 12
-                                            font.bold: true
+                                            font.weight: Theme.weightStrong
                                         }
                                     }
                                     // The day's minimum, rain, holiday and INMET's words: on hover.

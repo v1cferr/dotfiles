@@ -90,7 +90,7 @@ Item {
             color: pill.labelColor
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontBody
-            font.bold: pill.bold
+            font.weight: (pill.bold) ? Theme.weightStrong : Theme.weightText
             font.features: Theme.fontTabular
             elide: Text.ElideRight
         }

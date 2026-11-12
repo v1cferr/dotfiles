@@ -100,7 +100,7 @@ Rectangle {
                     color: Theme.colText
                     font.family: Theme.uiFont
                     font.pixelSize: Theme.fontMicro
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
             }
         }
@@ -153,7 +153,7 @@ Rectangle {
                 color: Theme.colText
                 font.family: Theme.uiFont
                 font.pixelSize: Theme.fontBody
-                font.bold: true
+                font.weight: Theme.weightStrong
                 elide: Text.ElideRight
             }
             Text {

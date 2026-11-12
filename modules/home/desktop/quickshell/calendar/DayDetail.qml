@@ -29,7 +29,7 @@ ColumnLayout {
         color: Theme.colText
         font.family: Theme.uiFont
         font.pixelSize: Theme.fontTitle
-        font.bold: true
+        font.weight: Theme.weightStrong
     }
     Text {
         visible: det.events.length === 0
@@ -69,7 +69,7 @@ ColumnLayout {
                     color: Theme.colText
                     font.family: Theme.uiFont
                     font.pixelSize: Theme.fontBody
-                    font.bold: true
+                    font.weight: Theme.weightStrong
                 }
                 Text {
                     visible: ev.o.name !== ev.o.display

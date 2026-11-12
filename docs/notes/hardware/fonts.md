@@ -88,5 +88,8 @@ width is padded with U+2007, the space as wide as a digit.
 shapes (an inner outline showing through the fill, rendered on 11/11/2026), so `Theme.iconAxes`
 sets the weight and the optical size only, as the lock does.
 
-Until the next rebuild the generated JSON still names the UI family, so the shell keeps its mono
-face with the new icons; the rebuild is what switches the text.
+**No bold.** Geist's 700 is heavy at 11 to 14 px, and on 11/11/2026 the owner found it "strange"
+on the live bar. Emphasis is one step instead: `Theme.weightText` (400) and `Theme.weightStrong`
+(500, Geist Medium), picked from four renders of the same bar (400 with 700, 600 and 500, and 300
+with 500). Every text of the shell that was bold takes the strong weight; the lock keeps its own
+weights.

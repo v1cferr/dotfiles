@@ -3,7 +3,7 @@
 `modules/home/desktop/quickshell/bar/`. The desktop's bar, the only one; Waybar left in the migration to
 Quickshell. It is loaded by `shell.qml` (`Bar {}`), and the popovers live in files next to it.
 
-It shows: the workspaces per monitor plus the title and Spotifast (Mpris), the NixOS logo (the way
+It shows: the workspaces per monitor plus the focused app's name and Spotifast (Mpris), the NixOS logo (the way
 into notifications and the session, [nixos-center.md](nixos-center.md)), the network, the VPN and
 Tor, audio (Pipewire), the notification state, the tray and the clock, and on the standing monitor
 the operational alerts. The CPU, the disk and a stopped hypridle show only while they need a look;
@@ -85,12 +85,21 @@ critical). A click opens the NixOS Center under the logo, a right click flips do
 6 px dot on the logo's corner stays, on both monitors.
 
 **The left side splits its room by rules that read the room alone, never a text.** With a player up
-the media takes up to 220 px, the title keeps at least 240; with less room the media shrinks toward
-120, then becomes its icon alone, and only then does the title give way, hiding under 120 px instead
-of becoming a stub. The workspaces never fold. Without a player the media item is gone and the title
-gets its room. Since no level reads a song's or a title's text, a track change can never flip one.
-The title's own width comes from `TextMetrics` and is rounded UP to 64 px steps (its text
-left-aligned), so most focus changes do not move the media beside it. The hover hint keeps the full title.
+the media takes up to 220 px, the app's name keeps at least 240; with less room the media shrinks
+toward 120, then becomes its icon alone, and only then does the name give way, hiding under 120 px
+instead of becoming a stub. The workspaces never fold. Without a player the media item is gone and
+the name gets its room. Since no level reads a song's text, a track change can never flip one.
+
+**The focused app is named, not its window** (11/11/2026). The bar shows the name the app's
+`.desktop` entry carries (`appName` in `Bar.qml`, from the focused toplevel's class through
+`DesktopEntries.heuristicLookup`; the class itself when no entry answers), in the strong weight.
+Until then it showed the window's title, rewritten with a brand glyph, in sky blue italics, which
+changed on every tab and file. The full title is in the hover hint.
+
+**Neutral at rest.** Text and icons are `colText` or `colSubtext`; a color means a state that needs
+a look (`colWarn`, `colAlert`, `colCrit`) and the accent means a selection. So a steady link, a VPN
+that is up and a playing song stopped being green on 11/11/2026: off by choice is faded content,
+and only a link that is slow, unstable or down takes its color.
 
 **The right side folds once, the tray protected.** `measure(level)` in `BarRight.qml` sums the
 clock, the tray, the volume, network and VPN, plus the bell and the alerts that are up, from implicit
@@ -258,13 +267,16 @@ control's 8 px radius).
 
 | State                              | Looks                                                             |
 | ---------------------------------- | ----------------------------------------------------------------- |
-| active                             | accent bold number on the sliding highlight (`colCellOpenFill`)   |
-| occupied                           | bold `text` number, and its apps' icons on the full bar           |
+| active                             | accent number on the sliding highlight (`colCellOpenFill`)        |
+| occupied                           | `text` number in the strong weight                                |
 | empty                              | `dim` number                                                      |
 | a window opened there              | a steady 8 px yellow tick under the number (`colWarn`)            |
 | a window there asked for attention | the highlight in `colCrit` at 22%, the number in red              |
 
-**The apps.** Each number carries its apps' icons, one per window class in
+**The apps, on a hover.** At rest a workspace is its number alone (11/11/2026; until then every
+number carried its icons). Once the pointer rests on a number for `Theme.hoverIntent` (a sweep opens
+nothing) that workspace opens to its RIGHT, so the number never leaves the pointer, and closes when
+the pointer leaves. Open, it shows its apps' icons, one per window class in
 Hyprland's order (`wsApps` in `Bar.qml`, read from the toplevels' IPC object), up to three (two on
 the LG's narrower bar) and then `+N`: full color on the active workspace, greyed on the others (`widgets/AppIcon.qml`, the same
 lookup the lock screen uses. A Steam game's class says nothing (`hl` for Northgard,

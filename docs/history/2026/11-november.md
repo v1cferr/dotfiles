@@ -1,6 +1,15 @@
 # History: november 2026
 
-10 entries. Index in [README.md](../README.md).
+11 entries. Index in [README.md](../README.md).
+
+- [x] A quieter bar: numbers, the app's name, no bold (11/11/2026; asked 11/11/2026). How and why:
+      [notes/desktop/bar.md](../../notes/desktop/bar.md), [notes/hardware/fonts.md](../../notes/hardware/fonts.md).
+      • NO BOLD: Geist's 700 read as heavy on the live bar; emphasis is weight 500 over 400, picked
+        from four renders, across the whole shell but the lock.
+      • WORKSPACES ARE NUMBERS: a workspace's app icons open to its right on a rested hover.
+      • THE APP, NOT THE WINDOW: the focused app's name replaces the window's title.
+      • NEUTRAL AT REST: a steady link, a VPN that is up and a playing song are no longer green.
+      • ONE OWNER EACH for the audio sink and the media player, ahead of the Control Center.
 
 - [x] The shell in Geist, the bar's icons in Material Symbols (11/11/2026; asked 11/11/2026). How
       and why: [notes/hardware/fonts.md](../../notes/hardware/fonts.md#the-shells-own-families-11112026).

@@ -3,7 +3,6 @@
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
-import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -16,33 +15,15 @@ Scope {
     property int panelLeft: Theme.barTop // the screen x the bar asked for; the left edge otherwise
     property real positionNow: 0
 
-    // It selects the Spotifast player (the fallback: whichever is playing; otherwise the 1st)
-    readonly property var player: {
-        const m = Mpris.players;
-        const list = (m && m.values) ? m.values : [];
-        for (let i = 0; i < list.length; i++) {
-            const p = list[i];
-            if (p && (p.identity === "Spotifast" || (p.dbusName || "").toLowerCase().indexOf("spotifast") >= 0))
-                return p;
-        }
-        for (let i = 0; i < list.length; i++)
-            if (list[i] && list[i].isPlaying)
-                return list[i];
-        return list.length ? list[0] : null;
-    }
-
-    readonly property bool hasPlayer: !!root.player
-    readonly property string title: (root.player && root.player.trackTitle) ? root.player.trackTitle : "—"
-    readonly property string artist: {
-        if (!root.player || !root.player.trackArtists)
-            return "";
-        const a = root.player.trackArtists;
-        return Array.isArray(a) ? a.join(", ") : ("" + a);
-    }
-    readonly property string album: (root.player && root.player.trackAlbum) ? root.player.trackAlbum : ""
-    readonly property string artUrl: (root.player && root.player.trackArtUrl) ? root.player.trackArtUrl : ""
-    readonly property real length: (root.player && root.player.length) ? root.player.length : 0
-    readonly property bool playing: !!(root.player && root.player.isPlaying)
+    // The player and its track have one owner (Media.qml).
+    readonly property var player: Media.player
+    readonly property bool hasPlayer: Media.hasPlayer
+    readonly property string title: Media.title || "—"
+    readonly property string artist: Media.artist
+    readonly property string album: Media.album
+    readonly property string artUrl: Media.artUrl
+    readonly property real length: Media.length
+    readonly property bool playing: Media.playing
 
     function refreshPosition() {
         root.positionNow = (root.player && root.player.positionSupported) ? root.player.position : 0;

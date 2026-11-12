@@ -16,7 +16,7 @@ RowLayout {
     // In order: media from 220 down to 120, media to its icon, then the title (a floor of 120,
     // under which it hides). The workspaces never fold. A song or a focus change never flips a level.
     readonly property int titleMin: 240
-    readonly property bool mediaHere: !left.bar.compact && left.host.spHasPlayer
+    readonly property bool mediaHere: !left.bar.compact && Media.hasPlayer
     readonly property int avail: left.room - wsStrip.implicitWidth - Theme.barGap - (left.mediaHere ? Theme.barGap : 0)
     readonly property int mediaIconW: Theme.barCellWidth(Math.ceil(tmMediaIcon.advanceWidth))
     readonly property int mediaW: !left.mediaHere ? 0 : Math.max(left.mediaIconW, Math.min(220, left.avail - left.titleMin))
@@ -61,8 +61,8 @@ RowLayout {
         id: spPill
         visible: left.mediaHere
         icon: "music_note"
-        label: left.mediaIconOnly ? "" : left.host.spText
-        accent: left.host.spColor
+        label: left.mediaIconOnly ? "" : Media.line
+        accent: Media.playing ? Theme.colGreen : Theme.colYellow
         maxWidth: left.mediaUsed
         onHoveredChanged: left.host.hoverHint("music", spPill, left.barContent, left.bar, hovered)
         onClicked: {

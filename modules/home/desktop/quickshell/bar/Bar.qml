@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
-import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -920,9 +919,9 @@ Scope {
             return root.wsHint(root.hintWs);
         if (key === "music")
             return {
-                title: root.spTitle || "Spotifast",
-                lines: [root.spArtist, root.spPlaying ? "Playing" : "Paused"].filter(l => l !== ""),
-                action: "Click for the player · right-click to " + (root.spPlaying ? "pause" : "play") + " · scroll to skip"
+                title: Media.title || "Spotifast",
+                lines: [Media.artist, Media.playing ? "Playing" : "Paused"].filter(l => l !== ""),
+                action: "Click for the player · right-click to " + (Media.playing ? "pause" : "play") + " · scroll to skip"
             };
         if (key === "vol")
             return {
@@ -1196,32 +1195,6 @@ Scope {
             });
         root.wHourly = hours;
     }
-    // ===== Spotifast (Mpris) =====
-    readonly property var player: {
-        const m = Mpris.players;
-        const list = (m && m.values) ? m.values : [];
-        for (let i = 0; i < list.length; i++) {
-            const p = list[i];
-            if (p && (p.identity === "Spotifast" || (p.dbusName || "").toLowerCase().indexOf("spotifast") >= 0))
-                return p;
-        }
-        for (let i = 0; i < list.length; i++)
-            if (list[i] && list[i].isPlaying)
-                return list[i];
-        return list.length ? list[0] : null;
-    }
-    readonly property bool spHasPlayer: !!root.player
-    readonly property string spTitle: (root.player && root.player.trackTitle) ? root.player.trackTitle : ""
-    readonly property string spArtist: {
-        if (!root.player || !root.player.trackArtists)
-            return "";
-        const a = root.player.trackArtists;
-        return Array.isArray(a) ? a.join(", ") : ("" + a);
-    }
-    readonly property bool spPlaying: !!(root.player && root.player.isPlaying)
-    readonly property string spText: root.spHasPlayer ? (root.spArtist ? root.spArtist + " - " + root.spTitle : root.spTitle) : ""
-    readonly property color spColor: root.spPlaying ? Theme.colGreen : (root.spHasPlayer ? Theme.colYellow : Theme.colDim)
-
     // ===== Network =====
     // ONE read for the whole link: what NetworkManager thinks, the default route, the addresses and
     // the sysfs link files. The MAIN interface is the ROUTE's, never a name written in here.

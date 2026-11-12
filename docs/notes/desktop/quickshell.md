@@ -206,7 +206,8 @@ the headless harness: the bar and the media panel render pixel for pixel as befo
 `Audio` also holds the level of what plays (`level()`, a `PwNodePeakMonitor`), captured only while
 one of its two askers wants it: the island while media is what it shows (`waveIsland`), the media
 panel while it is open (`wavePanel`) ([island.md](island.md#the-wave)). `Media` says a track once:
-an artist repeated in the title is cut from it, and YouTube's "X - Topic" is X. It is a function to call and not a property to bind: the meter
+an artist repeated in the title is cut from it, and YouTube's "X - Topic" is X. It also finds the
+window what plays lives in (`reveal`), and `Audio` sets the volume of what plays (`mediaNode`). It is a function to call and not a property to bind: the meter
 reports once per audio quantum, 47 to 185 times a second.
 
 ### `Pill.qml`

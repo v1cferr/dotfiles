@@ -123,8 +123,11 @@ while a notification held the capsule), on the output and on the browser's own s
 20 s windows of the shell's CPU: 7.90% to 8.90% of a core with the wave, 4.25% to 5.55% on the tree
 without it. With the wave not drawn it was still 7.13% to 7.67%, so the cost is the meter and not
 the bars. That day a Sunshine stream held the audio graph at a quantum of 256 frames, and the
-meter reports once per quantum: 185 times a second, where the default of 1024 gives 47. The cost
-at the default quantum was not measured.
+meter reports once per quantum: 185 times a second, where the default of 1024 gives 47. Later the
+same day, with a game holding the same 256 and the meter on the browser's stream: 10.00% to 12.93%
+with the wave, 5.27% to 5.80% without. So the wave costs 4 to 6 points of a core whenever
+something holds the graph at 256 frames, which a game or a Sunshine stream does. The cost at the
+default quantum was not measured: the machine was never without one of the two.
 
 The stream was found by its name the same day: with a stand-in player calling itself "Mozilla
 zen", as Zen does, the meter took the browser's stream ("Zen") and not the output.
@@ -145,12 +148,26 @@ named none, Nerd glyphs in outlined rings, and the artist twice.
 | The wave    | the island's, across the panel: 3 px bars, some five seconds of what was heard        |
 | The seek    | a 4 px track; a press or a drag moves the track there; the two times under its ends   |
 | The keys    | previous, play or pause (filled), next: centered on the panel, so under the logo      |
+| The volume  | of what plays: the player's own stream when it is known, else the output's            |
+
+At the track's right end a key goes to the window it plays in (`Media.reveal`): the player's app
+showing that very title, else any window of that app, found among the compositor's toplevels and
+activated; with no window, the player is asked to raise itself. A browser playing in a tab that is
+not the front one leads to the browser, not to the tab: MPRIS does not say which tab.
+
+**A hover opens it** (12/11/2026, asked for: a click was one step too many). The pointer resting on
+the capsule's media for `Theme.hoverIntent` opens the panel, and it stays while the pointer is on
+the capsule or on the panel, closing 600 ms after it leaves both. A click on the capsule then keeps
+it, as a pin does on the bar's panels; opened by a click it closes 2.5 s after the pointer leaves.
+The apps' icons at the capsule's far end are their own zone: resting there opens the peek, as the
+whole capsule does when the apps are all it shows. A pinned panel is never taken down by a hover.
 
 It is Geist and Material Symbols like the rest, on the theme's tokens. The wave asks the meter for
 itself (`Audio.wavePanel`), so it keeps moving while a notification holds the capsule above it.
 
 **Symmetry, by pixel, on 12/11/2026** in the harness, about the logo's center (x 1280): the capsule
-208 px each side, the panel 180, the seek bar 164, the three keys 58, the logo's ink 1261 to 1298.
+208 px each side, the panel 180, the seek bar and the volume 164, the three keys 58, the logo's ink
+1261 to 1298.
 The panel's width is even so its middle is a whole pixel.
 
 ## How it moves
@@ -236,5 +253,8 @@ nothing was changed there), a VPN's progress and its error, a Bluetooth device c
 player pausing and changing track, the disk warning, the pointer freezing the capsule, the hover
 that opens the peek, and every click on it or in the peek. How the spring LOOKS was never seen by a
 person: only its numbers were measured. Of the wave: how it looks moving, and its cost outside a
-Sunshine stream. Of the media panel: the seek by press and drag, and the three keys on a real
-player (the stand-in's do nothing).
+stream holding the quantum at 256. Of the media panel: the seek by press and drag, the three keys,
+the volume and the way to the window on a real player (the stand-in's do nothing, and nothing in
+the harness may change a volume). Of the hover: a virtual pointer entering the capsule was seen to
+give the media zone, but none could be held there, so the rest that opens the panel was not seen;
+the panel's side of it was, over IPC: `openAt` opened it and it was gone 1.5 s later.

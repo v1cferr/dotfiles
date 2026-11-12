@@ -107,8 +107,7 @@ Item {
             return Object.assign(none, {
                 icon: "music_note",
                 left: d.artist,
-                // A player that puts the artist in the title too ("Artist - Title") says it once.
-                right: (d.artist && d.title.toLowerCase().startsWith(d.artist.toLowerCase() + " - ")) ? d.title.slice(d.artist.length + 3) : d.title,
+                right: d.title,
                 art: d.art || "",
                 badges: true
             });

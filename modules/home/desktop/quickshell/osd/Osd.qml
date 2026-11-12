@@ -49,9 +49,34 @@ Scope {
         showTimer.restart();
     }
 
+    // With the island up, the same events show there, around the logo, and this window stays shut.
+    function toIsland(m) {
+        if (!Island.live)
+            return false;
+        if (m === "volume")
+            Island.push("volume", {
+                level: root.volume,
+                muted: root.sinkMuted
+            });
+        else if (m === "mic")
+            Island.push("mic", {
+                muted: root.micMuted
+            });
+        else if (m === "brightness")
+            Island.push("brightness", {
+                level: root.brightnessMax > 0 ? root.brightnessValue / root.brightnessMax : 0
+            });
+        else
+            Island.push("dpi", {
+                value: root.dpiValue
+            });
+        return true;
+    }
     // It shows directly (with no armed lock): used by brightness through IPC.
     function showNow(m) {
         root.mode = m;
+        if (root.toIsland(m))
+            return;
         root.shown = true;
         hideTimer.restart();
     }
@@ -117,7 +142,7 @@ Scope {
         id: showTimer
         interval: 0
         onTriggered: {
-            if (!root.armed)
+            if (!root.armed || root.toIsland(root.mode))
                 return;
             root.shown = true;
             hideTimer.restart();

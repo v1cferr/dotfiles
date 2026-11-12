@@ -13,6 +13,9 @@
       • THE LOGO DOES NOT MOVE: the capsule is drawn under it, in the bar's own window.
       • A TIMER THAT NEVER FIRED AGAIN was caught by the first run and fixed.
       • A FLAG, `my.shell.island.enable`, puts the OSD and the toasts back.
+      • MEDIA RESTS THERE while it plays, the cover and the title, and everything else passes
+        over it; and the capsule moves on a SPRING, 3.9% past its size and at rest in about
+        340 ms, the shell's one exception to its no-overshoot rule, asked for by name.
 
 - [x] The Control Center (12/11/2026; asked 11/11/2026). How and why:
       [notes/desktop/control-center.md](../../notes/desktop/control-center.md).

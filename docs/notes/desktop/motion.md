@@ -12,7 +12,8 @@ dependency. In practice that means:
 
 - **Fast in, faster out.** An entrance is short and decelerates; an exit is shorter still, because
   nobody waits to watch a thing leave.
-- **No visible overshoot, ever.** No bounce, no rubber band, no zoom that draws the eye.
+- **No visible overshoot.** No bounce, no rubber band, no zoom that draws the eye. One exception,
+  asked for: [the island](#the-island).
 - **Springs for space, curves for everything else.** Something that MOVES (a window settling on the
   tape, a workspace sliding) gets a near-critically damped spring, which keeps its velocity when it
   is retargeted mid-flight. Opacity and color get a short ease-out.
@@ -173,11 +174,26 @@ All of them are `NumberAnimation`/`ColorAnimation` with an ease-out, deliberatel
 `SpringAnimation` was weighed for the moving parts and rejected: it is tuned by `spring`/`damping`
 values with no duration, which is the opposite of what a token needs, and nothing in the shell is
 retargeted fast enough for velocity to matter. A Behavior already restarts from where the value IS.
+The island is the one place that uses it (below).
 
 **The glance band keeps its own numbers** (the 320/560 ms entrance, 420 ms page slides, the
 520 ms services rail, the 1100 ms weather draw-in), wrapped in `Theme.ms()`: they were chosen as
 one choreography on 07/10/2026 ([dash.md](dash.md#motion)), they play when a page turns on its
 own and not when I act, and folding them into the shell's tokens would retune a design that works.
+
+### The island
+
+The capsule around the logo ([island.md](island.md#how-it-moves)) is the ONE surface that moves on
+a spring and overshoots, since 12/11/2026. The owner asked for it by name, "modern animations like
+motion.dev", and chose the slight overshoot over a damped spring knowing it breaks the rule above.
+It stays an exception because of what the island is: small, in the middle of the bar, and moving
+only when something happened, so a little life there reads as an answer and not as decoration. A
+window, a panel or the bar's own items still obey the rule.
+
+The two numbers are tokens (`Theme.islandSpring`, `Theme.islandDamping`), picked by measuring and
+not by eye: a 3.9% overshoot, at rest within 320 to 353 ms. Closing is not a spring: it eases out
+over `motionHover`, so "fast in, faster out" holds there too. `my.theme.motion = "off"` removes all
+of it.
 
 ### Off in Quickshell
 

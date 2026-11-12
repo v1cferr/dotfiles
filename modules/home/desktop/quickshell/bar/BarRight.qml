@@ -22,6 +22,11 @@ RowLayout {
     // Icons and alerts never fold, and the tray's width comes from its item count alone.
     readonly property int squeeze: right.bar.compact || right.measure(0) <= right.room ? 0 : 1
     readonly property bool cpuPegged: right.host.cpuPct >= 90
+    // LEAN: with the Control Center on, what it holds leaves the strip. The network keeps its icon,
+    // the VPN shows only while it is up or coming up, the sound only while muted, and the bell goes.
+    readonly property bool lean: Theme.controlCenterOn
+    readonly property bool vpnHere: Theme.hasVpn && (!right.lean || right.host.vpnConnected || Object.keys(right.host.vpnPhase).length > 0)
+    readonly property bool volHere: !right.lean || Audio.muted
 
     spacing: Theme.barGap
 
@@ -54,17 +59,24 @@ RowLayout {
     // The row's width at a fold level, from implicit widths and text metrics that do not depend on
     // the level: so the level never feeds back into itself.
     function measure(level) {
-        let w = right.clockW + volPill.implicitWidth;
-        let n = 2;
-        const extra = [[!right.host.hypridleOn, idlePill], [right.cpuPegged, cpuPill], [diskPill.shown, diskPill], [bell.active, bell]];
+        let w = right.clockW;
+        let n = 1;
+        const extra = [[Theme.controlCenterOn, controlPill], [right.volHere, volPill], [!right.host.hypridleOn, idlePill], [right.cpuPegged, cpuPill], [diskPill.shown, diskPill], [bell.active && !right.lean, bell]];
         for (const e of extra)
             if (e[0]) {
                 w += e[1].implicitWidth;
                 n++;
             }
+        // The network and the VPN change their own labels with the level, so they are measured from
+        // text metrics, never from the pills: that is what keeps this free of a loop.
         const icon = Theme.iconSymbol;
-        w += level >= 1 ? 2 * Theme.barCellWidth(icon) : Theme.barCellWidth(icon + Theme.sp1 + tmNet.advanceWidth + (right.host.netBusy ? tmNetUnit.advanceWidth + Theme.sp1 : 0)) + Theme.barCellWidth(icon + (tmVpn.advanceWidth > 0 ? Theme.sp1 + tmVpn.advanceWidth : 0));
-        n += 2;
+        const bare = right.lean || level >= 1;
+        w += bare ? Theme.barCellWidth(icon) : Theme.barCellWidth(icon + Theme.sp1 + tmNet.advanceWidth + (right.host.netBusy ? tmNetUnit.advanceWidth + Theme.sp1 : 0));
+        n++;
+        if (right.vpnHere) {
+            w += bare ? Theme.barCellWidth(icon) : Theme.barCellWidth(icon + (tmVpn.advanceWidth > 0 ? Theme.sp1 + tmVpn.advanceWidth : 0));
+            n++;
+        }
         return w + (n - 1) * Theme.barGap + right.trayW;
     }
 
@@ -127,8 +139,8 @@ RowLayout {
         id: netPill
         visible: !right.bar.compact
         icon: "lan"
-        label: right.squeeze >= 1 ? "" : right.host.netPillText
-        sub: right.squeeze >= 1 || !right.host.netBusy ? "" : "b/s" // ONE unit for both rates
+        label: right.lean || right.squeeze >= 1 ? "" : right.host.netPillText
+        sub: right.lean || right.squeeze >= 1 || !right.host.netBusy ? "" : "b/s" // ONE unit for both rates
         // Neutral while the link is steady: color is for a state that needs a look.
         accent: right.host.netQuality.label === "steady" ? Theme.colSubtext : right.host.netQuality.color
         labelColor: Theme.colText
@@ -141,9 +153,9 @@ RowLayout {
         // VPN: click opens the actions popover, HOVER shows the statistics, right click drops everything.
         // Off by choice is neutral, never a failure. Information on hover, ACTION on click: docs/notes/desktop/bar.md
         id: vpnPill
-        visible: !right.bar.compact
+        visible: !right.bar.compact && right.vpnHere
         icon: "shield_lock"
-        label: right.host.vpnConnected && right.squeeze < 1 ? right.host.vpnName : ""
+        label: right.host.vpnConnected && !right.lean && right.squeeze < 1 ? right.host.vpnName : ""
         accent: right.host.vpnConnected ? Theme.colText : Theme.colUnknown
         labelColor: Theme.colText
         off: !right.host.vpnConnected
@@ -165,9 +177,9 @@ RowLayout {
     }
     Pill {
         id: volPill
-        visible: !right.bar.compact
+        visible: !right.bar.compact && right.volHere
         icon: right.volSymbol()
-        label: right.host.tab(Math.round(Audio.volume * 100), 3) + "%"
+        label: right.lean ? "" : right.host.tab(Math.round(Audio.volume * 100), 3) + "%"
         accent: Audio.muted ? Theme.colUnknown : Theme.colSubtext
         labelColor: Audio.muted ? Theme.colUnknown : Theme.colText
         off: Audio.muted
@@ -179,7 +191,7 @@ RowLayout {
     }
     NotifIndicator {
         id: bell
-        visible: !right.bar.compact && bell.active
+        visible: !right.bar.compact && bell.active && !right.lean
         host: right.host
         barContent: right.barContent
         barWindow: right.bar

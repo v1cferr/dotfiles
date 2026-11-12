@@ -10,6 +10,7 @@ import "root:/widgets"
 Item {
     id: isle
     required property var host // the Bar's Scope: where a click on the capsule leads
+    property var barContent: null
     property var barWindow: null
 
     readonly property var ev: Island.current
@@ -357,7 +358,12 @@ Item {
             enabled: isle.shown
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onContainsMouseChanged: Island.freeze(containsMouse)
+            // With something not seen yet, a hover that rests lists it (NotifPeek.qml).
+            onContainsMouseChanged: {
+                Island.freeze(containsMouse);
+                if (Notifs.unseen > 0 || !containsMouse)
+                    isle.host.hoverPanel("peek", isle, isle.barContent, isle.barWindow, containsMouse);
+            }
             onClicked: isle.act()
         }
     }

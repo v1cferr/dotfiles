@@ -7,6 +7,7 @@ import "root:/widgets"
 Rectangle {
     id: link
     property string label: ""
+    property string mark: "arrow_outward" // a Material Symbols name: what the row does
     signal clicked
     Layout.fillWidth: true
     implicitHeight: Theme.barControl
@@ -26,7 +27,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
         anchors.rightMargin: Theme.sp2
-        text: "arrow_outward"
+        text: link.mark
         color: Theme.colDim
         font.family: Theme.iconFont
         font.pixelSize: Theme.iconBar

@@ -80,6 +80,7 @@ PanelWindow {
             visible: bar.islandHere
             x: bar.centerX - Theme.islandHalf
             host: bar.host
+            barContent: barContent
             barWindow: bar
         }
         LogoSlot {

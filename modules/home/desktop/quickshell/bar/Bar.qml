@@ -1966,6 +1966,11 @@ Scope {
         bar: root
     }
 
+    // ===== What was not seen yet, on a hover of the island: bar/NotifPeek.qml =====
+    NotifPeek {
+        bar: root
+    }
+
     // ===== The Control Center, the view is in control/ControlCenter.qml =====
     ControlCenter {
         bar: root

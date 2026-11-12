@@ -107,7 +107,8 @@ Item {
             return Object.assign(none, {
                 icon: "music_note",
                 left: d.artist,
-                right: d.title,
+                // A player that puts the artist in the title too ("Artist - Title") says it once.
+                right: (d.artist && d.title.toLowerCase().startsWith(d.artist.toLowerCase() + " - ")) ? d.title.slice(d.artist.length + 3) : d.title,
                 art: d.art || "",
                 badges: true
             });
@@ -136,7 +137,11 @@ Item {
 
     // Half the logo's slot, then the wider side, then the padding: the same on both sides.
     readonly property int inner: Theme.barCenterWidth / 2
-    readonly property int side: Math.min(Theme.islandHalf - isle.inner - Theme.sp3, Math.ceil(Math.max(leftRow.implicitWidth, rightRow.implicitWidth)))
+    // While media rests there, what the wider side leaves empty on the left is the wave's, and it
+    // never gets fewer than five bars.
+    readonly property bool waving: Audio.wave && isle.last !== null && isle.last.kind === "media"
+    readonly property int waveMin: isle.waving ? 5 * wave.bar + 4 * wave.gap + Theme.sp2 : 0
+    readonly property int side: Math.min(Theme.islandHalf - isle.inner - Theme.sp3, Math.ceil(Math.max(leftRow.implicitWidth + isle.waveMin, rightRow.implicitWidth)))
     readonly property int half: isle.shown ? isle.inner + isle.side + Theme.sp3 : isle.inner
 
     function resize() {
@@ -237,10 +242,21 @@ Item {
         }
         clip: true
 
+        Wave {
+            id: wave
+            visible: isle.waving
+            x: Math.round(capsule.width / 2 - isle.inner - isle.side)
+            width: Math.max(0, isle.side - leftRow.width - Theme.sp2)
+            height: Theme.barLogo - Theme.sp1
+            anchors.verticalCenter: parent.verticalCenter
+            opacity: isle.beat1
+            read: Audio.level
+            running: isle.waving
+        }
         RowLayout {
             id: leftRow
             x: Math.round(capsule.width / 2 - isle.inner - leftRow.width)
-            width: Math.min(leftRow.implicitWidth, isle.side)
+            width: Math.min(leftRow.implicitWidth, isle.side - isle.waveMin)
             height: parent.height
             spacing: Theme.sp1
             // The cover while media plays; the event's icon otherwise, and when a cover fails to load.

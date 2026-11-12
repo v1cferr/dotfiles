@@ -84,6 +84,12 @@ Singleton {
         root.syncMedia();
         root.syncUnseen();
     }
+    // The wave listens only while the media is what the capsule shows.
+    Binding {
+        target: Audio
+        property: "wave"
+        value: root.live && root.current !== null && root.current.kind === "media" && !Theme.motionReduced
+    }
     Connections {
         target: Media
         function onPlayingChanged() {

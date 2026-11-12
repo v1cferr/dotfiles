@@ -48,12 +48,47 @@ Singleton {
                 out.push({
                     name: key,
                     label: n.appName || key,
+                    icon: "",
                     count: 0
                 });
             }
             out[at[key]].count++;
+            if (out[at[key]].icon === "")
+                out[at[key]].icon = root.appIconOf(n);
         }
         return out;
+    }
+
+    // The theme icon a notification names: its image when that is an icon, else its app icon.
+    function iconName(n) {
+        if (!n)
+            return "";
+        const m = (n.image || "").match(/^image:\/\/icon\/([^\/].*)$/);
+        if (m)
+            return m[1];
+        const ai = n.appIcon || "";
+        return (ai !== "" && !ai.startsWith("/") && ai.indexOf("://") < 0) ? ai : "";
+    }
+    // The APP's icon as the notification itself gives it, for an app no .desktop entry answers
+    // for. Never a chat message's picture (a contact's photo): that is not who sent it.
+    function appIconOf(n) {
+        if (!n)
+            return "";
+        const ai = n.appIcon || "";
+        if (ai.startsWith("/"))
+            return "file://" + ai;
+        if (ai.startsWith("file://"))
+            return ai;
+        const name = root.iconName(n);
+        if (name !== "")
+            return Quickshell.hasThemeIcon(name) ? Quickshell.iconPath(name) : "";
+        // An image with no name to it (a file's path, or a browser's own mark as data) is the last
+        // thing to try. Quickshell hands a bare path over as an icon name, image://icon//home/...
+        const img = n.image || "";
+        if (img === "" || (n.hints && ("" + (n.hints.category || "")).startsWith("im.")))
+            return "";
+        const bare = img.match(/^(?:image:\/\/icon\/)?(\/.+)$/);
+        return bare ? "file://" + bare[1] : img;
     }
 
     // When each one arrived (ms, by notification id): the server keeps no time. One handed over by a

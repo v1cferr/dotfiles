@@ -42,6 +42,7 @@ Item {
             tone: Theme.colText,
             art: "",
             app: "", // an app's own icon in the icon's place: whose notification this is
+            appIcon: "", // the icon that notification brought, when no entry answers for the app
             badges: false // the apps with unseen notifications, at the far end of a resting capsule
         };
         if (!e)
@@ -86,6 +87,7 @@ Item {
             return Object.assign(none, {
                 icon: "notifications",
                 app: d.icon,
+                appIcon: d.fallback || "",
                 left: d.app,
                 right: d.summary
             });
@@ -266,6 +268,7 @@ Item {
                 opacity: isle.beat0
                 scale: 0.8 + 0.2 * isle.beat0
                 name: isle.v.app
+                fallback: isle.v.appIcon
                 size: Theme.iconBar
             }
             Text {
@@ -339,6 +342,7 @@ Item {
                     AppIcon {
                         required property var modelData
                         name: modelData.name
+                        fallback: modelData.icon
                         size: Theme.iconBar
                     }
                 }

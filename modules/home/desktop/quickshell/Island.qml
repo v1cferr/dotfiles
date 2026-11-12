@@ -104,6 +104,7 @@ Singleton {
         function onArrived(n) {
             root.push("notification", {
                 icon: n.desktopEntry || n.appName || "",
+                fallback: Notifs.appIconOf(n),
                 app: n.appName || "",
                 summary: n.summary || n.body || ""
             });

@@ -18,6 +18,8 @@ Item {
 
     // The window's process, when known: a Steam game is found by the app id in its environment.
     property int pid: 0
+    // What to draw when no entry answers for the name: the icon a notification brought with it.
+    property string fallback: ""
 
     // The .desktop entry first; then a Steam game's own icon; a Wine app has neither, so then the
     // icon Bottles extracted for it.
@@ -30,7 +32,7 @@ Item {
             if (e && e.icon && Quickshell.hasThemeIcon(e.icon))
                 return Quickshell.iconPath(e.icon);
         }
-        return SteamIcons.path(app.name, app.pid) || WineIcons.path(app.name);
+        return SteamIcons.path(app.name, app.pid) || WineIcons.path(app.name) || app.fallback;
     }
     implicitWidth: app.size
     implicitHeight: app.size

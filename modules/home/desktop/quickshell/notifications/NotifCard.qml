@@ -39,18 +39,7 @@ Rectangle {
 
     // The notifying app's icon from the current theme, else the bell. hasThemeIcon avoids the checkered
     // placeholder the provider returns for a missing icon. Everything here is the sender's, so untrusted.
-    readonly property string wantedName: {
-        if (!card.notif)
-            return "";
-        const img = card.notif.image || "";
-        const m = img.match(/^image:\/\/icon\/([^\/].*)$/);
-        if (m)
-            return m[1];
-        const ai = card.notif.appIcon || "";
-        if (ai !== "" && !ai.startsWith("/") && ai.indexOf("://") < 0)
-            return ai;
-        return "";
-    }
+    readonly property string wantedName: Notifs.iconName(card.notif)
     readonly property string themeIcon: {
         if (!card.notif)
             return "";

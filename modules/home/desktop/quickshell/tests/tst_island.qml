@@ -148,6 +148,16 @@ TestCase {
         compare(s.queue.filter(e => e.kind === "media").length, 1, "the least urgent of all, and it stays");
         compare(s.queue.length, 4, "the media and three moments");
     }
+    function test_unseen_apps_rest_under_everything_and_show_when_nothing_else_does() {
+        let s = m.push(m.idle, ev("unseen"), 0);
+        compare(s.current.kind, "unseen");
+        s = m.push(s, ev("media"), 100);
+        compare(s.current.kind, "media", "what plays goes over them");
+        s = m.drop(s, "media:", 200);
+        compare(s.current.kind, "unseen", "the music stopped: they are still there");
+        s = m.drop(s, "unseen:", 300);
+        compare(s.current, null);
+    }
     function test_drop_removes_an_event_wherever_it_is() {
         let s = m.push(m.idle, ev("critical", "disk"), 0);
         s = m.push(s, ev("bluetooth"), 10);

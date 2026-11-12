@@ -39,7 +39,9 @@ Item {
             right: "",
             level: -1,
             tone: Theme.colText,
-            art: ""
+            art: "",
+            app: "", // an app's own icon in the icon's place: whose notification this is
+            badges: false // the apps with unseen notifications, at the far end of a resting capsule
         };
         if (!e)
             return none;
@@ -82,8 +84,15 @@ Item {
         case "notification":
             return Object.assign(none, {
                 icon: "notifications",
+                app: d.icon,
                 left: d.app,
                 right: d.summary
+            });
+        case "unseen":
+            return Object.assign(none, {
+                icon: "notifications",
+                left: d.count + " new",
+                badges: true
             });
         case "bluetooth":
             return Object.assign(none, {
@@ -96,7 +105,8 @@ Item {
                 icon: "music_note",
                 left: d.artist,
                 right: d.title,
-                art: d.art || ""
+                art: d.art || "",
+                badges: true
             });
         case "critical":
             return Object.assign(none, {
@@ -111,7 +121,7 @@ Item {
     // A click leads to the surface that holds the rest of it.
     function act() {
         const k = isle.last ? isle.last.kind : "";
-        if (k === "notification")
+        if (k === "notification" || k === "unseen")
             Notifs.toggleCenter();
         else if (k === "media")
             isle.host.openMediaUnder(isle.barWindow);
@@ -249,8 +259,16 @@ Item {
                     asynchronous: true
                 }
             }
+            // The app a notification came from, by its own icon.
+            AppIcon {
+                visible: isle.v.app !== ""
+                opacity: isle.beat0
+                scale: 0.8 + 0.2 * isle.beat0
+                name: isle.v.app
+                size: Theme.iconBar
+            }
             Text {
-                visible: !(isle.v.art !== "" && cover.status === Image.Ready)
+                visible: isle.v.app === "" && !(isle.v.art !== "" && cover.status === Image.Ready)
                 opacity: isle.beat0
                 scale: 0.8 + 0.2 * isle.beat0
                 text: isle.v.icon
@@ -308,6 +326,28 @@ Item {
                 opacity: isle.beat2
                 transform: Translate {
                     x: -(1 - isle.beat2) * isle.slide
+                }
+            }
+            // Apps with notifications not seen yet: their icons rest here, up to three.
+            Row {
+                visible: isle.v.badges && Notifs.unseenApps.length > 0
+                opacity: isle.beat2
+                spacing: Theme.sp1
+                Repeater {
+                    model: isle.v.badges ? Notifs.unseenApps.slice(0, 3) : []
+                    AppIcon {
+                        required property var modelData
+                        name: modelData.name
+                        size: Theme.iconBar
+                    }
+                }
+                Text {
+                    visible: Notifs.unseenApps.length > 3
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "+" + (Notifs.unseenApps.length - 3)
+                    color: Theme.colDim
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontSmall
                 }
             }
         }

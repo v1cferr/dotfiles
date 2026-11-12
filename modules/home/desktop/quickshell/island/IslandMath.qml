@@ -21,7 +21,8 @@ QtObject {
             vpn: 4,
             notification: 5,
             bluetooth: 6,
-            media: 8
+            media: 8,
+            unseen: 9
         })
     // How long each stays, in ms; 0 stays until something ends it.
     readonly property var life: ({
@@ -33,7 +34,8 @@ QtObject {
             vpn: 4000,
             notification: 5000,
             bluetooth: 3000,
-            media: 0
+            media: 0,
+            unseen: 0
         })
     readonly property int queueMax: 3
     readonly property int resumeFloor: 1000 // an interrupted event comes back only with this much left

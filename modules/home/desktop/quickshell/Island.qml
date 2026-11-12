@@ -76,8 +76,14 @@ Singleton {
         else
             root.drop("media");
     }
-    onLiveChanged: root.syncMedia()
-    Component.onCompleted: root.syncMedia()
+    onLiveChanged: {
+        root.syncMedia();
+        root.syncUnseen();
+    }
+    Component.onCompleted: {
+        root.syncMedia();
+        root.syncUnseen();
+    }
     Connections {
         target: Media
         function onPlayingChanged() {
@@ -97,9 +103,26 @@ Singleton {
         target: Notifs
         function onArrived(n) {
             root.push("notification", {
+                icon: n.desktopEntry || n.appName || "",
                 app: n.appName || "",
                 summary: n.summary || n.body || ""
             });
+        }
+    }
+    // Apps with notifications not seen yet rest under everything else, media included; the count
+    // changing updates them in place.
+    function syncUnseen() {
+        if (Notifs.unseenApps.length > 0)
+            root.push("unseen", {
+                count: Notifs.unseen
+            });
+        else
+            root.drop("unseen");
+    }
+    Connections {
+        target: Notifs
+        function onUnseenAppsChanged() {
+            root.syncUnseen();
         }
     }
     Instantiator {

@@ -59,8 +59,12 @@ that grows one day (media, a volume change, a notification) widens those two and
 
 ## The distribution (12/11/2026)
 
-The main monitor reads `Workspaces, app, media | logo | alerts, network, VPN, tray, Control Center,
-clock`, and the standing monitor `Workspaces, app | logo | operational chips`.
+The main monitor reads `Workspaces, app | the island's room, logo | alerts, network, VPN, tray,
+Control Center, clock`, and the standing monitor `Workspaces, app | logo | operational chips`.
+
+**The island lives around the logo** (12/11/2026, [island.md](island.md)). On the main monitor the
+sides stop 208 px from the center, whether the capsule shows or not, and the media item left the
+strip: a track change is announced in the capsule and its controls are in the Control Center.
 
 **With the Control Center on, what it holds leaves the strip** (12/11/2026,
 [control-center.md](control-center.md)). The network keeps its icon and loses its numbers; the VPN

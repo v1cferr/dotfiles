@@ -1,6 +1,18 @@
 # History: november 2026
 
-12 entries. Index in [README.md](../README.md).
+13 entries. Index in [README.md](../README.md).
+
+- [x] The island around the logo (12/11/2026; asked 11/11/2026). How and why:
+      [notes/desktop/island.md](../../notes/desktop/island.md).
+      • ONE CAPSULE for the volume, the microphone, the brightness, a notification, a VPN's
+        progress, a Bluetooth device and a new track; at rest it is not there.
+      • A TESTED STATE MACHINE decides what shows: urgency, in-place updates, a queue of three,
+        the interrupted event's one return, the pointer freezing it.
+      • IT REPLACED the bottom OSD, the plain toast and the bar's media item; a critical
+        notification, or one with buttons, stays a toast. Never both.
+      • THE LOGO DOES NOT MOVE: the capsule is drawn under it, in the bar's own window.
+      • A TIMER THAT NEVER FIRED AGAIN was caught by the first run and fixed.
+      • A FLAG, `my.shell.island.enable`, puts the OSD and the toasts back.
 
 - [x] The Control Center (12/11/2026; asked 11/11/2026). How and why:
       [notes/desktop/control-center.md](../../notes/desktop/control-center.md).

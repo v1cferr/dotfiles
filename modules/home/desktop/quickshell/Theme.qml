@@ -163,6 +163,12 @@ Singleton {
     readonly property int motionHover: theme.ms(120)
     readonly property int motionNormal: theme.ms(180) // something appearing or moving: a popover, an indicator
     readonly property int motionSlow: theme.ms(300) // a value settling: a meter, a progress bar
+    // The island's own motion, the one place a spring and a slight overshoot are allowed: how hard
+    // the capsule is pulled to its size, how soon it settles, and the gap between the parts of an
+    // entrance. Measured, and why only there: docs/notes/desktop/motion.md#the-island
+    readonly property real islandSpring: 5.0
+    readonly property real islandDamping: 0.37
+    readonly property int motionStagger: theme.ms(40)
     // How long the pointer rests on a pill before its panel opens: a sweep across the bar opens nothing.
     readonly property int hoverIntent: 200
 

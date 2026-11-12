@@ -5,6 +5,7 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
+import "root:/widgets"
 
 Item {
     id: isle
@@ -125,18 +126,93 @@ Item {
     readonly property int side: Math.min(Theme.islandHalf - isle.inner - Theme.sp3, Math.ceil(Math.max(leftRow.implicitWidth, rightRow.implicitWidth)))
     readonly property int half: isle.shown ? isle.inner + isle.side + Theme.sp3 : isle.inner
 
-    Rectangle {
-        id: capsule
-        property real reach: isle.half
-        Behavior on reach {
-            NumberAnimation {
-                duration: Theme.motionNormal
-                easing.type: Easing.OutCubic
+    function resize() {
+        grow.stop();
+        shrink.stop();
+        if (Theme.motionReduced) {
+            capsule.reach = isle.half;
+        } else if (isle.shown) {
+            grow.to = isle.half;
+            grow.restart();
+        } else {
+            shrink.to = isle.half;
+            shrink.restart();
+        }
+    }
+    onHalfChanged: isle.resize()
+    Component.onCompleted: capsule.reach = isle.half
+    SpringAnimation {
+        id: grow
+        target: capsule
+        property: "reach"
+        spring: Theme.islandSpring
+        damping: Theme.islandDamping
+        epsilon: 0.25
+    }
+    NumberAnimation {
+        id: shrink
+        target: capsule
+        property: "reach"
+        duration: Theme.motionHover
+        easing.type: Easing.OutCubic
+    }
+
+    // A NEW event enters in three beats, out from the logo: the icon, the name, the value. The
+    // same event changing its content does not replay this (its texts fade through instead).
+    property real beat0: 1
+    property real beat1: 1
+    property real beat2: 1
+    readonly property real slide: Theme.sp1 * 1.5
+    Connections {
+        target: Island
+        function onSeqChanged() {
+            if (!Island.current || Theme.motionReduced)
+                return;
+            isle.beat0 = 0;
+            isle.beat1 = 0;
+            isle.beat2 = 0;
+            enter.restart();
+        }
+    }
+    component Beat: NumberAnimation {
+        target: isle
+        from: 0
+        to: 1
+        duration: Theme.motionNormal
+        easing.type: Easing.OutCubic
+    }
+    ParallelAnimation {
+        id: enter
+        Beat {
+            property: "beat0"
+        }
+        SequentialAnimation {
+            PauseAnimation {
+                duration: Theme.motionStagger
+            }
+            Beat {
+                property: "beat1"
             }
         }
-        x: Math.round(isle.width / 2 - capsule.reach)
+        SequentialAnimation {
+            PauseAnimation {
+                duration: Theme.motionStagger * 2
+            }
+            Beat {
+                property: "beat2"
+            }
+        }
+    }
+
+    Rectangle {
+        id: capsule
+        // Opening or changing size it is pulled by a spring and overshoots a little; closing it
+        // just eases out, faster. It never gets smaller than the logo's own slot.
+        property real reach: isle.inner
+        readonly property real span: Math.max(isle.inner, capsule.reach)
+        x: Math.round(isle.width / 2 - capsule.span)
         y: Theme.barCellY
-        width: Math.round(2 * capsule.reach)
+        width: Math.round(2 * capsule.span)
         height: Theme.barCell
         radius: height / 2
         color: Theme.colCellHoverFill
@@ -156,6 +232,8 @@ Item {
             spacing: Theme.sp1
             // The cover while media plays; the event's icon otherwise, and when a cover fails to load.
             ClippingRectangle {
+                opacity: isle.beat0
+                scale: 0.8 + 0.2 * isle.beat0
                 visible: isle.v.art !== "" && cover.status === Image.Ready
                 implicitWidth: Theme.barLogo
                 implicitHeight: Theme.barLogo
@@ -173,19 +251,24 @@ Item {
             }
             Text {
                 visible: !(isle.v.art !== "" && cover.status === Image.Ready)
+                opacity: isle.beat0
+                scale: 0.8 + 0.2 * isle.beat0
                 text: isle.v.icon
                 color: isle.v.tone
                 font.family: Theme.iconFont
                 font.pixelSize: Theme.iconBar
                 font.variableAxes: Theme.iconAxes
             }
-            Text {
+            SwapText {
                 Layout.fillWidth: true
+                Layout.fillHeight: true
                 text: isle.v.left
+                epoch: Island.seq
                 color: Theme.colSubtext
-                font.family: Theme.uiFont
-                font.pixelSize: Theme.fontBody
-                elide: Text.ElideRight
+                opacity: isle.beat1
+                transform: Translate {
+                    x: (1 - isle.beat1) * isle.slide
+                }
             }
         }
         RowLayout {
@@ -196,6 +279,7 @@ Item {
             spacing: Theme.sp2
             Rectangle {
                 visible: isle.v.level >= 0
+                opacity: isle.beat2
                 implicitWidth: Theme.sp6 * 2
                 implicitHeight: Theme.sp1
                 radius: height / 2
@@ -212,14 +296,19 @@ Item {
                     }
                 }
             }
-            Text {
+            SwapText {
                 Layout.fillWidth: true
+                Layout.fillHeight: true
                 text: isle.v.right
+                epoch: Island.seq
+                // A level's number ticks with the key: it changes, it does not fade.
+                animate: isle.v.level < 0
                 color: isle.v.tone
-                font.family: Theme.uiFont
-                font.pixelSize: Theme.fontBody
-                font.features: Theme.fontTabular
-                elide: Text.ElideRight
+                features: Theme.fontTabular
+                opacity: isle.beat2
+                transform: Translate {
+                    x: -(1 - isle.beat2) * isle.slide
+                }
             }
         }
         // The pointer on it holds it; a click leads on. Never the keyboard: it is not a window.

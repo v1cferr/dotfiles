@@ -85,10 +85,12 @@ Singleton {
         JsonAdapter {
             id: shellCfg
             property bool controlCenter: true
+            property bool island: true
             property bool vpn: true
         }
     }
     readonly property bool controlCenterOn: shellCfg.controlCenter
+    readonly property bool islandOn: shellCfg.island
     readonly property bool hasVpn: shellCfg.vpn
 
     readonly property string primaryMonitor: mon.primary
@@ -186,6 +188,9 @@ Singleton {
     readonly property int barEdge: screenInset // the first and last item: the band's and the windows' column
     readonly property int barCenterWidth: 40 // the logo's slot, on the screen's exact center
     readonly property int barLogo: 20
+    // The island's reach on each side of the screen's center. The sides stop there whether it is
+    // showing or not, so an event never moves them. docs/notes/desktop/island.md
+    readonly property int islandHalf: 208
     // An item's width from its content, on a 4 px module, so a changing value rarely moves a neighbor.
     function barCellWidth(content) { return Math.ceil((content + 2 * theme.barPad) / 4) * 4; }
     // A control's height off the bar (a panel's icon button, a calendar arrow).

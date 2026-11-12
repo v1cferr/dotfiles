@@ -16,7 +16,8 @@ RowLayout {
     // In order: media from 220 down to 120, media to its icon, then the app's name (a floor of 120,
     // under which it hides). The workspaces never fold. A song or a focus change never flips a level.
     readonly property int titleMin: 240
-    readonly property bool mediaHere: !left.bar.compact && Media.hasPlayer
+    // With the island up the track is announced there, and its controls are in the Control Center.
+    readonly property bool mediaHere: !left.bar.compact && Media.hasPlayer && !Island.live
     readonly property int avail: left.room - wsStrip.implicitWidth - Theme.barGap - (left.mediaHere ? Theme.barGap : 0)
     readonly property int mediaIconW: Theme.barCellWidth(Math.ceil(tmMediaIcon.advanceWidth))
     readonly property int mediaW: !left.mediaHere ? 0 : Math.max(left.mediaIconW, Math.min(220, left.avail - left.titleMin))

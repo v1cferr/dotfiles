@@ -28,6 +28,9 @@ Singleton {
     property var popups: []
     // How many notifications to keep; past it the oldest go, but never a critical or resident one.
     readonly property int historyLimit: 100
+    // A new notification that is the ISLAND's to show: a plain one, while the island is up. A
+    // critical one, or one with buttons, is a toast as before, and never both.
+    signal arrived(var n)
     // Arrived while the Center was closed, and not seen yet: the dot on the logo, and the count on the bar's bell.
     property int unseen: 0
     property bool unseenCritical: false

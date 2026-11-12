@@ -33,9 +33,12 @@ PanelWindow {
     // The logo sits on the screen's EXACT center: its x comes from the width alone.
     readonly property int centerX: Math.floor(bar.width / 2)
     readonly property int slotX: bar.centerX - Theme.barCenterWidth / 2
-    // Where the sides stop. A center that grows one day widens these two and nothing else.
-    readonly property int centerLeft: bar.slotX
-    readonly property int centerRight: bar.slotX + Theme.barCenterWidth
+    // Where the sides stop: at the island's reach where it lives (the main monitor's full bar),
+    // at the logo's slot elsewhere. Reserved whether it shows or not, so an event moves nothing.
+    readonly property bool islandHere: !bar.compact && Island.live && !!bar.screen && !!Theme.screenPrimary && bar.screen.name === Theme.screenPrimary.name
+    readonly property int centerHalf: bar.islandHere ? Theme.islandHalf : Theme.barCenterWidth / 2
+    readonly property int centerLeft: bar.centerX - bar.centerHalf
+    readonly property int centerRight: bar.centerX + bar.centerHalf
     // An item's content, not its highlight, sits on the windows' column.
     readonly property int edge: Math.max(0, Theme.barEdge - Theme.barPad)
     readonly property int leftRoom: bar.centerLeft - bar.edge - Theme.sp4
@@ -72,6 +75,13 @@ PanelWindow {
             color: Theme.colEdge
         }
 
+        // Under the logo, so the logo and its own click stay on top.
+        IslandSlot {
+            visible: bar.islandHere
+            x: bar.centerX - Theme.islandHalf
+            host: bar.host
+            barWindow: bar
+        }
         LogoSlot {
             x: bar.slotX
             host: bar.host

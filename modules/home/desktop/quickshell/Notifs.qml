@@ -34,6 +34,27 @@ Singleton {
     // Arrived while the Center was closed, and not seen yet: the dot on the logo, and the count on the bar's bell.
     property int unseen: 0
     property bool unseenCritical: false
+    // The ones behind that count, newest last, and the apps they came from, newest first: the
+    // island rests their icons beside the logo and a hover on it lists them.
+    property var unseenList: []
+    readonly property var unseenApps: {
+        const out = [];
+        const at = {};
+        for (let i = root.unseenList.length - 1; i >= 0; i--) {
+            const n = root.unseenList[i];
+            const key = n.desktopEntry || n.appName || "";
+            if (at[key] === undefined) {
+                at[key] = out.length;
+                out.push({
+                    name: key,
+                    label: n.appName || key,
+                    count: 0
+                });
+            }
+            out[at[key]].count++;
+        }
+        return out;
+    }
 
     // When each one arrived (ms, by notification id): the server keeps no time. One handed over by a
     // hot reload gets the reload's time, the closest the shell can know.
@@ -56,6 +77,11 @@ Singleton {
     onCountChanged: {
         if (root.unseen > root.count)
             root.unseen = root.count;
+        // One that was dismissed or expired is not waiting to be seen any more.
+        const here = server.trackedNotifications.values;
+        const still = root.unseenList.filter(n => here.indexOf(n) >= 0);
+        if (still.length !== root.unseenList.length)
+            root.unseenList = still;
         // Forget the times of what left the history, so the map never outgrows it.
         const live = ({});
         for (const n of server.trackedNotifications.values)
@@ -88,6 +114,7 @@ Singleton {
     function markSeen() {
         root.unseen = 0;
         root.unseenCritical = false;
+        root.unseenList = [];
     }
     onCenterOpenChanged: if (root.centerOpen) {
         root.markSeen();
@@ -152,6 +179,7 @@ Singleton {
             if (!root.centerOpen) {
                 root.unseen++;
                 root.unseenCritical = root.unseenCritical || critical;
+                root.unseenList = root.unseenList.concat([n]);
             }
             // Shown only when not quiet (DND or a hold) and the Center is closed; Critical pierces all.
             // A plain one goes to the island when it is up; one that asks for an answer stays a toast.

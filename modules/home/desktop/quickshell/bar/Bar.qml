@@ -9,6 +9,7 @@ import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
 import "root:/dash"
+import "root:/control"
 
 Scope {
     id: root
@@ -48,6 +49,10 @@ Scope {
         // under the clock and every other under the logo. `close` closes whatever is open.
         function panel(key: string): void {
             root.openForTest(key);
+        }
+        // The same, closing it when it is already open: what a key binding wants.
+        function toggle(key: string): void {
+            root.pinned === key ? root.closePanels() : root.openForTest(key);
         }
         // The calendar focused on a day ("YYYY-MM-DD"): its month, the day selected, its detail.
         function calendar(iso: string): void {
@@ -993,6 +998,12 @@ Scope {
                 lines: [root.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"],
                 action: root.hypridleOn ? "Click to disable" : "Click to enable"
             };
+        if (key === "control")
+            return {
+                title: "Control Center",
+                lines: ["Network, Bluetooth, VPN, focus, media and sound"],
+                action: "Click to open · scroll for the volume"
+            };
         if (key === "notif")
             return {
                 title: "Notifications",
@@ -1616,8 +1627,8 @@ Scope {
         root.vpnPopVisible = false;
         root.popBar = b;
         root.popScreen = scr;
-        // The calendar and the weather hang from the clock; every other panel from the logo.
-        root.popCenterX = key === "cal" || key === "weather" ? b.clockCenterX : Math.floor(b.width / 2);
+        // Each panel under the item that opens it: the clock's two, the Control Center, else the logo.
+        root.popCenterX = key === "cal" || key === "weather" ? b.clockCenterX : (key === "control" ? b.controlCenterX : Math.floor(b.width / 2));
         root.panelShown = "";
         root.pinned = key;
         root.hideMedia();
@@ -1921,6 +1932,11 @@ Scope {
         key: "ops"
     }
     NixosCenter {
+        bar: root
+    }
+
+    // ===== The Control Center, the view is in control/ControlCenter.qml =====
+    ControlCenter {
         bar: root
     }
 

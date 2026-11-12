@@ -194,6 +194,19 @@ RowLayout {
         barWindow: right.bar
     }
     Pill {
+        // The Control Center's entry point; a scroll on it is the volume, so sound needs no item.
+        id: controlPill
+        visible: !right.bar.compact && Theme.controlCenterOn
+        // Do Not Disturb shows HERE while it is on, since the bell left the strip.
+        icon: Notifs.dnd ? "do_not_disturb_on" : "tune"
+        accent: Notifs.dnd ? Theme.colAlert : Theme.colText
+        selected: right.host.pinned === "control"
+        onHoveredChanged: right.host.hoverHint("control", controlPill, right.barContent, right.bar, hovered)
+        onClicked: right.host.togglePanel("control", controlPill, right.barContent, right.bar)
+        onScrolledUp: Audio.changeVolume(0.05)
+        onScrolledDown: Audio.changeVolume(-0.05)
+    }
+    Pill {
         // Hover or click: the calendar. Right click: the weather, which left the bar for this.
         id: clockPill
         visible: !right.bar.compact

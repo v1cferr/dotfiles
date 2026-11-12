@@ -17,6 +17,7 @@ local bluetooth      = "blueman-manager"  -- SUPER+B
 hl.bind(mainMod .. " + Q",         hl.dsp.exec_cmd(launcherApps))                 -- launcher (Vicinae)
 -- SUPER alone, on RELEASE and only as a click (no mouse drag in between): the Windows-key menu.
 hl.bind(mainMod .. " + SUPER_L",   hl.dsp.exec_cmd("qs ipc call notif toggle"), { release = true, click = true })  -- the NixOS Center
+hl.bind(mainMod .. " + A",         hl.dsp.exec_cmd("qs ipc call bar toggle control")) -- Control Center
 hl.bind(mainMod .. " + RETURN",    hl.dsp.exec_cmd(terminal))                     -- terminal
 hl.bind(mainMod .. " + BACKSPACE", hl.dsp.exec_cmd(terminalWithAi))               -- terminal with AI (Claude Code)
 hl.bind(mainMod .. " + E",         hl.dsp.exec_cmd(fileManager))                  -- files (Dolphin)

@@ -41,6 +41,7 @@ PanelWindow {
     readonly property int leftRoom: bar.centerLeft - bar.edge - Theme.sp4
     readonly property int rightRoom: bar.width - bar.centerRight - bar.edge - Theme.sp4
     // The clock's center, for a panel of its own opened without a pointer (IPC); the logo's otherwise.
+    readonly property int controlCenterX: bar.compact ? bar.centerX : bar.clockCenterX - right.clockW / 2 - Theme.barGap - Theme.barCellWidth(Theme.iconSymbol) / 2
     readonly property int clockCenterX: bar.compact ? bar.centerX : bar.width - bar.edge - right.clockW / 2
 
     Component.onCompleted: bar.host.registerBar(bar)

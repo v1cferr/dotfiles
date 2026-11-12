@@ -18,6 +18,20 @@ Singleton {
     readonly property bool muted: (root.sink && root.sink.audio) ? root.sink.audio.muted : false
     readonly property bool micMuted: (root.source && root.source.audio) ? root.source.audio.muted : false
 
+    readonly property real micVolume: (root.source && root.source.audio) ? root.source.audio.volume : 0
+
+    function setVolume(v) {
+        if (root.sink && root.sink.audio)
+            root.sink.audio.volume = Math.max(0, Math.min(1, v));
+    }
+    function setMicVolume(v) {
+        if (root.source && root.source.audio)
+            root.source.audio.volume = Math.max(0, Math.min(1, v));
+    }
+    function toggleMic() {
+        if (root.source && root.source.audio)
+            root.source.audio.muted = !root.source.audio.muted;
+    }
     function changeVolume(delta) {
         if (root.sink && root.sink.audio)
             root.sink.audio.volume = Math.max(0, Math.min(1, root.sink.audio.volume + delta));

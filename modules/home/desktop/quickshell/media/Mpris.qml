@@ -257,11 +257,9 @@ Scope {
                 Wave {
                     Layout.fillWidth: true
                     Layout.preferredHeight: Theme.sp6
-                    visible: Audio.wavePanel
-                    bar: 3
-                    gap: 2
-                    read: Audio.level
-                    running: Audio.wavePanel
+                    visible: Audio.wavePanel && Audio.bands.length > 0
+                    mirror: true
+                    bands: Audio.bands
                 }
 
                 // Where the track is: a press or a drag moves it there.

@@ -138,7 +138,7 @@ Item {
     readonly property int inner: Theme.barCenterWidth / 2
     // While media rests there, what the wider side leaves empty on the left is the wave's, and it
     // never gets fewer than five bars.
-    readonly property bool waving: Audio.waveIsland && isle.last !== null && isle.last.kind === "media"
+    readonly property bool waving: Audio.waveIsland && Audio.bands.length > 0 && isle.last !== null && isle.last.kind === "media"
     readonly property int waveMin: isle.waving ? 5 * wave.bar + 4 * wave.gap + Theme.sp2 : 0
     readonly property int side: Math.min(Theme.islandHalf - isle.inner - Theme.sp3, Math.ceil(Math.max(leftRow.implicitWidth + isle.waveMin, rightRow.implicitWidth)))
     readonly property int half: isle.shown ? isle.inner + isle.side + Theme.sp3 : isle.inner
@@ -249,8 +249,7 @@ Item {
             height: Theme.barLogo - Theme.sp1
             anchors.verticalCenter: parent.verticalCenter
             opacity: isle.beat1
-            read: Audio.level
-            running: isle.waving
+            bands: Audio.bands
         }
         RowLayout {
             id: leftRow

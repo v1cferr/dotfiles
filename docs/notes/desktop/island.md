@@ -95,46 +95,42 @@ notification, the capsule did not. Both read one rule now.
 ## The wave
 
 The capsule is symmetric, so a title wider than the artist left a gap beside the cover. Since
-12/11/2026 a wave of what is heard takes it, asked for as "really synchronized with the audio":
+12/11/2026 a wave of what is heard takes it, asked for as "really synchronized with the audio",
+and then as cleaner, more fluid and lighter than its first version.
 
-- **It is the real level.** `Audio.qml` holds a `PwNodePeakMonitor` (Quickshell's own, no new
-  package and no child process) and `widgets/Wave.qml` draws it: one bar per 80 ms, the loudest
-  moment in it, the newest bar live at the right and each older one a step to the left. It is a
-  level over time and not a spectrum: it does not tell bass from treble.
-- **Of the player, when it can be told.** The meter listens to the player's own stream when one
-  answers to its name (`application.name` against the MPRIS identity) or is the only one playing,
-  so a notification's sound does not move the wave; else to the default output.
-- **Drawn between the loudest and the quietest heard lately**, each drifting back toward what
-  plays, so a dense track and a sparse one both move over the whole height, and a bar once drawn
-  keeps its size. Two fixed scales came first and each failed one kind of music: against the
-  loudest alone a mastered track was a solid block, and squared an acoustic one was a row of dots
-  with a spike now and then.
-- **Only while it is seen.** The meter and the wave's timer run while media is what the capsule
-  shows. A volume change or a notification passing over it stops both, and so does a pause. With
-  `my.theme.motion = "off"` there is no wave and the gap is back.
-- It takes what the wider side leaves, and never fewer than five bars: a long artist leaves it
-  those five.
-- A player that repeats the artist in the title ("Radiohead - Creep" by Radiohead) says it once,
-  and YouTube's "X - Topic" is X: `Media.qml` cleans both, for every reader.
+- **It is the real spectrum.** `Audio.qml` runs [cava](https://github.com/karlstav/cava) as a
+  child process with `media/cava.ini`: it reads what is heard and prints 24 levels a frame, bass
+  first, 24 frames a second, already smoothed and scaled to what plays. `widgets/Wave.qml` only
+  draws them: bars that rise and fall in place, 3 px wide, with no clock of their own.
+- **The bass is by the cover** in the capsule, and the treble at the far end; the bars between
+  read between two bands, so five bars or twenty show the same shape.
+- **Only while it is seen.** cava runs while media is what the capsule shows, or while the media
+  panel is open. A volume key or a notification takes the capsule for a moment, so cava outlives
+  the asking by 8 s instead of starting again each time; a pause ends it. With
+  `my.theme.motion = "off"` there is no wave and the gap is back, and the same on a host where
+  cava is not installed yet.
+- It takes what the wider side leaves, and never fewer than five bars.
+- It hears the default output, not the player alone: a notification's sound moves it too.
 
-**Measured on 12/11/2026** in the harness, which shares the machine's real Pipewire, with music
-playing in a browser: the meter's value followed the audio (0.57 to 0.91 over five seconds, and 0
-while a notification held the capsule), on the output and on the browser's own stream alike. Three
-20 s windows of the shell's CPU: 7.90% to 8.90% of a core with the wave, 4.25% to 5.55% on the tree
-without it. With the wave not drawn it was still 7.13% to 7.67%, so the cost is the meter and not
-the bars. That day a Sunshine stream held the audio graph at a quantum of 256 frames, and the
-meter reports once per quantum: 185 times a second, where the default of 1024 gives 47. Later the
-same day, with a game holding the same 256 and the meter on the browser's stream: 10.00% to 12.93%
-with the wave, 5.27% to 5.80% without. So the wave costs 4 to 6 points of a core whenever
-something holds the graph at 256 frames, which a game or a Sunshine stream does. The cost at the
-default quantum was not measured: the machine was never without one of the two.
+**Why cava and not Quickshell's own meter.** The first version (the same day) was a level over
+time from a `PwNodePeakMonitor`, chosen for needing no package. It reports once per audio quantum
+on the shell's main thread, and a game or a Sunshine stream holds the quantum at 256 frames: 185
+reports a second. Measured on 12/11/2026, three windows each:
 
-The stream was found by its name the same day: with a stand-in player calling itself "Mozilla
-zen", as Zen does, the meter took the browser's stream ("Zen") and not the output.
+| Where                       | Without a wave | The peak meter   | cava                              |
+| --------------------------- | -------------- | ---------------- | --------------------------------- |
+| Harness, quantum 256 (game) | 5.27% to 5.80% | 10.00% to 12.93% | not run                           |
+| Harness, quantum 2048       | 4.20% to 4.93% | 6.80% to 7.47%   | 4.73% to 5.53% at 20 frames       |
+|                             |                |                  | 5.40% to 6.33% at 30 frames       |
+| cava's own process          |                |                  | 0.53% to 0.90%, at either quantum |
 
-A first version counted every stream as one that plays, the meter's own capture included: the list
-changed each time the meter started, the meter was rebuilt for the new list, and it never lived
-long enough to report. Only streams that play count now.
+All of a core, the shell's process unless said. The live shell with the peak meter and a game open
+took 13.47% of a core and 1.46% of the GPU's render engine over 15 s, so the weight was the CPU's.
+cava's cost does not follow the quantum, and its smoothing is what the hand-made scale of the
+first version was reaching for: that one needed three tries (against the loudest, squared, then
+between the loudest and the quietest) to look right on both a dense track and a sparse one.
+24 frames sits between the two measured rates. The live cost with cava was not measured: it needs
+a rebuild first.
 
 ## The media panel
 
@@ -142,13 +138,13 @@ A click on the resting media opens the panel under the logo (`media/Mpris.qml`).
 on 12/11/2026, asked for with a capture of the old one: that still had the mono font, since it
 named none, Nerd glyphs in outlined rings, and the artist twice.
 
-| Row         | What                                                                                  |
-| ----------- | ------------------------------------------------------------------------------------- |
-| The track   | a 72 px cover; the title, the artist, and the album or else the player's name         |
-| The wave    | the island's, across the panel: 3 px bars, some five seconds of what was heard        |
-| The seek    | a 4 px track; a press or a drag moves the track there; the two times under its ends   |
-| The keys    | previous, play or pause (filled), next: centered on the panel, so under the logo      |
-| The volume  | of what plays: the player's own stream when it is known, else the output's            |
+| Row        | What                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| The track  | a 72 px cover; the title, the artist, and the album or else the player's name                |
+| The wave   | the island's, across the panel and mirrored: the bass in the middle, the treble at both ends |
+| The seek   | a 4 px track; a press or a drag moves the track there; the two times under its ends          |
+| The keys   | previous, play or pause (filled), next: centered on the panel, so under the logo             |
+| The volume | of what plays: the player's own stream when it is known, else the output's                   |
 
 At the track's right end a key goes to the window it plays in (`Media.reveal`): the player's app
 showing that very title, else any window of that app, found among the compositor's toplevels and
@@ -162,7 +158,7 @@ it, as a pin does on the bar's panels; opened by a click it closes 2.5 s after t
 The apps' icons at the capsule's far end are their own zone: resting there opens the peek, as the
 whole capsule does when the apps are all it shows. A pinned panel is never taken down by a hover.
 
-It is Geist and Material Symbols like the rest, on the theme's tokens. The wave asks the meter for
+It is Geist and Material Symbols like the rest, on the theme's tokens. The wave asks for cava
 itself (`Audio.wavePanel`), so it keeps moving while a notification holds the capsule above it.
 
 **Symmetry, by pixel, on 12/11/2026** in the harness, about the logo's center (x 1280): the capsule
@@ -252,8 +248,7 @@ Not verified: the volume and the microphone (the harness shares the machine's re
 nothing was changed there), a VPN's progress and its error, a Bluetooth device connecting, a real
 player pausing and changing track, the disk warning, the pointer freezing the capsule, the hover
 that opens the peek, and every click on it or in the peek. How the spring LOOKS was never seen by a
-person: only its numbers were measured. Of the wave: how it looks moving, and its cost outside a
-stream holding the quantum at 256. Of the media panel: the seek by press and drag, the three keys,
+person: only its numbers were measured. Of the wave: how it looks moving, and what it costs live. Of the media panel: the seek by press and drag, the three keys,
 the volume and the way to the window on a real player (the stand-in's do nothing, and nothing in
 the harness may change a volume). Of the hover: a virtual pointer entering the capsule was seen to
 give the media zone, but none could be held there, so the rest that opens the panel was not seen;

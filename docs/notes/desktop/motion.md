@@ -196,7 +196,7 @@ over `motionHover`, so "fast in, faster out" holds there too. `my.theme.motion =
 of it.
 
 The wave beside the cover ([island.md](island.md#the-wave)) never stops while music plays, and is
-not decoration: it is the level of what is heard, a status that IS motion. Unlike the other such
+not decoration: it is the spectrum of what is heard, a status that IS motion. Unlike the other such
 statuses it does go with `my.theme.motion = "off"`, since the cover and the title already say that
 something plays.
 

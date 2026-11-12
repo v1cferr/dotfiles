@@ -203,12 +203,11 @@ twelve lines stood in both. The lock keeps its own, different rule (the first pl
 none), since it runs as a separate process from a store copy of the tree. Checked on 11/11/2026 in
 the headless harness: the bar and the media panel render pixel for pixel as before.
 
-`Audio` also holds the level of what plays (`level()`, a `PwNodePeakMonitor`), captured only while
-one of its two askers wants it: the island while media is what it shows (`waveIsland`), the media
-panel while it is open (`wavePanel`) ([island.md](island.md#the-wave)). `Media` says a track once:
+`Audio` also holds the spectrum of what is heard (`bands`, from a cava child process), running
+only while one of its two askers wants it: the island while media is what it shows (`waveIsland`),
+the media panel while it is open (`wavePanel`) ([island.md](island.md#the-wave)). `Media` says a track once:
 an artist repeated in the title is cut from it, and YouTube's "X - Topic" is X. It also finds the
-window what plays lives in (`reveal`), and `Audio` sets the volume of what plays (`mediaNode`). It is a function to call and not a property to bind: the meter
-reports once per audio quantum, 47 to 185 times a second.
+window what plays lives in (`reveal`), and `Audio` sets the volume of what plays (`mediaNode`).
 
 ### `Pill.qml`
 

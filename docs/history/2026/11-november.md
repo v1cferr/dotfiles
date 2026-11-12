@@ -18,8 +18,9 @@
         340 ms, the shell's one exception to its no-overshoot rule, asked for by name.
       • THE APPS THAT WAIT (12/11/2026): a notification carries its app's own icon, the apps
         with unseen ones rest in the capsule, and a hover lists them.
-      • A WAVE OF THE REAL LEVEL (12/11/2026) fills the gap beside the cover, from Quickshell's
-        own peak meter; and an app with no entry wears the icon its notification brought.
+      • A WAVE OF WHAT IS HEARD (12/11/2026) fills the gap beside the cover: cava's spectrum,
+        after Quickshell's own peak meter cost the shell 4 to 6 points of a core with a game
+        open; and an app with no entry wears the icon its notification brought.
       • THE MEDIA PANEL REDRAWN (12/11/2026) in the shell's font and icons, with the wave, a
         seek that drags and the keys centered under the logo; symmetry checked by pixel. A
         hover on the capsule opens it, and it has the player's volume and the way to its window.

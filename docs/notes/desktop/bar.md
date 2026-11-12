@@ -268,15 +268,14 @@ control's 8 px radius).
 | State                              | Looks                                                             |
 | ---------------------------------- | ----------------------------------------------------------------- |
 | active                             | accent number on the sliding highlight (`colCellOpenFill`)        |
-| occupied                           | `text` number in the strong weight                                |
+| occupied                           | `text` number in the strong weight, and its apps' icons           |
 | empty                              | `dim` number                                                      |
 | a window opened there              | a steady 8 px yellow tick under the number (`colWarn`)            |
 | a window there asked for attention | the highlight in `colCrit` at 22%, the number in red              |
 
-**The apps, on a hover.** At rest a workspace is its number alone (11/11/2026; until then every
-number carried its icons). Once the pointer rests on a number for `Theme.hoverIntent` (a sweep opens
-nothing) that workspace opens to its RIGHT, so the number never leaves the pointer, and closes when
-the pointer leaves. Open, it shows its apps' icons, one per window class in
+**The apps.** Each number carries its apps' icons, always. For a few minutes on 11/11/2026 they
+opened only on a rested hover, to make the rail quieter; the owner tried it live and preferred
+seeing them, so that went back the same day. The icons are one per window class in
 Hyprland's order (`wsApps` in `Bar.qml`, read from the toplevels' IPC object), up to three (two on
 the LG's narrower bar) and then `+N`: full color on the active workspace, greyed on the others (`widgets/AppIcon.qml`, the same
 lookup the lock screen uses. A Steam game's class says nothing (`hl` for Northgard,

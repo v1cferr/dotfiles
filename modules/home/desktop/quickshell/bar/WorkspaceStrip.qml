@@ -1,6 +1,7 @@
 // The ADAPTIVE WORKSPACE RAIL: one monitor's workspaces, bare on the strip, the active one under a
-// rounded highlight that slides. Each number carries its apps' icons (one per app, up to 3, 2 on the
-// standing screen, then +N; a click focuses that window); occupied reads bright, empty dim; a new
+// rounded highlight that slides. At rest a workspace is its number; a hover opens its apps' icons
+// (one per app, up to 3, 2 on the standing screen, then +N; a click focuses that window);
+// occupied reads bright, empty dim; a new
 // window is a yellow tick under the number and a request for attention a red highlight, neither pulsing.
 // The rail, its model (orphans of a gone secondary) and the 0.55 dispatch trap: docs/notes/desktop/bar.md
 import Quickshell.Hyprland
@@ -62,6 +63,7 @@ Item {
             model: strip.ids
             delegate: Item {
                 id: btn
+                clip: true // its icons arrive with the width, never over the next number
                 required property int modelData
                 readonly property bool active: strip.host.wsActive[strip.monitor] === btn.modelData
                 readonly property bool exists: strip.host.wsExist[btn.modelData] === true
@@ -69,9 +71,24 @@ Item {
                 readonly property bool activity: strip.host.wsActivity[btn.modelData] === true
                 readonly property var apps: strip.host.wsApps(btn.modelData)
                 readonly property var shown: btn.apps.slice(0, strip.maxApps)
+                // At rest a workspace is its number. Its apps open to the RIGHT of it once the pointer
+                // rests there, so the number never leaves the pointer and a sweep opens nothing.
+                property bool open: false
+                readonly property bool showApps: btn.open && btn.shown.length > 0
+                Timer {
+                    id: openTimer
+                    interval: Theme.hoverIntent
+                    onTriggered: btn.open = true
+                }
+                Behavior on implicitWidth {
+                    NumberAnimation {
+                        duration: Theme.motionNormal
+                        easing.type: Easing.OutCubic
+                    }
+                }
 
                 // The number from a template ("01" and "08" never differ), then its icons.
-                implicitWidth: Math.ceil((numBox.width + (btn.shown.length > 0 ? appRow.implicitWidth + Theme.sp1 : 0) + 2 * Theme.sp2) / 4) * 4
+                implicitWidth: Math.ceil((numBox.width + (btn.showApps ? appRow.implicitWidth + Theme.sp1 : 0) + 2 * Theme.sp2) / 4) * 4
                 implicitHeight: Theme.barCell
 
                 // Asking for attention: the active highlight, in the alert color, until visited.
@@ -121,7 +138,7 @@ Item {
                 Row {
                     id: appRow
                     z: 1 // above the button's area, so an icon's own click wins
-                    visible: btn.shown.length > 0
+                    visible: btn.showApps
                     x: numBox.x + numBox.width + Theme.sp1
                     height: Theme.barCell
                     spacing: Theme.sp1
@@ -188,8 +205,13 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
                     onContainsMouseChanged: {
-                        if (containsMouse)
+                        if (containsMouse) {
                             strip.host.hintWs = btn.modelData;
+                            openTimer.restart();
+                        } else {
+                            openTimer.stop();
+                            btn.open = false;
+                        }
                         strip.host.hoverHint("ws", btn, strip.barContent, strip.barWindow, containsMouse);
                     }
                     // `hl.dsp.workspace` is a TABLE; what switches is focus (0.55's Lua dispatch).

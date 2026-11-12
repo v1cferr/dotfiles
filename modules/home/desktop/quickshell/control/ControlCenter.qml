@@ -68,8 +68,7 @@ BarPanel {
                 on: cc.bar.netConnected
                 toggles: false
                 hasPage: true
-                // The link's own panel, under the same item, until the Network page lands.
-                onOpened: cc.bar.togglePanel("net", null, null, cc.bar.popBar)
+                onOpened: cc.page = "net"
             }
             ControlTile {
                 icon: cc.adapter && cc.adapter.enabled ? "bluetooth" : "bluetooth_disabled"
@@ -79,11 +78,7 @@ BarPanel {
                 on: !!cc.adapter && cc.adapter.enabled
                 hasPage: true
                 onToggled: cc.adapter.enabled = !cc.adapter.enabled
-                // Blueman stays the pairing agent and the full manager until the Bluetooth page lands.
-                onOpened: {
-                    cc.bar.closePanels();
-                    cc.bar.launch(["blueman-manager"]);
-                }
+                onOpened: cc.page = "bt"
             }
             ControlTile {
                 visible: Theme.hasVpn
@@ -142,12 +137,33 @@ BarPanel {
         // ── The pages ──
         PageHeader {
             visible: cc.page !== ""
-            title: cc.page === "sound" ? "Sound" : "VPN"
+            title: ({
+                    net: "Network",
+                    bt: "Bluetooth",
+                    sound: "Sound",
+                    vpn: "VPN"
+                })[cc.page] || ""
             onBack: cc.page = ""
         }
         SoundPage {
             visible: cc.page === "sound"
             active: cc.visible && cc.page === "sound"
+            Layout.fillWidth: true
+            onLeave: cmd => {
+                cc.bar.closePanels();
+                cc.bar.launch(cmd);
+            }
+        }
+        NetworkPage {
+            visible: cc.page === "net"
+            active: cc.visible && cc.page === "net"
+            Layout.fillWidth: true
+            // The link's own panel, under the same item.
+            onDetail: cc.bar.togglePanel("net", null, null, cc.bar.popBar)
+        }
+        BluetoothPage {
+            visible: cc.page === "bt"
+            active: cc.visible && cc.page === "bt"
             Layout.fillWidth: true
             onLeave: cmd => {
                 cc.bar.closePanels();

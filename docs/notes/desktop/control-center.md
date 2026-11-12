@@ -23,22 +23,19 @@ row at the foot of the Control Center opens the NixOS Center.
 
 ## The parts
 
-| Part      | Reads and sets                                                                                 |
-| --------- | ---------------------------------------------------------------------------------------------- |
-| Network   | the bar's link state; its tile opens the network panel that already existed                    |
-| Bluetooth | `Quickshell.Bluetooth`: the adapter's switch and the connected devices; its tile opens Blueman |
-| VPN       | the `vpn` CLI through the bar's `runVpn`; its tile opens the VPN page                          |
-| Focus     | `Notifs.dnd`                                                                                   |
-| Media     | `Media.qml`: the cover, the track, previous, play or pause, next                               |
-| Sound     | `Audio.qml`: the volume and the mute; its chevron opens the Sound page                         |
+| Part      | Reads and sets                                                                                            |
+| --------- | --------------------------------------------------------------------------------------------------------- |
+| Network   | `Quickshell.Networking` and the bar's link state; its tile opens the Network page                         |
+| Bluetooth | `Quickshell.Bluetooth`: the adapter's switch and the connected devices; its tile opens the Bluetooth page |
+| VPN       | the `vpn` CLI through the bar's `runVpn`; its tile opens the VPN page                                     |
+| Focus     | `Notifs.dnd`                                                                                              |
+| Media     | `Media.qml`: the cover, the track, previous, play or pause, next                                          |
+| Sound     | `Audio.qml`: the volume and the mute; its chevron opens the Sound page                                    |
 
 A tile is a round icon that is the switch, a name, and what it is now. A click on the icon flips
 it; a click anywhere else on a tile that has a page opens the page in place, with a way back. A
 tile whose hardware is not there (no Bluetooth adapter) stays, faded, and says so; the VPN tile is
 absent on a host that has no `vpn` command at all.
-
-Network and Bluetooth do not have pages of their own yet: the tiles hand over to the network panel
-and to Blueman, which stays the pairing agent either way.
 
 ## The building blocks
 
@@ -54,6 +51,26 @@ Three widgets came with it, since the shell had no slider and no switch:
 
 `widgets/IconButton.qml` learned the bar's rule: a Material Symbols name draws in the icon font, any
 other string is a glyph of the text font.
+
+## Network
+
+The Network page reads NetworkManager through `Quickshell.Networking`, which the shell had never
+used: until 12/11/2026 the link was an `nmcli` poll, and there was no way to pick a network. It
+lists the wired links (the cable, the connection, the link speed) and, where the machine has a
+Wi-Fi device, a switch and up to eight networks: the connected one first, then the saved ones, then
+by signal. A click connects a saved or an open network and disconnects the connected one. One that
+needs a password opens a field under its row; Enter hands the password to NetworkManager and the
+field forgets it. The scan runs only while this page is on screen. The row at the foot opens the
+link's own panel, with the rates, the latency and the speed test, which did not move.
+
+## Bluetooth
+
+The Bluetooth page reads BlueZ through `Quickshell.Bluetooth`. `MY DEVICES` are the paired ones,
+each with its state (connecting, connected with its battery when the device reports one, not
+connected); a click connects or disconnects. `IN RANGE` are devices that are not paired and said
+their name; a click pairs, and Blueman answers any prompt, since it stays the pairing agent.
+Discovery is switched on when the page opens and off when it closes or the panel does: nothing
+scans in the background. `Bluetooth manager` hands over to Blueman.
 
 ## Sound
 
@@ -99,9 +116,12 @@ like the palette.
 
 **Rendered on 12/11/2026** in a second Quickshell on a copy of the tree inside a headless sway: the
 main view, the Sound page against the machine's real Pipewire nodes (six outputs, one input, one
-app stream), the VPN page with both tunnels off, the bar with the flag on and off, and no error in
-the log.
+app stream), the VPN page with both tunnels off, the Network page (one wired link, connected at
+1 Gb/s), the Bluetooth page (three paired devices, discovery on while open and reported off by
+`bluetoothctl show` after it closed), the bar with the flag on and off, and no error in the log.
 
 Not verified, since the harness has no pointer and no keyboard, and its Pipewire and BlueZ are the
 live machine's: dragging a slider, picking an output, the Bluetooth switch, connecting a VPN and
-its error path, the keyboard walk, Escape leaving a page, and SUPER+A.
+its error path, connecting or pairing a Bluetooth device, the keyboard walk, and Escape leaving a
+page. The whole Wi-Fi half of the Network page has never run: the desk has no Wi-Fi device, so the
+switch, the list, the password field and its failure path wait for the laptop.

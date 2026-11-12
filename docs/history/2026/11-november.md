@@ -8,6 +8,9 @@
         item on the bar's right or SUPER+A; it owns no state.
       • THE SHELL'S FIRST SLIDER AND SWITCH: `Slider`, `ControlTile`; a Sound page with the
         outputs, the inputs, the microphone and each app's level.
+      • NETWORK AND BLUETOOTH PAGES on `Quickshell.Networking` and `Quickshell.Bluetooth`: wired
+        links, Wi-Fi with a password field, paired devices and the ones in range; the scan and
+        the discovery run only while their page is open.
       • THE VPN HAS PHASES: connecting, disconnecting and an error that says why, on top of a CLI
         that only says connected or not.
       • THE BAR GETS LEANER with it on: no volume, no bell, no network numbers.

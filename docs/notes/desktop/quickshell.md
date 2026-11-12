@@ -186,9 +186,10 @@ noise, not this QML's.
 
 ### `Mpris.qml`
 
-The media control panel (Spotifast), modeled on the VPN panel, opened through
-`qs ipc call mpris toggle`. It uses the native `Quickshell.Services.Mpris` service and sits
-bottom/top-left on the main monitor, near the Spotifast pill.
+The media panel, on the native `Quickshell.Services.Mpris` service: the cover and the track, the
+wave of what is heard, a seek bar and the three keys. A click on the island's resting media hangs
+it under the logo; `qs ipc call mpris toggle` opens it too. What it shows and how it was checked:
+[island.md](island.md#the-media-panel).
 
 ### Audio and media
 
@@ -203,8 +204,9 @@ none), since it runs as a separate process from a store copy of the tree. Checke
 the headless harness: the bar and the media panel render pixel for pixel as before.
 
 `Audio` also holds the level of what plays (`level()`, a `PwNodePeakMonitor`), captured only while
-`wave` is set, which the island does while media is what it shows
-([island.md](island.md#the-wave)). It is a function to call and not a property to bind: the meter
+one of its two askers wants it: the island while media is what it shows (`waveIsland`), the media
+panel while it is open (`wavePanel`) ([island.md](island.md#the-wave)). `Media` says a track once:
+an artist repeated in the title is cut from it, and YouTube's "X - Topic" is X. It is a function to call and not a property to bind: the meter
 reports once per audio quantum, 47 to 185 times a second.
 
 ### `Pill.qml`

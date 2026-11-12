@@ -20,6 +20,8 @@
         with unseen ones rest in the capsule, and a hover lists them.
       • A WAVE OF THE REAL LEVEL (12/11/2026) fills the gap beside the cover, from Quickshell's
         own peak meter; and an app with no entry wears the icon its notification brought.
+      • THE MEDIA PANEL REDRAWN (12/11/2026) in the shell's font and icons, with the wave, a
+        seek that drags and the keys centered under the logo; symmetry checked by pixel.
 
 - [x] The Control Center (12/11/2026; asked 11/11/2026). How and why:
       [notes/desktop/control-center.md](../../notes/desktop/control-center.md).

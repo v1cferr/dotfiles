@@ -104,15 +104,18 @@ The capsule is symmetric, so a title wider than the artist left a gap beside the
 - **Of the player, when it can be told.** The meter listens to the player's own stream when one
   answers to its name (`application.name` against the MPRIS identity) or is the only one playing,
   so a notification's sound does not move the wave; else to the default output.
-- **Drawn against the loudest heard lately**, which sinks by half in about 5.5 s, so a quiet track
-  fills the height as a loud one does; and squared, since mastered music barely leaves the top
-  half of the scale.
+- **Drawn between the loudest and the quietest heard lately**, each drifting back toward what
+  plays, so a dense track and a sparse one both move over the whole height, and a bar once drawn
+  keeps its size. Two fixed scales came first and each failed one kind of music: against the
+  loudest alone a mastered track was a solid block, and squared an acoustic one was a row of dots
+  with a spike now and then.
 - **Only while it is seen.** The meter and the wave's timer run while media is what the capsule
   shows. A volume change or a notification passing over it stops both, and so does a pause. With
   `my.theme.motion = "off"` there is no wave and the gap is back.
 - It takes what the wider side leaves, and never fewer than five bars: a long artist leaves it
   those five.
-- A player that repeats the artist in the title ("Radiohead - Creep" by Radiohead) says it once.
+- A player that repeats the artist in the title ("Radiohead - Creep" by Radiohead) says it once,
+  and YouTube's "X - Topic" is X: `Media.qml` cleans both, for every reader.
 
 **Measured on 12/11/2026** in the harness, which shares the machine's real Pipewire, with music
 playing in a browser: the meter's value followed the audio (0.57 to 0.91 over five seconds, and 0
@@ -123,9 +126,32 @@ the bars. That day a Sunshine stream held the audio graph at a quantum of 256 fr
 meter reports once per quantum: 185 times a second, where the default of 1024 gives 47. The cost
 at the default quantum was not measured.
 
+The stream was found by its name the same day: with a stand-in player calling itself "Mozilla
+zen", as Zen does, the meter took the browser's stream ("Zen") and not the output.
+
 A first version counted every stream as one that plays, the meter's own capture included: the list
 changed each time the meter started, the meter was rebuilt for the new list, and it never lived
 long enough to report. Only streams that play count now.
+
+## The media panel
+
+A click on the resting media opens the panel under the logo (`media/Mpris.qml`). It was redrawn
+on 12/11/2026, asked for with a capture of the old one: that still had the mono font, since it
+named none, Nerd glyphs in outlined rings, and the artist twice.
+
+| Row         | What                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------- |
+| The track   | a 72 px cover; the title, the artist, and the album or else the player's name         |
+| The wave    | the island's, across the panel: 3 px bars, some five seconds of what was heard        |
+| The seek    | a 4 px track; a press or a drag moves the track there; the two times under its ends   |
+| The keys    | previous, play or pause (filled), next: centered on the panel, so under the logo      |
+
+It is Geist and Material Symbols like the rest, on the theme's tokens. The wave asks the meter for
+itself (`Audio.wavePanel`), so it keeps moving while a notification holds the capsule above it.
+
+**Symmetry, by pixel, on 12/11/2026** in the harness, about the logo's center (x 1280): the capsule
+208 px each side, the panel 180, the seek bar 164, the three keys 58, the logo's ink 1261 to 1298.
+The panel's width is even so its middle is a whole pixel.
 
 ## How it moves
 
@@ -209,5 +235,6 @@ Not verified: the volume and the microphone (the harness shares the machine's re
 nothing was changed there), a VPN's progress and its error, a Bluetooth device connecting, a real
 player pausing and changing track, the disk warning, the pointer freezing the capsule, the hover
 that opens the peek, and every click on it or in the peek. How the spring LOOKS was never seen by a
-person: only its numbers were measured. Of the wave: how it looks moving, the meter finding a real
-player's stream by its name (the harness has no player), and its cost outside a Sunshine stream.
+person: only its numbers were measured. Of the wave: how it looks moving, and its cost outside a
+Sunshine stream. Of the media panel: the seek by press and drag, and the three keys on a real
+player (the stand-in's do nothing).

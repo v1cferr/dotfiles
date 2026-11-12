@@ -2,6 +2,7 @@ pragma Singleton
 // The ONE owner of the default sink and source: the bar, the OSD and every panel read and set the
 // volume here, so two trackers can never disagree. docs/notes/desktop/quickshell.md#audio-and-media
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Pipewire
 import QtQuick
 
@@ -20,16 +21,56 @@ Singleton {
 
     readonly property real micVolume: (root.source && root.source.audio) ? root.source.audio.volume : 0
 
-    // ===== The level, for the island's wave =====
-    // Captured only while something asks (`wave`): the player's own stream when one answers to its
-    // name or is the only one playing, so a notification's sound does not move it; else the output.
-    // Only streams that PLAY count: the meter's own capture is a stream too, and would feed itself.
+    // ===== The spectrum, for the island's wave =====
+    // cava runs only while something asks (`wave`): a child process that reads what is heard and
+    // prints 24 levels a frame, bass first, already smoothed and scaled to what plays. It replaced
+    // Quickshell's own peak meter, which cost the shell four to six times as much.
     property bool waveIsland: false
     property bool wavePanel: false
     readonly property bool wave: root.waveIsland || root.wavePanel
-    // The media panel is open: it wants the player's stream for its volume, playing or not.
+    property var bands: [] // 0 to 1 each; empty while cava is not running (or not installed)
+    // It outlives a pause in the asking by a few seconds: a volume key or a notification takes the
+    // capsule for a moment, and starting cava again each time would cost more than letting it run.
+    property bool cavaOn: false
+    onWaveChanged: {
+        if (root.wave) {
+            linger.stop();
+            root.cavaOn = true;
+        } else {
+            linger.restart();
+        }
+    }
+    Timer {
+        id: linger
+        interval: 8000
+        onTriggered: {
+            root.cavaOn = false;
+            root.bands = [];
+        }
+    }
+    Process {
+        running: root.cavaOn
+        command: ["cava", "-p", Quickshell.shellPath("media/cava.ini")]
+        // A shell started from a terminal inherits libraries built on a newer glibc than cava's.
+        environment: ({
+                LD_LIBRARY_PATH: null
+            })
+        stdout: SplitParser {
+            onRead: line => {
+                const out = [];
+                for (const part of line.split(" "))
+                    if (part !== "")
+                        out.push(Math.min(1, parseInt(part) / 1000));
+                root.bands = out;
+            }
+        }
+    }
+
+    // ===== The volume of what plays =====
+    // The media panel is open: it wants the player's own stream, when one answers to its name or
+    // is the only one playing; else the volume is the output's.
     property bool panelOpen: false
-    readonly property var playing: ((root.wave || root.panelOpen) && Pipewire.nodes) ? Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream) : []
+    readonly property var playing: (root.panelOpen && Pipewire.nodes) ? Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream) : []
     PwObjectTracker {
         objects: root.playing
     }
@@ -42,8 +83,6 @@ Singleton {
         }
         return root.playing.length === 1 ? root.playing[0] : null;
     }
-    readonly property var waveNode: root.playerStream || root.sink || null
-    // The volume of what plays: the player's own stream when it is known, else the output's.
     readonly property var mediaNode: root.playerStream || root.sink || null
     readonly property bool mediaIsPlayer: !!root.playerStream
     readonly property real mediaVolume: (root.mediaNode && root.mediaNode.audio) ? root.mediaNode.audio.volume : 0
@@ -55,15 +94,6 @@ Singleton {
     function toggleMediaMute() {
         if (root.mediaNode && root.mediaNode.audio)
             root.mediaNode.audio.muted = !root.mediaNode.audio.muted;
-    }
-    PwNodePeakMonitor {
-        id: meter
-        node: root.waveNode
-        enabled: root.wave && !!root.waveNode
-    }
-    // Read when wanted, never bound: the meter reports some 185 times a second.
-    function level() {
-        return meter.enabled ? (meter.peak || 0) : 0;
     }
 
     function setVolume(v) {

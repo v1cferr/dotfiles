@@ -12,6 +12,7 @@ let
   # Rule 19: everything this module reaches for, named once. deadnix fails the build on an
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
+    cava
     coreutils
     gawk
     systemd
@@ -101,6 +102,7 @@ in
     qsPkg # `qs` / `quickshell`
     qsRestart # `qs-restart`, used by the SUPER+ESCAPE bind (keybinds.lua)
     trayNativeMenu # `tray-native-menu`, right click on an SNI with no DBusMenu (Bar.qml)
+    cava # the island's wave: the spectrum of what is heard, run by Audio.qml while it shows
   ];
 
   # ~/.config/quickshell points at the real file in the repo (mutable), which is the hot-reload.

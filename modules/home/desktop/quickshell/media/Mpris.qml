@@ -1,8 +1,10 @@
-// The media panel (Spotifast), through the native Mpris service. `qs ipc call mpris toggle`, or
-// `toggleAt <x>` from the bar's media pill, which hangs it under the pill.
+// The media panel, through the native Mpris service: the cover, the track, the wave of what is
+// heard, the seek bar and the three keys. `qs ipc call mpris toggle`, or `toggleAt <x>` from the
+// bar, which hangs it under the logo or the media item. docs/notes/desktop/island.md#the-media-panel
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
+import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -14,11 +16,21 @@ Scope {
     property bool panelVisible: false
     property int panelLeft: Theme.barTop // the screen x the bar asked for; the left edge otherwise
     property real positionNow: 0
+    // Even, so the panel's middle is a whole pixel: the logo's.
+    readonly property int panelWidth: 360
+    readonly property int cover: Theme.sp6 * 3
+
+    // The wave listens while the panel shows what plays.
+    Binding {
+        target: Audio
+        property: "wavePanel"
+        value: root.panelVisible && root.playing && !Theme.motionReduced
+    }
 
     // The player and its track have one owner (Media.qml).
     readonly property var player: Media.player
     readonly property bool hasPlayer: Media.hasPlayer
-    readonly property string title: Media.title || "—"
+    readonly property string title: Media.title
     readonly property string artist: Media.artist
     readonly property string album: Media.album
     readonly property string artUrl: Media.artUrl
@@ -114,8 +126,8 @@ Scope {
             left: root.panelLeft
         }
 
-        implicitWidth: 360
-        implicitHeight: content.implicitHeight + 28
+        implicitWidth: root.panelWidth
+        implicitHeight: content.implicitHeight + 2 * Theme.sp4
         color: "transparent"
 
         GlassSurface {
@@ -137,104 +149,123 @@ Scope {
             ColumnLayout {
                 id: content
                 anchors.fill: parent
-                anchors.margins: 14
-                spacing: 12
+                anchors.margins: Theme.sp4
+                spacing: Theme.sp3
 
-                // The header: the cover plus track/artist/album
+                // The cover, and the track in three lines: what, by whom, from where.
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 12
+                    spacing: Theme.sp3
 
-                    Rectangle {
-                        Layout.preferredWidth: 64
-                        Layout.preferredHeight: 64
-                        radius: 8
-                        color: Theme.colTrack
-                        clip: true
-
+                    ClippingRectangle {
+                        implicitWidth: root.cover
+                        implicitHeight: root.cover
+                        radius: Theme.radiusControl
+                        color: Theme.colCellHoverFill
+                        Text {
+                            anchors.centerIn: parent
+                            visible: art.status !== Image.Ready
+                            text: "music_note"
+                            color: Theme.colSubtext
+                            font.family: Theme.iconFont
+                            font.pixelSize: Theme.sp6
+                            font.variableAxes: Theme.iconAxes
+                        }
                         Image {
                             id: art
                             anchors.fill: parent
                             source: root.artUrl
+                            sourceSize.width: root.cover * 2
+                            sourceSize.height: root.cover * 2
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
-                            cache: true
-                            visible: status === Image.Ready
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            visible: art.status !== Image.Ready
-                            text: "󰓇"
-                            color: Theme.colDim
-                            font.pixelSize: 28
                         }
                     }
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: Theme.sp1 / 2
 
                         Text {
                             Layout.fillWidth: true
-                            text: root.title
+                            text: root.hasPlayer ? root.title : "Nothing is playing"
                             color: Theme.colText
-                            font.pixelSize: 14
+                            font.family: Theme.uiFont
+                            font.pixelSize: Theme.fontTitle
                             font.weight: Theme.weightStrong
                             elide: Text.ElideRight
                         }
                         Text {
                             Layout.fillWidth: true
-                            visible: root.artist !== ""
+                            visible: text !== ""
                             text: root.artist
-                            color: Theme.colAccent
-                            font.pixelSize: 12
+                            color: Theme.colSubtext
+                            font.family: Theme.uiFont
+                            font.pixelSize: Theme.fontBody
                             elide: Text.ElideRight
                         }
                         Text {
                             Layout.fillWidth: true
-                            visible: root.album !== ""
-                            text: root.album
+                            visible: text !== ""
+                            text: root.album !== "" ? root.album : Media.source
                             color: Theme.colDim
-                            font.pixelSize: 11
+                            font.family: Theme.uiFont
+                            font.pixelSize: Theme.fontSmall
                             elide: Text.ElideRight
                         }
                     }
                 }
 
-                // The progress bar (clickable to seek)
+                // What is heard, across the panel: the island's wave with room to breathe.
+                Wave {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Theme.sp6
+                    visible: Audio.wavePanel
+                    bar: 3
+                    gap: 2
+                    read: Audio.level
+                    running: Audio.wavePanel
+                }
+
+                // Where the track is: a press or a drag moves it there.
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 4
+                    spacing: Theme.sp1
                     visible: root.hasPlayer && root.length > 0
 
-                    Rectangle {
-                        id: track
+                    Item {
+                        id: seek
                         Layout.fillWidth: true
-                        height: 6
-                        radius: 3
-                        color: Theme.colTrack
-
+                        implicitHeight: Theme.sp3
+                        readonly property real part: Math.max(0, Math.min(1, root.length > 0 ? root.positionNow / root.length : 0))
                         Rectangle {
-                            width: parent.width * Math.max(0, Math.min(1, root.length > 0 ? root.positionNow / root.length : 0))
-                            height: parent.height
-                            radius: 3
-                            color: Theme.colAccent
-                            Behavior on width {
-                                NumberAnimation {
-                                    duration: Theme.motionSlow
-                                }
+                            id: track
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width
+                            height: Theme.sp1
+                            radius: height / 2
+                            color: Theme.colCellHoverFill
+                            Rectangle {
+                                width: Math.round(Math.max(parent.height, seek.part * parent.width))
+                                height: parent.height
+                                radius: parent.radius
+                                color: Qt.alpha(Theme.colText, 0.88)
                             }
                         }
-
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            enabled: root.player && root.player.canSeek
-                            onClicked: mouse => {
-                                if (root.player && root.length > 0) {
-                                    root.player.position = (mouse.x / width) * root.length;
-                                    root.refreshPosition();
-                                }
+                            enabled: !!root.player && root.player.canSeek
+                            function go(x) {
+                                if (!root.player || root.length <= 0)
+                                    return;
+                                root.player.position = Math.max(0, Math.min(1, x / width)) * root.length;
+                                root.refreshPosition();
+                            }
+                            onPressed: m => go(m.x)
+                            onPositionChanged: m => {
+                                if (pressed)
+                                    go(m.x);
                             }
                         }
                     }
@@ -244,7 +275,9 @@ Scope {
                         Text {
                             text: root.fmt(root.positionNow)
                             color: Theme.colDim
-                            font.pixelSize: 10
+                            font.family: Theme.uiFont
+                            font.features: Theme.fontTabular
+                            font.pixelSize: Theme.fontMicro
                         }
                         Item {
                             Layout.fillWidth: true
@@ -252,82 +285,80 @@ Scope {
                         Text {
                             text: root.fmt(root.length)
                             color: Theme.colDim
-                            font.pixelSize: 10
+                            font.family: Theme.uiFont
+                            font.features: Theme.fontTabular
+                            font.pixelSize: Theme.fontMicro
                         }
                     }
                 }
 
-                // The controls: previous / play-pause / next
+                // Previous, play or pause, next: centered on the panel, so under the logo.
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
-                    spacing: 18
+                    spacing: Theme.sp4
                     visible: root.hasPlayer
 
-                    CtlButton {
-                        glyph: "󰒮"
-                        enabled: root.player && root.player.canGoPrevious
+                    Key {
+                        glyph: "skip_previous"
+                        name: "Previous track"
+                        enabled: !!root.player && root.player.canGoPrevious
                         onActivated: root.player.previous()
                     }
-                    CtlButton {
-                        glyph: root.playing ? "󰏤" : "󰐊"
-                        big: true
-                        enabled: root.player && root.player.canTogglePlaying
+                    Key {
+                        glyph: root.playing ? "pause" : "play_arrow"
+                        name: root.playing ? "Pause" : "Play"
+                        main: true
+                        enabled: !!root.player && root.player.canTogglePlaying
                         onActivated: root.player.togglePlaying()
                     }
-                    CtlButton {
-                        glyph: "󰒭"
-                        enabled: root.player && root.player.canGoNext
+                    Key {
+                        glyph: "skip_next"
+                        name: "Next track"
+                        enabled: !!root.player && root.player.canGoNext
                         onActivated: root.player.next()
                     }
-                }
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    visible: !root.hasPlayer
-                    text: "No media player is active"
-                    color: Theme.colDim
-                    font.pixelSize: 12
                 }
             }
         }
     }
 
-    // A circular control button
-    component CtlButton: Rectangle {
-        id: btn
+    // A round transport key; the main one is filled, the two beside it are bare until hovered.
+    component Key: Rectangle {
+        id: key
 
         property string glyph: ""
-        property bool big: false
+        property string name: ""
+        property bool main: false
         signal activated
 
-        implicitWidth: big ? 44 : 36
-        implicitHeight: big ? 44 : 36
+        implicitWidth: key.main ? Theme.sp6 + Theme.sp4 : Theme.sp6 + Theme.sp2
+        implicitHeight: implicitWidth
         radius: width / 2
-        color: (area.containsMouse && btn.enabled) ? Theme.colHoverBgAccent : "transparent"
+        opacity: key.enabled ? 1 : Theme.opacityDisabled
+        color: key.main ? Qt.alpha(Theme.colText, area.pressed ? 0.72 : (area.containsMouse ? 1 : 0.88)) : (area.pressed ? Theme.colPressFill : (area.containsMouse ? Theme.colHoverFill : "transparent"))
         Behavior on color {
             ColorAnimation {
                 duration: Theme.motionHover
-                easing.type: Easing.OutQuad
             }
         }
-        border.color: btn.enabled ? Theme.colAccent : Theme.colDim
-        border.width: 1
-        opacity: btn.enabled ? 1 : 0.4
+        Accessible.role: Accessible.Button
+        Accessible.name: key.name
 
         Text {
             anchors.centerIn: parent
-            text: btn.glyph
-            color: Theme.colAccent
-            font.pixelSize: btn.big ? 20 : 16
+            text: key.glyph
+            color: key.main ? Theme.colBgSolid : Theme.colText
+            font.family: Theme.iconFont
+            font.pixelSize: key.main ? Theme.sp6 : Theme.iconSymbol + 2
+            font.variableAxes: Theme.iconAxes
         }
-
         MouseArea {
             id: area
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
-            enabled: btn.enabled
-            onClicked: btn.activated()
+            enabled: key.enabled
+            onClicked: key.activated()
         }
     }
 }

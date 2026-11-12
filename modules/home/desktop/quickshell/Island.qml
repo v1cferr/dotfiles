@@ -87,7 +87,7 @@ Singleton {
     // The wave listens only while the media is what the capsule shows.
     Binding {
         target: Audio
-        property: "wave"
+        property: "waveIsland"
         value: root.live && root.current !== null && root.current.kind === "media" && !Theme.motionReduced
     }
     Connections {

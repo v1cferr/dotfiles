@@ -24,7 +24,9 @@ Singleton {
     // Captured only while something asks (`wave`): the player's own stream when one answers to its
     // name or is the only one playing, so a notification's sound does not move it; else the output.
     // Only streams that PLAY count: the meter's own capture is a stream too, and would feed itself.
-    property bool wave: false
+    property bool waveIsland: false
+    property bool wavePanel: false
+    readonly property bool wave: root.waveIsland || root.wavePanel
     readonly property var playing: (root.wave && Pipewire.nodes) ? Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream) : []
     PwObjectTracker {
         objects: root.playing

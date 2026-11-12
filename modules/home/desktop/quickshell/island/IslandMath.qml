@@ -21,7 +21,7 @@ QtObject {
             vpn: 4,
             notification: 5,
             bluetooth: 6,
-            track: 7
+            media: 8
         })
     // How long each stays, in ms; 0 stays until something ends it.
     readonly property var life: ({
@@ -33,7 +33,7 @@ QtObject {
             vpn: 4000,
             notification: 5000,
             bluetooth: 3000,
-            track: 4000
+            media: 0
         })
     readonly property int queueMax: 3
     readonly property int resumeFloor: 1000 // an interrupted event comes back only with this much left
@@ -61,14 +61,15 @@ QtObject {
             seq: s.seq + 1
         };
     }
-    // One per key; past the cap the least urgent goes, the oldest of those first.
+    // One per key. Past the cap the least urgent MOMENT goes, the oldest of those first; an event
+    // with no end is a state (media playing, a VPN connecting) and never leaves this way.
     function enqueue(queue, ev) {
         const q = queue.filter(e => e.key !== ev.key).concat([ev]);
-        if (q.length <= queueMax)
+        if (q.filter(e => e.ttl > 0).length <= queueMax)
             return q;
-        let worst = 0;
-        for (let i = 1; i < q.length; i++)
-            if (q[i].prio > q[worst].prio)
+        let worst = -1;
+        for (let i = 0; i < q.length; i++)
+            if (q[i].ttl > 0 && (worst < 0 || q[i].prio > q[worst].prio))
                 worst = i;
         return q.filter((e, i) => i !== worst);
     }

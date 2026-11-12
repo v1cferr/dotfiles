@@ -1,6 +1,7 @@
 // The ISLAND's capsule: it grows out from behind the logo, the same on both sides, and says one
 // thing at a time. The logo is not in it and never moves; Island.qml decides what it shows.
 // docs/notes/desktop/island.md
+import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
@@ -36,7 +37,8 @@ Item {
             left: "",
             right: "",
             level: -1,
-            tone: Theme.colText
+            tone: Theme.colText,
+            art: ""
         };
         if (!e)
             return none;
@@ -88,11 +90,12 @@ Item {
                 left: d.name,
                 right: d.on ? "Connected" : "Disconnected"
             });
-        case "track":
+        case "media":
             return Object.assign(none, {
                 icon: "music_note",
                 left: d.artist,
-                right: d.title
+                right: d.title,
+                art: d.art || ""
             });
         case "critical":
             return Object.assign(none, {
@@ -109,7 +112,7 @@ Item {
         const k = isle.last ? isle.last.kind : "";
         if (k === "notification")
             Notifs.toggleCenter();
-        else if (k === "track")
+        else if (k === "media")
             isle.host.openMediaUnder(isle.barWindow);
         else if (k === "critical")
             Island.dismiss();
@@ -151,7 +154,25 @@ Item {
             width: Math.min(leftRow.implicitWidth, isle.side)
             height: parent.height
             spacing: Theme.sp1
+            // The cover while media plays; the event's icon otherwise, and when a cover fails to load.
+            ClippingRectangle {
+                visible: isle.v.art !== "" && cover.status === Image.Ready
+                implicitWidth: Theme.barLogo
+                implicitHeight: Theme.barLogo
+                radius: Theme.sp1
+                color: Theme.colCellPressFill
+                Image {
+                    id: cover
+                    anchors.fill: parent
+                    source: isle.v.art
+                    sourceSize.width: Theme.barLogo * 2
+                    sourceSize.height: Theme.barLogo * 2
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                }
+            }
             Text {
+                visible: !(isle.v.art !== "" && cover.status === Image.Ready)
                 text: isle.v.icon
                 color: isle.v.tone
                 font.family: Theme.iconFont

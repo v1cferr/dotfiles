@@ -15,9 +15,9 @@ TestCase {
     }
 
     function test_an_empty_island_shows_what_arrives() {
-        const s = m.push(m.idle, ev("track"), 1000);
-        compare(s.current.kind, "track");
-        compare(s.current.until, 5000, "a track stays 4 s");
+        const s = m.push(m.idle, ev("bluetooth"), 1000);
+        compare(s.current.kind, "bluetooth");
+        compare(s.current.until, 4000, "a Bluetooth device stays 3 s");
         compare(s.seq, 1);
     }
     function test_the_same_event_updates_in_place() {
@@ -51,19 +51,19 @@ TestCase {
     }
     function test_a_less_urgent_event_waits_its_turn() {
         let s = m.push(m.idle, ev("volume"), 0);
-        s = m.push(s, ev("track"), 100);
+        s = m.push(s, ev("bluetooth"), 100);
         s = m.push(s, ev("notification"), 200);
         compare(s.current.kind, "volume");
         s = m.tick(s, 1500);
         compare(s.current.kind, "notification", "the more urgent of the two that waited");
         s = m.tick(s, 6500);
-        compare(s.current.kind, "track");
-        s = m.tick(s, 10500);
+        compare(s.current.kind, "bluetooth");
+        s = m.tick(s, 9500);
         compare(s.current, null);
     }
     function test_tick_does_nothing_before_the_deadline() {
-        const s = m.push(m.idle, ev("track"), 0);
-        compare(m.tick(s, 3999), s);
+        const s = m.push(m.idle, ev("bluetooth"), 0);
+        compare(m.tick(s, 2999), s);
     }
     function test_an_event_with_no_end_stays_and_survives_an_interruption() {
         let s = m.push(m.idle, ev("vpn", "fai", 0), 0);
@@ -102,17 +102,56 @@ TestCase {
     }
     function test_the_queue_keeps_one_per_key_and_drops_the_least_urgent() {
         let s = m.push(m.idle, ev("critical", "disk"), 0);
-        for (const k of ["track", "bluetooth", "notification", "vpn"])
+        for (const k of ["bluetooth", "notification", "vpn", "mic"])
             s = m.push(s, ev(k), 10);
         compare(s.queue.length, 3);
-        compare(s.queue.map(e => e.kind).indexOf("track"), -1, "the least urgent left");
+        compare(s.queue.map(e => e.kind).indexOf("bluetooth"), -1, "the least urgent left");
         s = m.push(s, ev("notification"), 20);
         compare(s.queue.filter(e => e.kind === "notification").length, 1);
     }
+    function test_media_rests_in_the_island_and_returns_after_every_interruption() {
+        let s = m.push(m.idle, ev("media"), 0);
+        compare(m.deadline(s), 0, "playing has no clock");
+        s = m.push(s, ev("volume"), 1000);
+        compare(s.current.kind, "volume");
+        s = m.tick(s, 2500);
+        compare(s.current.kind, "media");
+        s = m.push(s, ev("notification"), 3000);
+        s = m.tick(s, 8000);
+        compare(s.current.kind, "media", "interrupted twice, it is still what plays");
+    }
+    function test_a_new_track_updates_the_media_in_place() {
+        let s = m.push(m.idle, m.event("media", {
+            title: "one"
+        }), 0);
+        s = m.push(s, m.event("media", {
+            title: "two"
+        }), 5000);
+        compare(s.current.data.title, "two");
+        compare(s.seq, 1, "the same media, another title: no new entrance");
+    }
+    function test_pausing_removes_the_media_shown_or_waiting() {
+        let s = m.push(m.idle, ev("media"), 0);
+        s = m.drop(s, "media:", 100);
+        compare(s.current, null);
+        s = m.push(m.idle, ev("media"), 0);
+        s = m.push(s, ev("volume"), 100);
+        s = m.drop(s, "media:", 200);
+        s = m.tick(s, 1600);
+        compare(s.current, null, "paused while the volume showed: nothing to return to");
+    }
+    function test_the_queue_never_drops_an_event_with_no_end() {
+        let s = m.push(m.idle, ev("critical", "disk"), 0);
+        s = m.push(s, ev("media"), 5);
+        for (const k of ["bluetooth", "notification", "vpn", "mic"])
+            s = m.push(s, ev(k), 10);
+        compare(s.queue.filter(e => e.kind === "media").length, 1, "the least urgent of all, and it stays");
+        compare(s.queue.length, 4, "the media and three moments");
+    }
     function test_drop_removes_an_event_wherever_it_is() {
         let s = m.push(m.idle, ev("critical", "disk"), 0);
-        s = m.push(s, ev("track"), 10);
-        s = m.drop(s, "track:", 20);
+        s = m.push(s, ev("bluetooth"), 10);
+        s = m.drop(s, "bluetooth:", 20);
         compare(s.queue.length, 0);
         s = m.drop(s, "critical:disk", 30);
         compare(s.current, null);

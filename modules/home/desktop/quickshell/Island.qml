@@ -64,14 +64,33 @@ Singleton {
     }
 
     // ── Sources that are singletons themselves; the others (the OSD, the VPN, the disk) push in ──
+    // Media is a STATE, not a moment: there while something plays, in place when the track
+    // changes, gone on a pause. It needs no arming: what plays at startup is still what plays.
+    function syncMedia() {
+        if (Media.playing && Media.title !== "")
+            root.push("media", {
+                title: Media.title,
+                artist: Media.artist,
+                art: Media.artUrl
+            });
+        else
+            root.drop("media");
+    }
+    onLiveChanged: root.syncMedia()
+    Component.onCompleted: root.syncMedia()
     Connections {
         target: Media
+        function onPlayingChanged() {
+            root.syncMedia();
+        }
         function onTitleChanged() {
-            if (root.armed && Media.playing && Media.title !== "")
-                root.push("track", {
-                    title: Media.title,
-                    artist: Media.artist
-                });
+            root.syncMedia();
+        }
+        function onArtistChanged() {
+            root.syncMedia();
+        }
+        function onArtUrlChanged() {
+            root.syncMedia();
         }
     }
     Connections {

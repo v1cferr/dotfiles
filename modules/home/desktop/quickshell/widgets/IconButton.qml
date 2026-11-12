@@ -13,6 +13,7 @@ Rectangle {
     property string stateText: "" // the tip's second line: what it is now
     property string action: ""    // the tip's third line: what a click does
     property Item tips: null      // the panel's GlassTip
+    readonly property bool symbol: /^[a-z0-9_]+$/.test(btn.glyph)
     signal clicked
 
     implicitWidth: Theme.barControl
@@ -33,8 +34,10 @@ Rectangle {
         anchors.centerIn: parent
         text: btn.glyph
         color: btn.tint
-        font.family: Theme.uiFont
-        font.pixelSize: Theme.iconBar
+        // A Material Symbols name draws in the icon font, a glyph in the text's (the same rule as Pill).
+        font.family: btn.symbol ? Theme.iconFont : Theme.uiFont
+        font.pixelSize: btn.symbol ? Theme.iconSymbol : Theme.iconBar
+        font.variableAxes: btn.symbol ? Theme.iconAxes : ({})
     }
     MouseArea {
         id: area

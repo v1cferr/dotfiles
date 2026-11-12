@@ -321,6 +321,12 @@ Scope {
 
     // ===== Disk (the root filesystem plus its device's I/O) =====
     property int diskPct: 0
+    // A root filesystem about to fill is the one warning the island holds until it is answered.
+    readonly property bool diskCrit: root.diskTotal > 0 && (root.diskPct >= 95 || root.diskFree < 5 * 1073741824)
+    onDiskCritChanged: root.diskCrit ? Island.push("critical", {
+        title: "Disk",
+        text: root.diskPct + "% used"
+    }, undefined, "disk") : Island.drop("critical", "disk")
     property real diskTotal: 0
     property real diskUsed: 0
     property real diskFree: 0
@@ -667,6 +673,14 @@ Scope {
             return p;
         return v.connected ? "connected" : (p !== "" ? p : "disconnected");
     }
+    // The island follows a tunnel from the command to its result, in one place.
+    function tellIsland(id, state, ttl) {
+        const v = root.vpnList.find(x => x.id === id);
+        Island.push("vpn", {
+            name: v ? v.name : id,
+            state: state
+        }, ttl, id);
+    }
     function setVpnPhase(id, phase) {
         const m = Object.assign({}, root.vpnPhase);
         if (phase === "")
@@ -696,7 +710,9 @@ Scope {
                 const e = Object.assign({}, root.vpnError);
                 e[vpnDiagProc.target] = text.split("\n")[0] || "did not connect";
                 root.vpnError = e;
-                root.setVpnPhase(vpnDiagProc.target, text.indexOf("connected") === 0 ? "" : "error");
+                const up = text.indexOf("connected") === 0;
+                root.setVpnPhase(vpnDiagProc.target, up ? "" : "error");
+                root.tellIsland(vpnDiagProc.target, up ? "connected" : "error");
             }
         }
     }
@@ -711,8 +727,10 @@ Scope {
                 }
                 // The tunnel answers for the phase: up ends "connecting", down ends "disconnecting".
                 const p = root.vpnPhase[v.id] || "";
-                if ((v.connected && p === "connecting") || (!v.connected && p === "disconnecting" && !root.vpnBusy))
+                if ((v.connected && p === "connecting") || (!v.connected && p === "disconnecting" && !root.vpnBusy)) {
                     root.setVpnPhase(v.id, "");
+                    root.tellIsland(v.id, v.connected ? "connected" : "disconnected");
+                }
             });
             root.vpnList = j.vpns || [];
             root.vpnConnected = c;
@@ -723,8 +741,10 @@ Scope {
     // 5s poll; vpnBusy holds the panel open and the buttons inert meanwhile.
     function runVpn(action, target) {
         const ids = target === "all" ? root.vpnList.filter(v => v.connected).map(v => v.id) : [target];
-        for (const id of ids)
+        for (const id of ids) {
             root.setVpnPhase(id, action === "connect" ? "connecting" : "disconnecting");
+            root.tellIsland(id, action === "connect" ? "connecting" : "disconnecting", 0);
+        }
         if (action === "connect") {
             root.vpnLast = target;
             vpnDeadline.restart();

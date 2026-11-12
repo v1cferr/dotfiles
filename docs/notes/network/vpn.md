@@ -234,9 +234,14 @@ The VPS went unpaid that day, and whether it comes back is open, so the relay is
 rather than assumed. `vpn-fai-up` gives the VPS's sshd three seconds; if it does not answer, the
 fifteen second wait is skipped and the portal is dialled at once, which keeps a punch's deadline.
 The relay's ssh carries `ConnectTimeout=5`, so it fails fast instead of hanging on a dead address,
-and `vpn diagnose fai` checks the portal itself and no longer blames a stopped relay. A VPS that
-answers again is used again with no change here. If it is cancelled for good, the relay unit, the
-`Requires=` and `faiVpsHost` can go; a recycled address is harmless meanwhile, because ssh refuses
+and `vpn diagnose fai` checks the portal itself and no longer blames a stopped relay.
+That fast failure exposed a second link the next morning: `vpn-fai` held the relay with
+`Requires=`, and a restart of a required unit restarts its dependants too. The relay now failed
+every five seconds and restarted, so every Acuttis run of 2026-11-12 saw a tunnel that came up and
+was torn down ten seconds later. The VPN holds it with `Wants=` now: started alongside, never
+followed down. A VPS that
+answers again is used again with no change here. If it is cancelled for good, the relay unit, its
+`Wants=` and `faiVpsHost` can go; a recycled address is harmless meanwhile, because ssh refuses
 a host key it does not know and nxBender still pins the portal's certificate.
 
 ## Removed on 30/07: the `menu` subcommand

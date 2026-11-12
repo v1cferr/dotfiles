@@ -54,7 +54,7 @@ let
   # Pins whichever allowlisted cert the portal serves NOW; nxBender still enforces that pin, so a
   # cert swapped between this probe and the login fails closed.
   faiUp = writeShellScript "vpn-fai-up" ''
-    # The relay starts first (Requires=), but its port opens only once ssh has logged in.
+    # The relay starts first (Wants=), but its port opens only once ssh has logged in.
     server=127.0.0.1
     port=${toString faiRelayPort}
     # A VPS whose sshd does not answer at all is not waited for: the punches run on a deadline.
@@ -556,8 +556,12 @@ in
   # FAI: SonicWall through nxBender, reading the config rendered by sops (with the password).
   systemd.services.vpn-fai = {
     description = "FAI VPN (SonicWall through nxBender)";
-    wants = [ "network-online.target" ];
-    requires = [ "vpn-fai-relay.service" ];
+    # Wants, not Requires: a restart of the relay propagates through Requires=, and a dead VPS
+    # restarts it every ten seconds, which on 2026-11-12 took the tunnel down with it each time.
+    wants = [
+      "network-online.target"
+      "vpn-fai-relay.service"
+    ];
     after = [
       "network-online.target"
       "vpn-fai-relay.service"

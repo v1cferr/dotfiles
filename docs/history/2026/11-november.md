@@ -16,6 +16,8 @@
       • MEDIA RESTS THERE while it plays, the cover and the title, and everything else passes
         over it; and the capsule moves on a SPRING, 3.9% past its size and at rest in about
         340 ms, the shell's one exception to its no-overshoot rule, asked for by name.
+      • THE APPS THAT WAIT (12/11/2026): a notification carries its app's own icon, the apps
+        with unseen ones rest in the capsule, and a hover lists them.
 
 - [x] The Control Center (12/11/2026; asked 11/11/2026). How and why:
       [notes/desktop/control-center.md](../../notes/desktop/control-center.md).

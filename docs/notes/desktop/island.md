@@ -22,6 +22,7 @@ Lower is more urgent. A level the user is setting beats a result, which beats ne
 | 5        | A plain notification                      | 5 s                  | `Notifs.qml`                                  |
 | 6        | A Bluetooth device connected or gone      | 3 s                  | `Quickshell.Bluetooth`                        |
 | 8        | Media playing: the cover, artist, title   | while it plays       | `Media.qml`                                   |
+| 9        | Apps with notifications not seen yet      | until they are seen  | `Notifs.qml`                                  |
 
 Priority 2 is not an event: it is the pointer. While it rests on the capsule the clock stops and
 only a priority 1 event may take the place.
@@ -63,6 +64,26 @@ dismissed by its click.
 
 It exists only on the main monitor's full bar. With no screen wide enough for it (`Island.live`),
 the OSD and the toasts do what they always did, so no event is ever sent to a capsule nobody sees.
+
+## The apps that wait
+
+A notification shows with the icon of the app it came from, in the place of the bell: whose it is
+reads before its words do. And while notifications wait to be seen, the apps they came from rest
+in the capsule, up to three icons and a `+N` (12/11/2026, asked for with WhatsApp's messages as
+the example):
+
+- With nothing else to show, the capsule holds `3 new` left of the logo and the icons right of it.
+- While media plays, the icons sit at the far end, after the title. Unseen apps are the least
+  urgent thing of all (priority 9, no end), so they never hide what plays.
+- A hover that rests on the capsule opens the PEEK (`bar/NotifPeek.qml`): the four newest of them
+  as the same cards the NixOS Center uses, by the bar's own hover rules (`Theme.hoverIntent`, and
+  it closes when the pointer leaves both).
+- Seeing them in the peek does not mark them seen. `Mark as seen` at its foot does, and so does
+  opening the NixOS Center, by a click on the capsule or on the other row. A notification that is
+  dismissed or expires leaves the list by itself.
+
+`Notifs.qml` owns the list (`unseenList`, and `unseenApps`, one entry per app, newest first); the
+count on the logo's dot is the same number.
 
 ## How it moves
 
@@ -133,7 +154,11 @@ The resting media was run the same day with a stand-in for `Media.qml` in the te
 private bus has no player: the cover, the artist and the title showed, a brightness event and then
 a notification took their place, and the media was back after each. The 17 state-machine tests pass.
 
+The apps that wait were run on 12/11/2026 the same way: a notification from ZapFast showed with
+ZapFast's icon; with three unseen from two apps the capsule rested on `3 new` and both icons; the
+peek, opened over IPC, listed the three, newest first. The 18 state-machine tests pass.
+
 Not verified: the volume and the microphone (the harness shares the machine's real Pipewire, so
 nothing was changed there), a VPN's progress and its error, a Bluetooth device connecting, a real
-player pausing and changing track, the disk warning, the pointer freezing the capsule, and every
-click on it. How the spring LOOKS was never seen by a person: only its numbers were measured.
+player pausing and changing track, the disk warning, the pointer freezing the capsule, the hover
+that opens the peek, and every click on it or in the peek. How the spring LOOKS was never seen by a person: only its numbers were measured.

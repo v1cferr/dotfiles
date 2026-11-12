@@ -1586,15 +1586,17 @@ Scope {
     // The media panel lives in shell.qml, outside this coordinator: a pin closes it over its IPC
     // (a no-op when it is already closed), so the one-panel rule holds for it too.
     // The media panel under a bar's logo: where a click on the island's track leads.
-    function openMediaUnder(barWin) {
-        if (!barWin)
+    // A click toggles it; a hover that rested only opens it, and it stays while the pointer does.
+    function openMediaUnder(barWin, hover) {
+        // A pinned panel owns the bar: a hover does not take it down.
+        if (!barWin || (hover && root.pinned !== ""))
             return;
         root.closePanels();
         root.hideHint();
         root.popBar = barWin;
         root.popScreen = barWin.screen;
         root.popCenterX = Math.floor(barWin.width / 2);
-        root.launch(["qs", "ipc", "call", "mpris", "toggleAt", "" + root.popLeft(360)]);
+        root.launch(["qs", "ipc", "call", "mpris", hover ? "openAt" : "toggleAt", "" + root.popLeft(360)]);
     }
     function hideMedia() {
         root.launch(["qs", "ipc", "call", "mpris", "hide"]);

@@ -349,6 +349,7 @@ Item {
             }
             // Apps with notifications not seen yet: their icons rest here, up to three.
             Row {
+                id: badges
                 visible: isle.v.badges && Notifs.unseenApps.length > 0
                 opacity: isle.beat2
                 spacing: Theme.sp1
@@ -372,18 +373,40 @@ Item {
             }
         }
         // The pointer on it holds it; a click leads on. Never the keyboard: it is not a window.
+        // A hover that rests opens what is under it: the media panel over what plays, the peek over
+        // the apps that wait (their icons, or the whole capsule when they are all it shows).
         MouseArea {
+            id: pointer
             anchors.fill: parent
             enabled: isle.shown
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            // With something not seen yet, a hover that rests lists it (NotifPeek.qml).
-            onContainsMouseChanged: {
-                Island.freeze(containsMouse);
-                if (Notifs.unseen > 0 || !containsMouse)
-                    isle.host.hoverPanel("peek", isle, isle.barContent, isle.barWindow, containsMouse);
+            readonly property bool overBadges: badges.visible && pointer.mouseX >= rightRow.x + badges.x - Theme.sp1
+            readonly property string zone: {
+                if (!pointer.containsMouse || !isle.last)
+                    return "";
+                if (isle.last.kind === "media")
+                    return (pointer.overBadges && Notifs.unseen > 0) ? "peek" : "media";
+                return ((isle.last.kind === "unseen" || isle.last.kind === "notification") && Notifs.unseen > 0) ? "peek" : "";
+            }
+            onContainsMouseChanged: Island.freeze(pointer.containsMouse)
+            onZoneChanged: {
+                isle.host.hoverPanel("peek", isle, isle.barContent, isle.barWindow, pointer.zone === "peek");
+                Media.hover = pointer.zone === "media";
+                if (pointer.zone === "media") {
+                    rest.restart();
+                } else {
+                    rest.stop();
+                    if (pointer.zone === "peek")
+                        isle.host.hideMedia();
+                }
             }
             onClicked: isle.act()
+        }
+        Timer {
+            id: rest
+            interval: Theme.hoverIntent
+            onTriggered: isle.host.openMediaUnder(isle.barWindow, true)
         }
     }
 }

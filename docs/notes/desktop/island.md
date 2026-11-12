@@ -2,8 +2,8 @@
 
 `modules/home/desktop/quickshell/Island.qml`, `island/IslandMath.qml` and `bar/IslandSlot.qml`. A
 capsule that grows out from behind the NixOS logo on the main monitor's bar, says one thing, and
-goes. With nothing to say it is not there: the logo stands alone. While media plays it rests open, still,
-with the cover and the title.
+goes. With nothing to say it is not there: the logo stands alone. While media plays it rests open,
+with the cover, the title and a wave of what is heard.
 
 Before 12/11/2026 the same events lived in three places: a bottom OSD for the volume, the
 microphone and the brightness, toasts in the top right corner for notifications, and a media item
@@ -85,6 +85,48 @@ the example):
 `Notifs.qml` owns the list (`unseenList`, and `unseenApps`, one entry per app, newest first); the
 count on the logo's dot is the same number.
 
+**Whose icon.** The app's `.desktop` entry first (`widgets/AppIcon.qml`). An app no entry answers
+for wears what its notification brought (`Notifs.appIconOf`): a theme icon's name, a file's path,
+or image data, in that order, and never a chat message's picture, which is a contact and not the
+app. The first version looked at the entry alone, and on 12/11/2026 Sunshine and Zen rested in the
+capsule as the neutral glyph while the peek right under it drew their icons: the card read the
+notification, the capsule did not. Both read one rule now.
+
+## The wave
+
+The capsule is symmetric, so a title wider than the artist left a gap beside the cover. Since
+12/11/2026 a wave of what is heard takes it, asked for as "really synchronized with the audio":
+
+- **It is the real level.** `Audio.qml` holds a `PwNodePeakMonitor` (Quickshell's own, no new
+  package and no child process) and `widgets/Wave.qml` draws it: one bar per 80 ms, the loudest
+  moment in it, the newest bar live at the right and each older one a step to the left. It is a
+  level over time and not a spectrum: it does not tell bass from treble.
+- **Of the player, when it can be told.** The meter listens to the player's own stream when one
+  answers to its name (`application.name` against the MPRIS identity) or is the only one playing,
+  so a notification's sound does not move the wave; else to the default output.
+- **Drawn against the loudest heard lately**, which sinks by half in about 5.5 s, so a quiet track
+  fills the height as a loud one does; and squared, since mastered music barely leaves the top
+  half of the scale.
+- **Only while it is seen.** The meter and the wave's timer run while media is what the capsule
+  shows. A volume change or a notification passing over it stops both, and so does a pause. With
+  `my.theme.motion = "off"` there is no wave and the gap is back.
+- It takes what the wider side leaves, and never fewer than five bars: a long artist leaves it
+  those five.
+- A player that repeats the artist in the title ("Radiohead - Creep" by Radiohead) says it once.
+
+**Measured on 12/11/2026** in the harness, which shares the machine's real Pipewire, with music
+playing in a browser: the meter's value followed the audio (0.57 to 0.91 over five seconds, and 0
+while a notification held the capsule), on the output and on the browser's own stream alike. Three
+20 s windows of the shell's CPU: 7.90% to 8.90% of a core with the wave, 4.25% to 5.55% on the tree
+without it. With the wave not drawn it was still 7.13% to 7.67%, so the cost is the meter and not
+the bars. That day a Sunshine stream held the audio graph at a quantum of 256 frames, and the
+meter reports once per quantum: 185 times a second, where the default of 1024 gives 47. The cost
+at the default quantum was not measured.
+
+A first version counted every stream as one that plays, the meter's own capture included: the list
+changed each time the meter started, the meter was rebuilt for the new list, and it never lived
+long enough to report. Only streams that play count now.
+
 ## How it moves
 
 The island is the one place in the shell that moves on a spring and overshoots
@@ -98,6 +140,7 @@ The island is the one place in the shell that moves on a spring and overshoots
 | A NEW event's content                        | three beats 40 ms apart, out from the logo: the icon or cover, the name, the value |
 | The same event's text changing (a new track) | the text fades through (`widgets/SwapText.qml`)                                    |
 | A level's bar and its number                 | `motionFast`, no spring and no fade: it answers a key                              |
+| The wave beside the cover                    | a step every 80 ms while media shows ([the wave](#the-wave)); not an animation     |
 
 **Measured on 12/11/2026** from a trace of the capsule's reach, frame by frame, in the harness: with
 spring 5.0 and damping 0.37 it passes its size by 3.9% of the travel (5.6 px opening from the logo
@@ -154,6 +197,10 @@ The resting media was run the same day with a stand-in for `Media.qml` in the te
 private bus has no player: the cover, the artist and the title showed, a brightness event and then
 a notification took their place, and the media was back after each. The 17 state-machine tests pass.
 
+The icons a notification brings were run on 12/11/2026 the same way: one naming a theme icon, one
+naming a file and one naming nothing, from apps with no entry, drew the icon, the file and the
+neutral glyph, in the capsule and at rest beside the title.
+
 The apps that wait were run on 12/11/2026 the same way: a notification from ZapFast showed with
 ZapFast's icon; with three unseen from two apps the capsule rested on `3 new` and both icons; the
 peek, opened over IPC, listed the three, newest first. The 18 state-machine tests pass.
@@ -161,4 +208,6 @@ peek, opened over IPC, listed the three, newest first. The 18 state-machine test
 Not verified: the volume and the microphone (the harness shares the machine's real Pipewire, so
 nothing was changed there), a VPN's progress and its error, a Bluetooth device connecting, a real
 player pausing and changing track, the disk warning, the pointer freezing the capsule, the hover
-that opens the peek, and every click on it or in the peek. How the spring LOOKS was never seen by a person: only its numbers were measured.
+that opens the peek, and every click on it or in the peek. How the spring LOOKS was never seen by a
+person: only its numbers were measured. Of the wave: how it looks moving, the meter finding a real
+player's stream by its name (the harness has no player), and its cost outside a Sunshine stream.

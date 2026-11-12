@@ -202,6 +202,11 @@ twelve lines stood in both. The lock keeps its own, different rule (the first pl
 none), since it runs as a separate process from a store copy of the tree. Checked on 11/11/2026 in
 the headless harness: the bar and the media panel render pixel for pixel as before.
 
+`Audio` also holds the level of what plays (`level()`, a `PwNodePeakMonitor`), captured only while
+`wave` is set, which the island does while media is what it shows
+([island.md](island.md#the-wave)). It is a function to call and not a property to bind: the meter
+reports once per audio quantum, 47 to 185 times a second.
+
 ### `Pill.qml`
 
 The bar's control. Since 11/11/2026 it is bare content, a glyph and a label, with a rounded

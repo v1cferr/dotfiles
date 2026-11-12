@@ -195,6 +195,11 @@ not by eye: a 3.9% overshoot, at rest within 320 to 353 ms. Closing is not a spr
 over `motionHover`, so "fast in, faster out" holds there too. `my.theme.motion = "off"` removes all
 of it.
 
+The wave beside the cover ([island.md](island.md#the-wave)) never stops while music plays, and is
+not decoration: it is the level of what is heard, a status that IS motion. Unlike the other such
+statuses it does go with `my.theme.motion = "off"`, since the cover and the title already say that
+something plays.
+
 ### Off in Quickshell
 
 `my.theme.motion = "off"` reaches `Theme.motionReduced`, and every token and `ms()` returns 0, so

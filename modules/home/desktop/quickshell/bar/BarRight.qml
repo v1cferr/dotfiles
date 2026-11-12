@@ -69,9 +69,9 @@ RowLayout {
     }
 
     function volSymbol() {
-        if (right.host.sinkMuted || right.host.volume <= 0)
+        if (Audio.muted || Audio.volume <= 0)
             return "volume_off";
-        return right.host.volume <= 0.33 ? "volume_mute" : (right.host.volume <= 0.66 ? "volume_down" : "volume_up");
+        return Audio.volume <= 0.33 ? "volume_mute" : (Audio.volume <= 0.66 ? "volume_down" : "volume_up");
     }
 
     // ── The standing screen: the operational alerts, nothing the band already shows ──
@@ -166,15 +166,15 @@ RowLayout {
         id: volPill
         visible: !right.bar.compact
         icon: right.volSymbol()
-        label: right.host.tab(Math.round(right.host.volume * 100), 3) + "%"
-        accent: right.host.sinkMuted ? Theme.colUnknown : Theme.colSubtext
-        labelColor: right.host.sinkMuted ? Theme.colUnknown : Theme.colText
-        off: right.host.sinkMuted
+        label: right.host.tab(Math.round(Audio.volume * 100), 3) + "%"
+        accent: Audio.muted ? Theme.colUnknown : Theme.colSubtext
+        labelColor: Audio.muted ? Theme.colUnknown : Theme.colText
+        off: Audio.muted
         onHoveredChanged: right.host.hoverHint("vol", volPill, right.barContent, right.bar, hovered)
-        onClicked: right.host.toggleMute()
+        onClicked: Audio.toggleMute()
         onRightClicked: right.host.launch(["pavucontrol"])
-        onScrolledUp: right.host.setVol(0.05)
-        onScrolledDown: right.host.setVol(-0.05)
+        onScrolledUp: Audio.changeVolume(0.05)
+        onScrolledDown: Audio.changeVolume(-0.05)
     }
     NotifIndicator {
         id: bell

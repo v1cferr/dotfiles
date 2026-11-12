@@ -28,22 +28,12 @@ Scope {
     // a Timer(0) coalesces the show. Brightness through IPC skips it, being an explicit action.
     property bool armed: false
 
-    PwObjectTracker {
-        objects: {
-            const arr = [];
-            if (Pipewire.defaultAudioSink)
-                arr.push(Pipewire.defaultAudioSink);
-            if (Pipewire.defaultAudioSource)
-                arr.push(Pipewire.defaultAudioSource);
-            return arr;
-        }
-    }
-
-    readonly property var sink: Pipewire.defaultAudioSink
-    readonly property var source: Pipewire.defaultAudioSource
-    readonly property real volume: (sink && sink.audio) ? sink.audio.volume : 0
-    readonly property bool sinkMuted: (sink && sink.audio) ? sink.audio.muted : false
-    readonly property bool micMuted: (source && source.audio) ? source.audio.muted : false
+    // The sink and the source have one owner (Audio.qml); these mirror it so a change shows the OSD.
+    readonly property var sink: Audio.sink
+    readonly property var source: Audio.source
+    readonly property real volume: Audio.volume
+    readonly property bool sinkMuted: Audio.muted
+    readonly property bool micMuted: Audio.micMuted
 
     onVolumeChanged: root.trigger("volume")
     onSinkMutedChanged: root.trigger("volume")

@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
-import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
@@ -928,8 +927,8 @@ Scope {
         if (key === "vol")
             return {
                 title: "Volume",
-                lines: [(root.sinkMuted ? "Muted" : Math.round(root.volume * 100) + "%") + (root.sink ? " · " + (root.sink.description || root.sink.name || "") : "")],
-                action: (root.sinkMuted ? "Click to unmute" : "Click to mute") + " · scroll ±5% · right-click for the mixer"
+                lines: [(Audio.muted ? "Muted" : Math.round(Audio.volume * 100) + "%") + (Audio.sink ? " · " + (Audio.sink.description || Audio.sink.name || "") : "")],
+                action: (Audio.muted ? "Click to unmute" : "Click to mute") + " · scroll ±5% · right-click for the mixer"
             };
         if (key === "idle")
             return {
@@ -1197,22 +1196,6 @@ Scope {
             });
         root.wHourly = hours;
     }
-    // ===== Audio (Pipewire) =====
-    PwObjectTracker {
-        objects: Pipewire.defaultAudioSink ? [Pipewire.defaultAudioSink] : []
-    }
-    readonly property var sink: Pipewire.defaultAudioSink
-    readonly property real volume: (sink && sink.audio) ? sink.audio.volume : 0
-    readonly property bool sinkMuted: (sink && sink.audio) ? sink.audio.muted : false
-    function setVol(delta) {
-        if (root.sink && root.sink.audio)
-            root.sink.audio.volume = Math.max(0, Math.min(1, root.sink.audio.volume + delta));
-    }
-    function toggleMute() {
-        if (root.sink && root.sink.audio)
-            root.sink.audio.muted = !root.sink.audio.muted;
-    }
-
     // ===== Spotifast (Mpris) =====
     readonly property var player: {
         const m = Mpris.players;

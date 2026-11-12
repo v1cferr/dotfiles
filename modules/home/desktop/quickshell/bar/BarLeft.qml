@@ -55,7 +55,9 @@ RowLayout {
         visible: left.mediaHere
         icon: "music_note"
         label: left.mediaIconOnly ? "" : Media.line
-        accent: Media.playing ? Theme.colGreen : Theme.colYellow
+        accent: Theme.colSubtext
+        labelColor: Theme.colSubtext
+        off: !Media.playing
         maxWidth: left.mediaUsed
         onHoveredChanged: left.host.hoverHint("music", spPill, left.barContent, left.bar, hovered)
         onClicked: {

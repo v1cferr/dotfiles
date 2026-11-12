@@ -129,7 +129,8 @@ RowLayout {
         icon: "lan"
         label: right.squeeze >= 1 ? "" : right.host.netPillText
         sub: right.squeeze >= 1 || !right.host.netBusy ? "" : "b/s" // ONE unit for both rates
-        accent: right.host.netQuality.color
+        // Neutral while the link is steady: color is for a state that needs a look.
+        accent: right.host.netQuality.label === "steady" ? Theme.colSubtext : right.host.netQuality.color
         labelColor: Theme.colText
         selected: right.host.pinned === "net"
         onHoveredChanged: right.host.hoverPanel("net", netPill, right.barContent, right.bar, hovered)
@@ -143,7 +144,7 @@ RowLayout {
         visible: !right.bar.compact
         icon: "shield_lock"
         label: right.host.vpnConnected && right.squeeze < 1 ? right.host.vpnName : ""
-        accent: right.host.vpnConnected ? Theme.colOk : Theme.colUnknown
+        accent: right.host.vpnConnected ? Theme.colText : Theme.colUnknown
         labelColor: Theme.colText
         off: !right.host.vpnConnected
         // Tor rides along in its own purple: a VPN and Tor can be up at once.

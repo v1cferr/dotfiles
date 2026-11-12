@@ -153,9 +153,15 @@ Singleton {
                 root.unseen++;
                 root.unseenCritical = root.unseenCritical || critical;
             }
-            // A toast only when not quiet (DND or a hold) and the Center is closed; Critical pierces all.
-            if (critical || (!root.quiet && !root.centerOpen))
-                root.popups = root.popups.concat([n]).slice(-root.maxToasts);
+            // Shown only when not quiet (DND or a hold) and the Center is closed; Critical pierces all.
+            // A plain one goes to the island when it is up; one that asks for an answer stays a toast.
+            if (critical || (!root.quiet && !root.centerOpen)) {
+                const asks = critical || (n.actions || []).some(a => a.identifier !== "default");
+                if (Island.live && !asks)
+                    root.arrived(n);
+                else
+                    root.popups = root.popups.concat([n]).slice(-root.maxToasts);
+            }
             if (root.count > root.historyLimit)
                 root.trimHistory();
         }

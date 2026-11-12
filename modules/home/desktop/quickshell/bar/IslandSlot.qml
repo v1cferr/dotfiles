@@ -121,13 +121,12 @@ Item {
         }
         return none;
     }
-    // A click leads to the surface that holds the rest of it.
+    // A click keeps the island open when it has something to open on; else it leads to the
+    // surface that holds the rest of it.
     function act() {
         const k = isle.last ? isle.last.kind : "";
-        if (k === "notification" || k === "unseen")
-            Notifs.toggleCenter();
-        else if (k === "media")
-            isle.host.openMediaUnder(isle.barWindow);
+        if (Island.canOpen)
+            Island.keep();
         else if (k === "critical")
             Island.dismiss();
         else
@@ -141,7 +140,8 @@ Item {
     readonly property bool waving: Audio.waveIsland && Audio.bands.length > 0 && isle.last !== null && isle.last.kind === "media"
     readonly property int waveMin: isle.waving ? 5 * wave.bar + 4 * wave.gap + Theme.sp2 : 0
     readonly property int side: Math.min(Theme.islandHalf - isle.inner - Theme.sp3, Math.ceil(Math.max(leftRow.implicitWidth + isle.waveMin, rightRow.implicitWidth)))
-    readonly property int half: isle.shown ? isle.inner + isle.side + Theme.sp3 : isle.inner
+    // Open, it is as wide as it gets: what comes down under it has that width.
+    readonly property int half: !isle.shown ? isle.inner : (Island.wide ? Theme.islandHalf : isle.inner + isle.side + Theme.sp3)
 
     function resize() {
         grow.stop();
@@ -221,18 +221,38 @@ Item {
         }
     }
 
+    // Open, the capsule is the head of one shape: opaque, down to the bar's foot, its lower corners
+    // squaring as the body comes down under them (bar/IslandDrop.qml starts where the bar ends).
+    Item {
+        visible: Island.wide
+        x: capsule.x
+        y: capsule.y
+        width: capsule.width
+        height: Theme.barHeight - capsule.y
+        clip: true
+        Rectangle {
+            width: parent.width
+            // Taller than its window by the radius: the foot's edge and corners fall outside it.
+            height: parent.height + Math.min(capsule.radius, Island.dropReach)
+            radius: capsule.radius
+            color: Theme.colIsland
+            border.width: Theme.hairline
+            border.color: Theme.colIslandEdge
+        }
+    }
     Rectangle {
         id: capsule
         // Opening or changing size it is pulled by a spring and overshoots a little; closing it
-        // just eases out, faster. It never gets smaller than the logo's own slot.
+        // just eases out, faster. It never gets smaller than the logo's own slot, nor wider than
+        // the island's.
         property real reach: isle.inner
-        readonly property real span: Math.max(isle.inner, capsule.reach)
+        readonly property real span: Math.min(Theme.islandHalf, Math.max(isle.inner, capsule.reach))
         x: Math.round(isle.width / 2 - capsule.span)
         y: Theme.barCellY
         width: Math.round(2 * capsule.span)
         height: Theme.barCell
         radius: height / 2
-        color: Theme.colCellHoverFill
+        color: Island.wide ? "transparent" : Theme.colCellHoverFill
         opacity: isle.shown ? 1 : 0
         Behavior on opacity {
             NumberAnimation {
@@ -371,41 +391,19 @@ Item {
                 }
             }
         }
-        // The pointer on it holds it; a click leads on. Never the keyboard: it is not a window.
-        // A hover that rests opens what is under it: the media panel over what plays, the peek over
-        // the apps that wait (their icons, or the whole capsule when they are all it shows).
-        MouseArea {
-            id: pointer
-            anchors.fill: parent
-            enabled: isle.shown
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            readonly property bool overBadges: badges.visible && pointer.mouseX >= rightRow.x + badges.x - Theme.sp1
-            readonly property string zone: {
-                if (!pointer.containsMouse || !isle.last)
-                    return "";
-                if (isle.last.kind === "media")
-                    return (pointer.overBadges && Notifs.unseen > 0) ? "peek" : "media";
-                return ((isle.last.kind === "unseen" || isle.last.kind === "notification") && Notifs.unseen > 0) ? "peek" : "";
-            }
-            onContainsMouseChanged: Island.freeze(pointer.containsMouse)
-            onZoneChanged: {
-                isle.host.hoverPanel("peek", isle, isle.barContent, isle.barWindow, pointer.zone === "peek");
-                Media.hover = pointer.zone === "media";
-                if (pointer.zone === "media") {
-                    rest.restart();
-                } else {
-                    rest.stop();
-                    if (pointer.zone === "peek")
-                        isle.host.hideMedia();
-                }
-            }
-            onClicked: isle.act()
-        }
-        Timer {
-            id: rest
-            interval: Theme.hoverIntent
-            onTriggered: isle.host.openMediaUnder(isle.barWindow, true)
-        }
+    }
+    // The pointer on it holds it; resting there opens it, and a click keeps it open. The whole
+    // capsule is one zone, up to the screen's edge and down to the bar's foot, so a pointer thrown
+    // at the top of the screen lands on it. Never the keyboard: it is not a window.
+    MouseArea {
+        x: capsule.x
+        width: capsule.width
+        height: Theme.barHeight
+        enabled: isle.shown
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        // A pinned panel owns the bar: a hover does not open the island over it.
+        onContainsMouseChanged: Island.capsuleHover = containsMouse && isle.host.pinned === ""
+        onClicked: isle.act()
     }
 }

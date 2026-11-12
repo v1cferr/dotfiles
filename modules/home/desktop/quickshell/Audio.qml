@@ -27,7 +27,8 @@ Singleton {
     // Quickshell's own peak meter, which cost the shell four to six times as much.
     property bool waveIsland: false
     property bool wavePanel: false
-    readonly property bool wave: root.waveIsland || root.wavePanel
+    property bool waveOpen: false
+    readonly property bool wave: root.waveIsland || root.wavePanel || root.waveOpen
     property var bands: [] // 0 to 1 each; empty while cava is not running (or not installed)
     // It outlives a pause in the asking by a few seconds: a volume key or a notification takes the
     // capsule for a moment, and starting cava again each time would cost more than letting it run.
@@ -67,10 +68,11 @@ Singleton {
     }
 
     // ===== The volume of what plays =====
-    // The media panel is open: it wants the player's own stream, when one answers to its name or
-    // is the only one playing; else the volume is the output's.
+    // The media panel or the open island shows the volume: it wants the player's own stream, when
+    // one answers to its name or is the only one playing; else the volume is the output's.
     property bool panelOpen: false
-    readonly property var playing: (root.panelOpen && Pipewire.nodes) ? Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream) : []
+    property bool islandOpen: false
+    readonly property var playing: ((root.panelOpen || root.islandOpen) && Pipewire.nodes) ? Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream) : []
     PwObjectTracker {
         objects: root.playing
     }

@@ -55,6 +55,58 @@ Singleton {
         }
     }
 
+    // ===== Open: the capsule grown downward (bar/IslandDrop.qml) =====
+    // A pointer that rests on the capsule opens it, and it stays while the pointer is on the
+    // capsule or on what came down; a click on the capsule keeps it. Only with something to show.
+    property bool capsuleHover: false
+    property bool dropHover: false
+    property bool rested: false // the hover held long enough, and has not been away long enough
+    property bool kept: false   // a click keeps it open
+    readonly property bool hasMedia: Media.playing && Media.title !== ""
+    readonly property bool hasUnseen: Notifs.unseenList.length > 0
+    readonly property bool canOpen: root.current !== null && ["media", "unseen", "notification"].indexOf(root.current.kind) >= 0 && (root.hasMedia || root.hasUnseen)
+    readonly property bool open: root.canOpen && (root.rested || root.kept)
+    // How far what came down reaches, in px: the capsule squares its foot against it, and stays
+    // wide until it is all the way back up.
+    property real dropReach: 0
+    readonly property bool wide: root.open || root.dropReach > 0
+    // A click: keep it open, or shut it when it already was kept.
+    function keep() {
+        if (root.kept)
+            root.shut();
+        else
+            root.kept = true;
+    }
+    function shut() {
+        root.kept = false;
+        root.rested = false;
+    }
+    onCanOpenChanged: if (!root.canOpen)
+        root.kept = false
+    Timer {
+        interval: Theme.hoverIntent
+        running: root.capsuleHover && !root.rested
+        onTriggered: root.rested = true
+    }
+    Timer {
+        interval: 400
+        running: root.rested && !root.capsuleHover && !root.dropHover
+        onTriggered: root.rested = false
+    }
+    // What is shown holds while the pointer is on either part, or while it is kept open.
+    readonly property bool held: root.capsuleHover || root.dropHover || root.kept
+    onHeldChanged: root.freeze(root.held)
+    Binding {
+        target: Audio
+        property: "waveOpen"
+        value: root.open && root.hasMedia && !Theme.motionReduced
+    }
+    Binding {
+        target: Audio
+        property: "islandOpen"
+        value: root.open && root.hasMedia
+    }
+
     // What was already true when the shell came up is not news: sources speak after this.
     property bool armed: false
     Timer {

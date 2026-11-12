@@ -197,6 +197,10 @@ Singleton {
     // The island's reach on each side of the screen's center. The sides stop there whether it is
     // showing or not, so an event never moves them. docs/notes/desktop/island.md
     readonly property int islandHalf: 208
+    // The open island's fill: opaque, since two windows draw it (the bar's and the one under it)
+    // and glass over two different backdrops would show where they meet.
+    readonly property color colIsland: colBgSolid
+    readonly property color colIslandEdge: Qt.tint(colIsland, colEdge) // the hairline, opaque for the same reason
     // An item's width from its content, on a 4 px module, so a changing value rarely moves a neighbor.
     function barCellWidth(content) { return Math.ceil((content + 2 * theme.barPad) / 4) * 4; }
     // A control's height off the bar (a panel's icon button, a calendar arrow).

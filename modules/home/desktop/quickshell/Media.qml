@@ -37,8 +37,6 @@ Singleton {
     function once(title, artist) {
         return (artist !== "" && title.toLowerCase().startsWith(artist.toLowerCase() + " - ")) ? title.slice(artist.length + 3) : title;
     }
-    // The pointer rests on the island's media: the media panel stays while it does.
-    property bool hover: false
     // The window what plays lives in: the player's app showing that very title, else any window of
     // that app. Looked for when asked, never bound: every window's title would feed it.
     function window() {

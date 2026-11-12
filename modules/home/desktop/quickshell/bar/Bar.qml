@@ -50,6 +50,13 @@ Scope {
         function panel(key: string): void {
             root.openForTest(key);
         }
+        // The island, kept open or shut: `open` only does something while it has what to show.
+        function island(state: string): void {
+            if (state === "open")
+                Island.kept = true;
+            else
+                Island.shut();
+        }
         // The same, closing it when it is already open: what a key binding wants.
         function toggle(key: string): void {
             root.pinned === key ? root.closePanels() : root.openForTest(key);
@@ -1585,19 +1592,6 @@ Scope {
     }
     // The media panel lives in shell.qml, outside this coordinator: a pin closes it over its IPC
     // (a no-op when it is already closed), so the one-panel rule holds for it too.
-    // The media panel under a bar's logo: where a click on the island's track leads.
-    // A click toggles it; a hover that rested only opens it, and it stays while the pointer does.
-    function openMediaUnder(barWin, hover) {
-        // A pinned panel owns the bar: a hover does not take it down.
-        if (!barWin || (hover && root.pinned !== ""))
-            return;
-        root.closePanels();
-        root.hideHint();
-        root.popBar = barWin;
-        root.popScreen = barWin.screen;
-        root.popCenterX = Math.floor(barWin.width / 2);
-        root.launch(["qs", "ipc", "call", "mpris", hover ? "openAt" : "toggleAt", "" + root.popLeft(360)]);
-    }
     function hideMedia() {
         root.launch(["qs", "ipc", "call", "mpris", "hide"]);
     }
@@ -1670,8 +1664,10 @@ Scope {
     signal dashRequested(string what)
     onPanelPopHoveredChanged: root.panelPopHovered ? panelCloseTimer.stop() : panelCloseTimer.restart()
     onPanelOpenChanged: {
-        if (root.panelOpen !== "")
+        if (root.panelOpen !== "") {
             root.hideHint();
+            Island.shut(); // one thing open at a time
+        }
         if (root.panelOpen === "vpn")
             vpnStatsProc.running = true; // a fresh sample when it opens
     }
@@ -1968,9 +1964,21 @@ Scope {
         bar: root
     }
 
-    // ===== What was not seen yet, on a hover of the island: bar/NotifPeek.qml =====
-    NotifPeek {
+    // ===== The island grown downward: bar/IslandDrop.qml =====
+    IslandDrop {
         bar: root
+    }
+    // One thing open at a time: the island opening closes the panels (a panel opening shuts it
+    // in onPanelOpenChanged).
+    Connections {
+        target: Island
+        function onOpenChanged() {
+            if (Island.open) {
+                root.closePanels();
+                root.hideHint();
+                root.hideMedia();
+            }
+        }
     }
 
     // ===== The Control Center, the view is in control/ControlCenter.qml =====

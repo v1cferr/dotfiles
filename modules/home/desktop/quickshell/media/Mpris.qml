@@ -14,8 +14,6 @@ Scope {
 
     property bool panelVisible: false
     property int panelLeft: Theme.barTop // the screen x the bar asked for; the left edge otherwise
-    // Opened by a hover on the island: it closes soon after the pointer leaves both.
-    property bool byHover: false
     // Even, so the panel's middle is a whole pixel: the logo's.
     readonly property int panelWidth: 360
 
@@ -36,31 +34,15 @@ Scope {
         target: "mpris"
 
         function toggle(): void {
-            root.byHover = false;
             root.panelVisible = !root.panelVisible;
         }
         // The bar's media pill: hung under the pill at screen x `x`, like every bar panel.
         function toggleAt(x: int): void {
             root.panelLeft = x;
-            // A click on what a hover opened keeps it, as a pin does on the bar's panels.
-            if (root.panelVisible && root.byHover) {
-                root.byHover = false;
-                return;
-            }
-            root.byHover = false;
             root.panelVisible = !root.panelVisible;
-        }
-        // The island's hover: open it there, never close it.
-        function openAt(x: int): void {
-            root.panelLeft = x;
-            if (!root.panelVisible) {
-                root.byHover = true;
-                root.panelVisible = true;
-            }
         }
         // "open" and not "show" (show collides with the `qs ipc show` subcommand)
         function open(): void {
-            root.byHover = false;
             root.panelVisible = true;
         }
         function hide(): void {
@@ -68,11 +50,10 @@ Scope {
         }
     }
 
-    // It closes when the pointer is on neither the panel nor the island's media: soon after a
-    // hover opened it, later after a click did.
+    // It closes when the pointer has left it for a while (the same as the VPN panel).
     Timer {
-        interval: root.byHover ? 600 : 2500
-        running: root.panelVisible && !panelHover.hovered && !Media.hover
+        interval: 2500
+        running: root.panelVisible && !panelHover.hovered
         onTriggered: root.panelVisible = false
     }
 

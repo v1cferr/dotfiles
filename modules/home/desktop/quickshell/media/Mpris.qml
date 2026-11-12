@@ -25,7 +25,11 @@ Scope {
     readonly property real length: Media.length
     readonly property bool playing: Media.playing
 
+    // Only while the panel shows it: asking a player that is closing for its position logs a D-Bus
+    // error per change, and with the panel closed nobody reads the answer.
     function refreshPosition() {
+        if (!root.panelVisible)
+            return;
         root.positionNow = (root.player && root.player.positionSupported) ? root.player.position : 0;
     }
 

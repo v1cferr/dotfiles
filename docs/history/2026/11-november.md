@@ -24,6 +24,9 @@
       • THE MEDIA PANEL REDRAWN (12/11/2026) in the shell's font and icons, with the wave, a
         seek that drags and the keys centered under the logo; symmetry checked by pixel. A
         hover on the capsule opens it, and it has the player's volume and the way to its window.
+      • THE ISLAND OPENS DOWNWARD (12/11/2026): one shape made of two windows that meet in a
+        straight line, with what plays and what was not seen; the peek and the two hover zones
+        are gone.
 
 - [x] The Control Center (12/11/2026; asked 11/11/2026). How and why:
       [notes/desktop/control-center.md](../../notes/desktop/control-center.md).

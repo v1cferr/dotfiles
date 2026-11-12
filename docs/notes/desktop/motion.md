@@ -195,6 +195,10 @@ not by eye: a 3.9% overshoot, at rest within 320 to 353 ms. Closing is not a spr
 over `motionHover`, so "fast in, faster out" holds there too. `my.theme.motion = "off"` removes all
 of it.
 
+The island opening downward on a hover ([island.md](island.md#open)) is the same exception and the
+same two tokens: its body comes down on the spring (3.6% past its height, at rest in 352 ms) and
+goes back up on the short ease.
+
 The wave beside the cover ([island.md](island.md#the-wave)) never stops while music plays, and is
 not decoration: it is the spectrum of what is heard, a status that IS motion. Unlike the other such
 statuses it does go with `my.theme.motion = "off"`, since the cover and the title already say that

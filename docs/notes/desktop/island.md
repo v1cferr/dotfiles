@@ -58,9 +58,9 @@ shows or not, so an event never moves a workspace or an icon. The capsule is sym
 take the width of the wider one, an icon and a name left of the logo, a level and a word right of
 it, each eliding past its room.
 
-A click leads to the surface that holds the rest: a notification to the NixOS Center, a track to
-the media panel under the logo, a level or a VPN to the Control Center. The disk warning is
-dismissed by its click.
+With media playing or notifications not seen yet, the capsule OPENS downward on a hover, and a
+click keeps it open ([open](#open)). On anything else a click leads to the surface that holds the
+rest, a level or a VPN to the Control Center, and the disk warning is dismissed by its click.
 
 It exists only on the main monitor's full bar. With no screen wide enough for it (`Island.live`),
 the OSD and the toasts do what they always did, so no event is ever sent to a capsule nobody sees.
@@ -75,12 +75,11 @@ the example):
 - With nothing else to show, the capsule holds `3 new` left of the logo and the icons right of it.
 - While media plays, the icons sit at the far end, after the title. Unseen apps are the least
   urgent thing of all (priority 9, no end), so they never hide what plays.
-- A hover that rests on the capsule opens the PEEK (`bar/NotifPeek.qml`): the four newest of them
-  as the same cards the NixOS Center uses, by the bar's own hover rules (`Theme.hoverIntent`, and
-  it closes when the pointer leaves both).
-- Seeing them in the peek does not mark them seen. `Mark as seen` at its foot does, and so does
-  opening the NixOS Center, by a click on the capsule or on the other row. A notification that is
-  dismissed or expires leaves the list by itself.
+- The open island lists the three newest of them as the same cards the NixOS Center uses
+  ([open](#open)).
+- Seeing them there does not mark them seen. `Mark as seen` under them does, and so does opening
+  the NixOS Center, by the row beside it. A notification that is dismissed or expires leaves the
+  list by itself.
 
 `Notifs.qml` owns the list (`unseenList`, and `unseenApps`, one entry per app, newest first); the
 count on the logo's dot is the same number.
@@ -89,7 +88,7 @@ count on the logo's dot is the same number.
 for wears what its notification brought (`Notifs.appIconOf`): a theme icon's name, a file's path,
 or image data, in that order, and never a chat message's picture, which is a contact and not the
 app. The first version looked at the entry alone, and on 12/11/2026 Sunshine and Zen rested in the
-capsule as the neutral glyph while the peek right under it drew their icons: the card read the
+capsule as the neutral glyph while the list right under it drew their icons: the card read the
 notification, the capsule did not. Both read one rule now.
 
 ## The wave
@@ -136,38 +135,84 @@ open: the shell took 7.73% to 8.60% of a core and 1.78% to 1.99% of the GPU's re
 cava 0.47% to 0.53% of a core. cava's own stream asks for a quantum of 512 frames, so the audio
 graph runs at 512 while the wave shows, where it would idle at 1024 or more.
 
-## The media panel
+## Open
 
-A click on the resting media opens the panel under the logo (`media/Mpris.qml`). It was redrawn
-on 12/11/2026, asked for with a capture of the old one: that still had the mono font, since it
-named none, Nerd glyphs in outlined rings, and the artist twice.
+Asked for on 12/11/2026 with the Dynamic Island and the notch apps of macOS (boring.notch,
+NotchNook) as the picture: the whole capsule one hover zone, and the island itself opening
+downward. Before it, a hover on the media opened a card under the bar and a hover on the apps'
+icons another, each a separate surface with a gap above it.
 
-| Row        | What                                                                                         |
-| ---------- | -------------------------------------------------------------------------------------------- |
-| The track  | a 72 px cover; the title, the artist, and the album or else the player's name                |
-| The wave   | the island's, across the panel and mirrored: the bass in the middle, the treble at both ends |
-| The seek   | a 4 px track; a press or a drag moves the track there; the two times under its ends          |
-| The keys   | previous, play or pause (filled), next: centered on the panel, so under the logo             |
-| The volume | of what plays: the player's own stream when it is known, else the output's                   |
+- **One shape, two windows.** The head is the capsule, in the bar's window: open, it is as wide
+  as the island gets (416 px), opaque, and reaches the bar's foot with its lower corners squared.
+  The body is `bar/IslandDrop.qml`, a layer that starts where the bar ends, as wide as the head,
+  its lower corners round. Both are `Theme.colIsland`, opaque, because glass over two different
+  backdrops would show where they meet.
+- **Always mapped, empty while shut.** The body's window exists from the start, zero tall and
+  taking no pointer (its mask is the body), so opening is the island's own motion from its first
+  frame: no layer to map, no fade of the compositor's over it.
+- **What it holds**, in one column, each part only when it has something: what plays
+  ([the media card](#the-media-card)), then the three newest notifications not seen yet with
+  `Mark as seen` and the way to the NixOS Center.
+- **The hover.** The pointer resting on the capsule for `Theme.hoverIntent` opens it; the zone is
+  the capsule's width from the screen's top edge to the bar's foot, so a pointer thrown at the top
+  of the screen lands on it. It stays while the pointer is on the head or the body and shuts
+  400 ms after it leaves both. A click on the capsule keeps it; a second click, a click anywhere
+  else, or any other panel opening shuts it. A pinned panel is never taken down by a hover.
+- **Only with something to open on**: media playing or notifications not seen. A level, a VPN or a
+  Bluetooth device in the capsule does not open.
+- `Island.qml` owns the state (`open`, `kept`, the two hovers); `qs ipc call bar island open` and
+  `close` drive it without a pointer.
+
+| Part                 | Motion                                                                 |
+| -------------------- | ---------------------------------------------------------------------- |
+| The head widening    | the capsule's spring, held at the island's width (no overshoot there)  |
+| The body coming down | the same spring on its height; what it holds is revealed, not squeezed |
+| What it holds        | two beats 80 ms apart: what plays, then what waits                     |
+| Shutting             | an ease-out over `motionHover`; the head narrows when the body is gone |
+
+**Measured on 12/11/2026** in the harness, opened and shut over IPC:
+
+- The spring: the body passed its 269 px by 9.7 px (3.6%) and was within half a pixel of rest
+  after 352 ms, over 41 frames; shutting took 112 ms over 8.
+- The seam: on the rows where the two windows meet (y 33 and 34), the fill is the same color on
+  both and the outline runs from x 1072 to 1487 on each, as on every row above and below. The
+  edge was first the translucent hairline every surface has, and showed one row a shade lighter
+  where the bar's own foot was under it; it is opaque now (`Theme.colIslandEdge`).
+- Symmetry about the logo (x 1280): head and body 208 px each side, the keys 58, with media alone,
+  with notifications alone and with both.
+- Cost, three 15 s windows of the shell's CPU, media resting and the island shut: 6.80% to 7.47%
+  of a core against 7.27% to 7.67% on the tree before. Open on what plays: 10.73% to 11.47%, the
+  wide wave being most of it. Ten openings and closings in a row logged no warning.
+- Another panel opening shut it; the notifications alone opened a narrow capsule to full width.
+
+## The media card
+
+`media/MediaCard.qml` is what plays, to look at and to drive. The open island shows it, and so
+does the media panel (`media/Mpris.qml`), a window of its own for the bar's media item where the
+island is off and for `qs ipc call mpris toggle`. It was redrawn on 12/11/2026, asked for with a
+capture of the old one: that still had the mono font, since it named none, Nerd glyphs in
+outlined rings, and the artist twice.
+
+| Row        | What                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------- |
+| The track  | a 72 px cover; the title, the artist, and the album or else the player's name               |
+| The wave   | the island's, across the card and mirrored: the bass in the middle, the treble at both ends |
+| The seek   | a 4 px track; a press or a drag moves the track there; the two times under its ends         |
+| The keys   | previous, play or pause (filled), next: centered, so under the logo                         |
+| The volume | of what plays: the player's own stream when it is known, else the output's                  |
 
 At the track's right end a key goes to the window it plays in (`Media.reveal`): the player's app
 showing that very title, else any window of that app, found among the compositor's toplevels and
 activated; with no window, the player is asked to raise itself. A browser playing in a tab that is
 not the front one leads to the browser, not to the tab: MPRIS does not say which tab.
 
-**A hover opens it** (12/11/2026, asked for: a click was one step too many). The pointer resting on
-the capsule's media for `Theme.hoverIntent` opens the panel, and it stays while the pointer is on
-the capsule or on the panel, closing 600 ms after it leaves both. A click on the capsule then keeps
-it, as a pin does on the bar's panels; opened by a click it closes 2.5 s after the pointer leaves.
-The apps' icons at the capsule's far end are their own zone: resting there opens the peek, as the
-whole capsule does when the apps are all it shows. A pinned panel is never taken down by a hover.
+It is Geist and Material Symbols like the rest, on the theme's tokens. Its wave asks for cava
+itself (`Audio.waveOpen`, or `wavePanel` in the window), so it keeps moving while a notification
+holds the capsule above it.
 
-It is Geist and Material Symbols like the rest, on the theme's tokens. The wave asks for cava
-itself (`Audio.wavePanel`), so it keeps moving while a notification holds the capsule above it.
-
-**Symmetry, by pixel, on 12/11/2026** in the harness, about the logo's center (x 1280): the capsule
-208 px each side, the panel 180, the seek bar and the volume 164, the three keys 58, the logo's ink
-1261 to 1298.
+**Symmetry of the window, by pixel, on 12/11/2026** in the harness, about the logo's center
+(x 1280): the capsule 208 px each side, the panel 180, the seek bar and the volume 164, the three
+keys 58, the logo's ink 1261 to 1298.
 The panel's width is even so its middle is a whole pixel.
 
 ## How it moves
@@ -246,14 +291,15 @@ neutral glyph, in the capsule and at rest beside the title.
 
 The apps that wait were run on 12/11/2026 the same way: a notification from ZapFast showed with
 ZapFast's icon; with three unseen from two apps the capsule rested on `3 new` and both icons; the
-peek, opened over IPC, listed the three, newest first. The 18 state-machine tests pass.
+list under it, opened over IPC, showed the three, newest first. The 18 state-machine tests pass.
 
 Not verified: the volume and the microphone (the harness shares the machine's real Pipewire, so
 nothing was changed there), a VPN's progress and its error, a Bluetooth device connecting, a real
-player pausing and changing track, the disk warning, the pointer freezing the capsule, the hover
-that opens the peek, and every click on it or in the peek. How the spring LOOKS was never seen by a
+player pausing and changing track, the disk warning, the pointer freezing the capsule, and every
+click on it or in what it opens. How the spring LOOKS was never seen by a
 person: only its numbers were measured. Of the wave: how it looks moving, and what it costs live with a game open. Of the media panel: the seek by press and drag, the three keys,
 the volume and the way to the window on a real player (the stand-in's do nothing, and nothing in
-the harness may change a volume). Of the hover: a virtual pointer entering the capsule was seen to
-give the media zone, but none could be held there, so the rest that opens the panel was not seen;
-the panel's side of it was, over IPC: `openAt` opened it and it was gone 1.5 s later.
+the harness may change a volume). Of the open island: the hover itself (no pointer can be held still in the harness, so the rest
+that opens it and the leaving that shuts it were never seen), the click that keeps it and the
+click elsewhere that shuts it, `my.theme.motion = "off"`, how the opening LOOKS, and whether
+Hyprland stacks the two windows as sway did.

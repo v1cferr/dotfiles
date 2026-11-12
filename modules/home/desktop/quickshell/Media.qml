@@ -3,6 +3,7 @@ pragma Singleton
 // else the first. The bar and the media panel both read it. docs/notes/desktop/quickshell.md#audio-and-media
 import Quickshell
 import Quickshell.Services.Mpris
+import Quickshell.Wayland
 import QtQuick
 
 Singleton {
@@ -35,6 +36,30 @@ Singleton {
     }
     function once(title, artist) {
         return (artist !== "" && title.toLowerCase().startsWith(artist.toLowerCase() + " - ")) ? title.slice(artist.length + 3) : title;
+    }
+    // The pointer rests on the island's media: the media panel stays while it does.
+    property bool hover: false
+    // The window what plays lives in: the player's app showing that very title, else any window of
+    // that app. Looked for when asked, never bound: every window's title would feed it.
+    function window() {
+        if (!root.player)
+            return null;
+        const tokens = [root.player.desktopEntry || "", root.source].map(t => t.toLowerCase()).filter(t => t !== "");
+        const mine = ToplevelManager.toplevels.values.filter(w => {
+            const id = (w.appId || "").toLowerCase();
+            return id !== "" && tokens.some(t => id === t || id.indexOf(t) >= 0 || t.indexOf(id) >= 0);
+        });
+        const exact = root.rawTitle.length > 3 ? mine.find(w => (w.title || "").indexOf(root.rawTitle) >= 0) : undefined;
+        return exact || (mine.length ? mine[0] : null);
+    }
+    readonly property bool canReveal: !!root.player
+    // Go to it: the window when there is one, else whatever the player does when asked to raise.
+    function reveal() {
+        const w = root.window();
+        if (w)
+            w.activate();
+        else if (root.player && root.player.canRaise)
+            root.player.raise();
     }
     // Who plays it, as the player names itself.
     readonly property string source: (root.player && root.player.identity) ? root.player.identity : ""

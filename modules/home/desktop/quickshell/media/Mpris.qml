@@ -16,6 +16,8 @@ Scope {
     property bool panelVisible: false
     property int panelLeft: Theme.barTop // the screen x the bar asked for; the left edge otherwise
     property real positionNow: 0
+    // Opened by a hover on the island: it closes soon after the pointer leaves both.
+    property bool byHover: false
     // Even, so the panel's middle is a whole pixel: the logo's.
     readonly property int panelWidth: 360
     readonly property int cover: Theme.sp6 * 3
@@ -57,6 +59,7 @@ Scope {
         target: "mpris"
 
         function toggle(): void {
+            root.byHover = false;
             root.panelVisible = !root.panelVisible;
             if (root.panelVisible)
                 root.refreshPosition();
@@ -64,12 +67,28 @@ Scope {
         // The bar's media pill: hung under the pill at screen x `x`, like every bar panel.
         function toggleAt(x: int): void {
             root.panelLeft = x;
+            // A click on what a hover opened keeps it, as a pin does on the bar's panels.
+            if (root.panelVisible && root.byHover) {
+                root.byHover = false;
+                return;
+            }
+            root.byHover = false;
             root.panelVisible = !root.panelVisible;
             if (root.panelVisible)
                 root.refreshPosition();
         }
+        // The island's hover: open it there, never close it.
+        function openAt(x: int): void {
+            root.panelLeft = x;
+            if (!root.panelVisible) {
+                root.byHover = true;
+                root.panelVisible = true;
+                root.refreshPosition();
+            }
+        }
         // "open" and not "show" (show collides with the `qs ipc show` subcommand)
         function open(): void {
+            root.byHover = false;
             root.panelVisible = true;
             root.refreshPosition();
         }
@@ -86,11 +105,17 @@ Scope {
         onTriggered: root.refreshPosition()
     }
 
-    // Auto-closing when the mouse leaves the panel (the same as the VPN panel)
+    // It closes when the pointer is on neither the panel nor the island's media: soon after a
+    // hover opened it, later after a click did.
     Timer {
-        interval: 2500
-        running: root.panelVisible && !panelHover.hovered
+        interval: root.byHover ? 600 : 2500
+        running: root.panelVisible && !panelHover.hovered && !Media.hover
         onTriggered: root.panelVisible = false
+    }
+    Binding {
+        target: Audio
+        property: "panelOpen"
+        value: root.panelVisible
     }
 
     // It updates the position when the track changes or on play-pause
@@ -214,6 +239,18 @@ Scope {
                             elide: Text.ElideRight
                         }
                     }
+
+                    // Go to the window it plays in.
+                    Key {
+                        Layout.alignment: Qt.AlignTop
+                        visible: root.hasPlayer
+                        glyph: "open_in_new"
+                        name: "Go to " + (Media.source || "the player")
+                        onActivated: {
+                            Media.reveal();
+                            root.panelVisible = false;
+                        }
+                    }
                 }
 
                 // What is heard, across the panel: the island's wave with room to breathe.
@@ -317,6 +354,18 @@ Scope {
                         enabled: !!root.player && root.player.canGoNext
                         onActivated: root.player.next()
                     }
+                }
+
+                // The volume of what plays: the player's own when its stream is known, else the output's.
+                Slider {
+                    Layout.fillWidth: true
+                    visible: root.hasPlayer
+                    value: Audio.mediaVolume
+                    dimmed: Audio.mediaMuted
+                    icon: Audio.mediaMuted || Audio.mediaVolume <= 0 ? "volume_off" : (Audio.mediaVolume <= 0.5 ? "volume_down" : "volume_up")
+                    name: Audio.mediaIsPlayer ? Media.source + " volume" : "Volume"
+                    onMoved: v => Audio.setMediaVolume(v)
+                    onIconClicked: Audio.toggleMediaMute()
                 }
             }
         }

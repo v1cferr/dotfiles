@@ -27,18 +27,34 @@ Singleton {
     property bool waveIsland: false
     property bool wavePanel: false
     readonly property bool wave: root.waveIsland || root.wavePanel
-    readonly property var playing: (root.wave && Pipewire.nodes) ? Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream) : []
+    // The media panel is open: it wants the player's stream for its volume, playing or not.
+    property bool panelOpen: false
+    readonly property var playing: ((root.wave || root.panelOpen) && Pipewire.nodes) ? Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream) : []
     PwObjectTracker {
         objects: root.playing
     }
-    readonly property var waveNode: {
+    readonly property var playerStream: {
         const who = ((Media.player && Media.player.identity) || "").toLowerCase();
         for (const n of root.playing) {
             const name = ((n.properties && n.properties["application.name"]) || n.name || "").toLowerCase();
             if (who !== "" && name !== "" && (who.indexOf(name) >= 0 || name.indexOf(who) >= 0))
                 return n;
         }
-        return root.playing.length === 1 ? root.playing[0] : (root.sink || null);
+        return root.playing.length === 1 ? root.playing[0] : null;
+    }
+    readonly property var waveNode: root.playerStream || root.sink || null
+    // The volume of what plays: the player's own stream when it is known, else the output's.
+    readonly property var mediaNode: root.playerStream || root.sink || null
+    readonly property bool mediaIsPlayer: !!root.playerStream
+    readonly property real mediaVolume: (root.mediaNode && root.mediaNode.audio) ? root.mediaNode.audio.volume : 0
+    readonly property bool mediaMuted: (root.mediaNode && root.mediaNode.audio) ? root.mediaNode.audio.muted : false
+    function setMediaVolume(v) {
+        if (root.mediaNode && root.mediaNode.audio)
+            root.mediaNode.audio.volume = Math.max(0, Math.min(1, v));
+    }
+    function toggleMediaMute() {
+        if (root.mediaNode && root.mediaNode.audio)
+            root.mediaNode.audio.muted = !root.mediaNode.audio.muted;
     }
     PwNodePeakMonitor {
         id: meter

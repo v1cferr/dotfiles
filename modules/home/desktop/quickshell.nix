@@ -94,6 +94,7 @@ in
   imports = [
     ./quickshell/dash/services.nix # the band's services carousel: catalog plus its meta script
     ./quickshell/dash/band.nix # the band's height, my.dash.share
+    ./quickshell/flags.nix # which surfaces are on and what the host offers, my.shell.*
   ];
 
   home.packages = [

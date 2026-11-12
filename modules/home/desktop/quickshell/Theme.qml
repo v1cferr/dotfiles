@@ -75,6 +75,22 @@ Singleton {
         }
     }
 
+    // Which surfaces are on and what this host offers (my.shell.*, quickshell/flags.nix).
+    FileView {
+        id: shellFile
+        path: Quickshell.env("HOME") + "/.config/theme/shell.json"
+        blockLoading: true
+        watchChanges: true
+        onFileChanged: reload()
+        JsonAdapter {
+            id: shellCfg
+            property bool controlCenter: true
+            property bool vpn: true
+        }
+    }
+    readonly property bool controlCenterOn: shellCfg.controlCenter
+    readonly property bool hasVpn: shellCfg.vpn
+
     readonly property string primaryMonitor: mon.primary
     readonly property string secondaryMonitor: mon.secondary
     readonly property string primaryName: mon.primaryName

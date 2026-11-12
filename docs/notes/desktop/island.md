@@ -129,8 +129,12 @@ took 13.47% of a core and 1.46% of the GPU's render engine over 15 s, so the wei
 cava's cost does not follow the quantum, and its smoothing is what the hand-made scale of the
 first version was reaching for: that one needed three tries (against the loudest, squared, then
 between the loudest and the quietest) to look right on both a dense track and a sparse one.
-24 frames sits between the two measured rates. The live cost with cava was not measured: it needs
-a rebuild first.
+24 frames sits between the two measured rates.
+
+**Live, after the rebuild**, the same day, three 15 s windows with a video playing and no game
+open: the shell took 7.73% to 8.60% of a core and 1.78% to 1.99% of the GPU's render engine, and
+cava 0.47% to 0.53% of a core. cava's own stream asks for a quantum of 512 frames, so the audio
+graph runs at 512 while the wave shows, where it would idle at 1024 or more.
 
 ## The media panel
 
@@ -248,7 +252,7 @@ Not verified: the volume and the microphone (the harness shares the machine's re
 nothing was changed there), a VPN's progress and its error, a Bluetooth device connecting, a real
 player pausing and changing track, the disk warning, the pointer freezing the capsule, the hover
 that opens the peek, and every click on it or in the peek. How the spring LOOKS was never seen by a
-person: only its numbers were measured. Of the wave: how it looks moving, and what it costs live. Of the media panel: the seek by press and drag, the three keys,
+person: only its numbers were measured. Of the wave: how it looks moving, and what it costs live with a game open. Of the media panel: the seek by press and drag, the three keys,
 the volume and the way to the window on a real player (the stand-in's do nothing, and nothing in
 the harness may change a volume). Of the hover: a virtual pointer entering the capsule was seen to
 give the media zone, but none could be held there, so the rest that opens the panel was not seen;

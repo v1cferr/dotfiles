@@ -117,6 +117,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [hyprglass](desktop/hyprglass.md)               | the Liquid Glass plugin: the pinned build, the presets, turning it on and off           |
 | [performance](desktop/performance.md)           | what the desktop costs, and the A/B bench of blur and animations that measures it       |
 | [nixos-center](desktop/nixos-center.md)         | the logo's panel: notifications, do-not-disturb, the session, the toasts                |
+| [control-center](desktop/control-center.md)     | the everyday switches in one panel: network, Bluetooth, VPN, focus, media, sound        |
 | [dash](desktop/dash.md)                         | the glance band on the standing monitor: vitals, month, CI pages                        |
 | [glance-feed](desktop/glance-feed.md)           | the SQLite network cache: fetch only what changed, paint from disk at boot              |
 | [lockscreen](desktop/lockscreen.md)             | the QML lock (Quickshell), hyprlock as its fallback, hypridle, and the hardware lessons |

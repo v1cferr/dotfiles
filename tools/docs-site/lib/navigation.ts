@@ -127,6 +127,7 @@ export const navigation: NavItem[] = [
       { title: "Quickshell", doc: "notes/desktop/quickshell.md" },
       { title: "Bar", doc: "notes/desktop/bar.md" },
       { title: "NixOS Center", doc: "notes/desktop/nixos-center.md" },
+      { title: "Control Center", doc: "notes/desktop/control-center.md" },
       { title: "Calendar", doc: "notes/desktop/calendar.md" },
       { title: "Glance band", doc: "notes/desktop/dash.md" },
       { title: "Glance feed", doc: "notes/desktop/glance-feed.md" },

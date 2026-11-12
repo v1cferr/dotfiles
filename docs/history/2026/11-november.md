@@ -1,6 +1,18 @@
 # History: november 2026
 
-11 entries. Index in [README.md](../README.md).
+12 entries. Index in [README.md](../README.md).
+
+- [x] The Control Center (12/11/2026; asked 11/11/2026). How and why:
+      [notes/desktop/control-center.md](../../notes/desktop/control-center.md).
+      • ONE PANEL for network, Bluetooth, VPN, focus, the playing track and the sound, under its
+        item on the bar's right or SUPER+A; it owns no state.
+      • THE SHELL'S FIRST SLIDER AND SWITCH: `Slider`, `ControlTile`; a Sound page with the
+        outputs, the inputs, the microphone and each app's level.
+      • THE VPN HAS PHASES: connecting, disconnecting and an error that says why, on top of a CLI
+        that only says connected or not.
+      • THE BAR GETS LEANER with it on: no volume, no bell, no network numbers.
+      • A FLAG, `my.shell.controlCenter.enable`, puts the old strip back.
+      • RENDERED in the headless harness against the real Pipewire; nothing was clicked or typed.
 
 - [x] A quieter bar: the app's name, neutral colors, no bold (11/11/2026; asked 11/11/2026). How and why:
       [notes/desktop/bar.md](../../notes/desktop/bar.md), [notes/hardware/fonts.md](../../notes/hardware/fonts.md).

@@ -57,10 +57,17 @@ capped at what is left of it before the slot (`leftRoom`, `rightRoom`), so it ca
 `centerLeft` and `centerRight` are the only two numbers the sides read about the center: a center
 that grows one day (media, a volume change, a notification) widens those two and nothing else.
 
-## The distribution (11/11/2026)
+## The distribution (12/11/2026)
 
-The main monitor reads `Workspaces, title, media | logo | alerts, network, VPN, sound, bell, tray,
-clock`, and the standing monitor `Workspaces, title | logo | operational chips`.
+The main monitor reads `Workspaces, app, media | logo | alerts, network, VPN, tray, Control Center,
+clock`, and the standing monitor `Workspaces, app | logo | operational chips`.
+
+**With the Control Center on, what it holds leaves the strip** (12/11/2026,
+[control-center.md](control-center.md)). The network keeps its icon and loses its numbers; the VPN
+shows only while a tunnel is up or coming up; the sound shows only while muted, as an alert; the
+bell is gone, and do-not-disturb turns the Control Center's own icon into its sign. A scroll on
+that icon is the volume. With `my.shell.controlCenter.enable = false` the strip is the one of
+11/11/2026 again, which is what the next paragraphs about the bell and the fold describe.
 
 **What left the strip, and where it went.** The bar held fifteen permanent cells; secondary
 telemetry now waits one hover or one click away.
@@ -307,7 +314,7 @@ keeps the logo at x 540 and holds:
 - **Left:** that monitor's workspaces, and the window title when it fits cleanly.
 - **Right:** the operational alerts (`OpsIndicator.qml`) and nothing else. No clock: the band right
   under it shows the time at 72 px. Nothing the band's cards already show is repeated. The one
-  exception is the tray, and only with no wide screen up ([the distribution](#the-distribution-11112026)).
+  exception is the tray, and only with no wide screen up ([the distribution](#the-distribution-12112026)).
 
 **On the standing monitor the bar reserves the band's strip too.** Its `exclusiveZone` there is the
 whole top share (672 px at 35%), and the band draws inside that strip ignoring other zones. Two

@@ -190,6 +190,18 @@ The media control panel (Spotifast), modeled on the VPN panel, opened through
 `qs ipc call mpris toggle`. It uses the native `Quickshell.Services.Mpris` service and sits
 bottom/top-left on the main monitor, near the Spotifast pill.
 
+### Audio and media
+
+`Audio.qml` and `Media.qml`, two singletons at the tree's root, each the ONE owner of a piece of
+state that used to be computed in several places (11/11/2026). `Audio` binds the default sink and
+source and holds the only setters (`changeVolume`, `toggleMute`); the bar's volume item and the OSD
+read it, where before each kept its own `PwObjectTracker` and the microphone existed only in the
+OSD. `Media` holds the player choice (Spotifast when it is up, else whichever is playing, else the
+first) and its track; the bar's media item and the media panel read it, where before the same
+twelve lines stood in both. The lock keeps its own, different rule (the first playing player or
+none), since it runs as a separate process from a store copy of the tree. Checked on 11/11/2026 in
+the headless harness: the bar and the media panel render pixel for pixel as before.
+
 ### `Pill.qml`
 
 The bar's control. Since 11/11/2026 it is bare content, a glyph and a label, with a rounded

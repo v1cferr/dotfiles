@@ -648,6 +648,53 @@ Scope {
     property var vpnList: []
     property bool vpnPopVisible: false
     property bool vpnBusy: false
+    // What a VPN is doing beyond up or down, which the CLI's JSON does not say: "connecting" from the
+    // command until the tunnel exists, "disconnecting" while the command runs, "error" with the
+    // CLI's own diagnosis when the tunnel never came. docs/notes/desktop/control-center.md#vpn
+    property var vpnPhase: ({})
+    property var vpnError: ({})
+    property string vpnLast: "fai" // the one a bare "turn the VPN on" connects
+    function vpnState(v) {
+        if (!v)
+            return "unknown";
+        const p = root.vpnPhase[v.id] || "";
+        if (p === "disconnecting")
+            return p;
+        return v.connected ? "connected" : (p !== "" ? p : "disconnected");
+    }
+    function setVpnPhase(id, phase) {
+        const m = Object.assign({}, root.vpnPhase);
+        if (phase === "")
+            delete m[id];
+        else
+            m[id] = phase;
+        root.vpnPhase = m;
+    }
+    // 45 s is the CLI's own patience (`vpn watch`): past it, ask it why.
+    Timer {
+        id: vpnDeadline
+        interval: 45000
+        onTriggered: {
+            const late = Object.keys(root.vpnPhase).filter(id => root.vpnPhase[id] === "connecting");
+            if (late.length > 0) {
+                vpnDiagProc.target = late[0];
+                vpnDiagProc.command = [root.vpnBin, "diagnose", late[0]];
+                vpnDiagProc.running = true;
+            }
+        }
+    }
+    Process {
+        id: vpnDiagProc
+        property string target: ""
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const e = Object.assign({}, root.vpnError);
+                e[vpnDiagProc.target] = text.split("\n")[0] || "did not connect";
+                root.vpnError = e;
+                root.setVpnPhase(vpnDiagProc.target, text.indexOf("connected") === 0 ? "" : "error");
+            }
+        }
+    }
     function parseVpn(text) {
         try {
             const j = JSON.parse(text);
@@ -657,6 +704,10 @@ Scope {
                     c = true;
                     n = v.name;
                 }
+                // The tunnel answers for the phase: up ends "connecting", down ends "disconnecting".
+                const p = root.vpnPhase[v.id] || "";
+                if ((v.connected && p === "connecting") || (!v.connected && p === "disconnecting" && !root.vpnBusy))
+                    root.setVpnPhase(v.id, "");
             });
             root.vpnList = j.vpns || [];
             root.vpnConnected = c;
@@ -666,6 +717,13 @@ Scope {
     // A Process and not launch(), so we know WHEN it finished and can reread instead of waiting the
     // 5s poll; vpnBusy holds the panel open and the buttons inert meanwhile.
     function runVpn(action, target) {
+        const ids = target === "all" ? root.vpnList.filter(v => v.connected).map(v => v.id) : [target];
+        for (const id of ids)
+            root.setVpnPhase(id, action === "connect" ? "connecting" : "disconnecting");
+        if (action === "connect") {
+            root.vpnLast = target;
+            vpnDeadline.restart();
+        }
         root.vpnBusy = true;
         vpnActionProc.command = [root.vpnBin, action, target];
         vpnActionProc.running = true;

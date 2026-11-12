@@ -1,4 +1,4 @@
-// The bar's LEFT region: this monitor's workspaces, the focused window's title, then the media.
+// The bar's LEFT region: this monitor's workspaces, the focused app's name, then the media.
 // It folds by priority from the room it is given, never from a text: docs/notes/desktop/bar.md
 import QtQuick
 import QtQuick.Layouts
@@ -13,7 +13,7 @@ RowLayout {
     property int room: 0 // what this region may fill, from the screen's width alone
     readonly property string monitor: left.bar.modelData ? left.bar.modelData.name : ""
 
-    // In order: media from 220 down to 120, media to its icon, then the title (a floor of 120,
+    // In order: media from 220 down to 120, media to its icon, then the app's name (a floor of 120,
     // under which it hides). The workspaces never fold. A song or a focus change never flips a level.
     readonly property int titleMin: 240
     readonly property bool mediaHere: !left.bar.compact && Media.hasPlayer
@@ -26,12 +26,6 @@ RowLayout {
 
     spacing: Theme.barGap
 
-    TextMetrics {
-        id: tmTitle
-        font.family: Theme.uiFont
-        font.pixelSize: Theme.fontBody
-        text: left.host.winTitle
-    }
     TextMetrics {
         id: tmMediaIcon
         font.family: Theme.iconFont
@@ -47,14 +41,13 @@ RowLayout {
         barWindow: left.bar
     }
     Pill {
+        // The focused app's NAME; the window's full title is one hover away, in the hint.
         id: winPill
-        visible: left.monitor === left.host.focusedMon && left.host.winTitle !== "" && left.titleMax >= 120
-        label: left.host.winTitle
-        accent: Theme.colSky
-        leftAligned: true
+        visible: left.monitor === left.host.focusedMon && left.host.appName !== "" && left.titleMax >= 120
+        label: left.host.appName
+        labelColor: Theme.colText
+        bold: true
         maxWidth: left.titleMax
-        // In 64 px steps from the text's own metrics, so a focus change rarely moves the media.
-        Layout.preferredWidth: Math.min(left.titleMax, Math.max(120, Math.ceil(Theme.barCellWidth(tmTitle.advanceWidth + 1) / 64) * 64))
         onHoveredChanged: left.host.hoverHint("win", winPill, left.barContent, left.bar, hovered)
     }
     Pill {

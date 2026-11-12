@@ -32,9 +32,6 @@ Item {
     signal scrolledUp
     signal scrolledDown
     property alias hovered: area.containsMouse
-    // The content at the left edge instead of centered: a pill wider than its text (the focused
-    // window's title, sized in steps so its neighbors do not jump) reads from where it starts.
-    property bool leftAligned: false
 
     // An icon written as a Material Symbols name ("volume_up") draws in the icon font; anything else
     // is a glyph of the text font's fallback (a Nerd Font brand icon).
@@ -59,8 +56,8 @@ Item {
     RowLayout {
         id: prow
         anchors.verticalCenter: parent.verticalCenter
-        // Never left of the padding: a clipped label (elided) starts at the pad, like a left-aligned one.
-        x: Math.round(pill.leftAligned ? Theme.barPad : Math.max(Theme.barPad, (pill.width - prow.implicitWidth) / 2))
+        // Never left of the padding: a clipped label (elided) starts at the pad.
+        x: Math.round(Math.max(Theme.barPad, (pill.width - prow.implicitWidth) / 2))
         width: Math.min(prow.implicitWidth, pill.width - 2 * Theme.barPad)
         spacing: Theme.sp1
         opacity: pill.off ? 0.55 : 1

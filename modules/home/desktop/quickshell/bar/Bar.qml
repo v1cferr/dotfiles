@@ -1794,22 +1794,22 @@ Scope {
                 root.markUrgentActivity();
         }
     }
-    // the active window's title (Hyprland native) plus the rewrite rules
+    // the active window's title (Hyprland native), for the hint
     readonly property string rawTitle: Hyprland.activeToplevel ? (Hyprland.activeToplevel.title || "") : ""
-    readonly property string winTitle: root.rewriteTitle(root.rawTitle)
-    function rewriteTitle(t) {
-        if (!t)
+    // The focused app, by the name its .desktop entry carries; its window class when it has none.
+    readonly property string appClass: {
+        const t = Hyprland.activeToplevel;
+        return (t && t.lastIpcObject && t.lastIpcObject.class) ? t.lastIpcObject.class : "";
+    }
+    readonly property string appName: {
+        if (root.appClass === "")
             return "";
-        let m;
-        if ((m = t.match(/^(.*) — Zen Browser$/)))
-            return "󰺕 " + m[1];
-        if ((m = t.match(/^(.*) - (fish|zsh|bash)$/)))
-            return "󰆍 [" + m[1] + "]";
-        if ((m = t.match(/^(.*) - Spotifast$/)))
-            return "󰝚 " + m[1];
-        if ((m = t.match(/^(.*) - (Code|Visual Studio Code)$/)))
-            return "󰨞 " + m[1];
-        return t;
+        if (DesktopEntries.applications.values.length > 0) {
+            const e = DesktopEntries.heuristicLookup(root.appClass);
+            if (e && e.name)
+                return e.name;
+        }
+        return root.appClass;
     }
 
     // ===== The weather popover, the view is in bar/WeatherPopover.qml =====

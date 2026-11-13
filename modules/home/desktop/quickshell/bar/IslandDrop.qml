@@ -22,7 +22,13 @@ PanelWindow {
     // Always mapped, and empty while shut: opening is then the island's own motion from its first
     // frame, with no layer to map and no fade of the compositor's over it. Shut, it takes no
     // pointer (the mask is the body, zero tall) and draws nothing.
-    screen: drop.home || Theme.screenPrimary
+    // Shown one turn of the event loop after it is made, never at once: a window already visible
+    // when a hot reload hands it the old one's surface crashed the shell in QWindow::setScreen
+    // (12/11/2026, Quickshell 0.3.2; a stand-in window of ten lines did the same).
+    property bool up: false
+    Component.onCompleted: Qt.callLater(() => drop.up = true)
+    visible: drop.up
+    screen: drop.home
     WlrLayershell.namespace: "qs-island"
     // The keyboard only for the Center: the summary must never take it from the window under it.
     WlrLayershell.keyboardFocus: Island.full ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
@@ -49,12 +55,14 @@ PanelWindow {
 
     // Where it hangs: the main monitor, or the screen whose logo opened the Center. It moves only
     // while shut, so a Center closing on one screen never flashes a head on the other.
-    property var home: Theme.screenPrimary
+    // Kept as a NAME and looked up, so nothing here holds a screen object across a hot reload.
+    property string homeName: ""
+    readonly property var home: (drop.homeName !== "" && Quickshell.screens.find(x => x.name === drop.homeName)) || Theme.screenPrimary
     function rehome() {
         if (Island.full)
-            drop.home = drop.bar.popScreen || Theme.screenPrimary;
+            drop.homeName = drop.bar.popScreen ? drop.bar.popScreen.name : "";
         else if (body.reach <= 0)
-            drop.home = Theme.screenPrimary;
+            drop.homeName = "";
     }
     Connections {
         target: Island

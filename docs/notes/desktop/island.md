@@ -159,7 +159,12 @@ bar, a hover on the apps' icons another, and the logo's click a third, each a se
   curve and the shoulders are inside the body's window, off the bar's items.
 - **Always mapped, empty while shut.** The body's window exists from the start, zero tall and
   taking no pointer (its mask is the body), so opening is the island's own motion from its first
-  frame: no layer to map, no fade of the compositor's over it.
+  frame: no layer to map, no fade of the compositor's over it. It is shown one turn of the event
+  loop after it is made, never at once: on 12/11/2026 the first hot reload after it went live
+  crashed the shell in `QWindow::setScreen` (Quickshell 0.3.2 restarted itself, and the
+  notification history in memory was lost). A stand-in window of ten lines, visible from its
+  first instant, did the same on every reload in the harness; shown a turn late, six reloads in a
+  row passed, one of them with the Center open.
 - **Full opens with nothing in the capsule too**: the head grows out of the logo and the body
   comes down. From the summary it grows in place, taller and out at the shoulders.
 - **The keyboard only at full size.** The summary never takes it from the window under it.

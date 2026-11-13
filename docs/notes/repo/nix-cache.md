@@ -27,7 +27,9 @@ Dropping the papers override and capping the build parallelism
 2. `nix flake check`, the same gate as [`nix.yml`](../../../.github/workflows/nix.yml).
 3. [`cache-push.sh`](../../../tools/ci/cache-push.sh) asks a dry run of the host's toplevel what
    no substituter has, keeps only the derivations a cache would ever serve, builds them and
-   pushes the outputs, signed.
+   pushes the outputs, signed. The runner reads R2 itself as a substituter (the read-write key in
+   the daemon's environment, like the read key at home), so a night only builds what changed
+   since the last one.
 4. Only when all of that passed: one commit per bumped package plus one for the lock, straight
    to `main`.
 

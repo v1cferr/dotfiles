@@ -37,6 +37,27 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
+      # R2 as a substituter too, read the way the host reads it (modules/nixos/core/nix-cache): the
+      # dry run in cache-push then lists only what NO cache has, so a night builds what changed
+      # instead of everything again. The daemon is what fetches, so the key goes into ITS
+      # environment, through a root-only drop-in; printf is a builtin, so no argv carries it.
+      - name: read the R2 cache
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          c=modules/nixos/core/nix-cache/cache.json
+          url="s3://$(jq -r .bucket $c)?endpoint=$(jq -r .account $c).r2.cloudflarestorage.com&region=auto"
+          printf 'extra-substituters = %s&priority=45\nextra-trusted-public-keys = %s\n' \
+            "$url" "$(cat modules/nixos/core/nix-cache/nix-cache.pub)" | sudo tee -a /etc/nix/nix.conf >/dev/null
+          sudo install -d /etc/systemd/system/nix-daemon.service.d
+          printf '[Service]\nEnvironment=AWS_ACCESS_KEY_ID=%s\nEnvironment=AWS_SECRET_ACCESS_KEY=%s\n' \
+            "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" |
+            sudo sh -c 'umask 077; cat >/etc/systemd/system/nix-daemon.service.d/r2.conf'
+          sudo systemctl daemon-reload
+          sudo systemctl restart nix-daemon.service
+          nix store info --store "$url"
+
       # The same order as `update` at home: bumps BEFORE the lock. The private input stays out of
       # the update, since its lock entry is the one thing this runner cannot fetch.
       - name: bumps plus the lock

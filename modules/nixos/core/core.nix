@@ -28,6 +28,9 @@
   # media, so 1 GiB left is already after the accident.
   nix.settings.min-free = 15 * 1024 * 1024 * 1024; # 15 GiB, the floor that triggers the GC
   nix.settings.max-free = 50 * 1024 * 1024 * 1024; # 50 GiB, the target to free when it triggers
+  # 1 MiB stalls big NARs ("download buffer is full"); 64 and not more, since 16 parallel
+  # substitutions can each fill one on a 15 GiB machine.
+  nix.settings.download-buffer-size = 64 * 1024 * 1024;
   # The FAI's cache for FAI Meet built from source: TRUSTED, not queried. Only reachable through the
   # VPN, so as a default substituter it timed out every build without it; fai-meet-latest opts in.
   nix.settings.extra-trusted-substituters = [ "https://meet.sup.fai.ufscar.br/nix-cache" ];

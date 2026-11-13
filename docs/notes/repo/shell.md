@@ -6,17 +6,33 @@ Modules: [`modules/home/shell/zsh.nix`](../../../modules/home/shell/zsh.nix),
 
 zsh, the maintenance functions and the modern CLI toolkit.
 
-## The three maintenance functions are COMPOSED, not written three times
+## The maintenance functions are COMPOSED, not written twice
 
-`upgrade` IS `update && rebuild` by definition. Restating it in full (as it was until 06/08/2026)
-is the same rule in two places, so the day only one copy changes, `upgrade` stops being what its
-name says and nobody notices. That is rule 11 applied to a shell string.
+`upgrade` IS `sync && rebuild` by definition, and `update` keeps its own path. Restating a piece in
+full (as it was until 06/08/2026) is the same rule in two places, so the day only one copy changes,
+a function stops being what its name says and nobody notices. That is rule 11 applied to a shell
+string.
 
 ```text
 rebuild [nh flags]   nh os switch <flags> <flake> && hyprctl -i 0 reload
 update               vendored-bump && nix flake update && vscode-extensions-dump
-upgrade [nh flags]   update && rebuild <flags>
+upgrade [nh flags]   git pull --rebase --autostash && vscode-extensions-dump && rebuild <flags>
 ```
+
+**`upgrade` applies what the nightly validated; `update` is the bleeding edge.** Until 13/11/2026
+`upgrade` was `update && rebuild`: it moved every input to the tip of unstable on the spot, so each
+upstream breakage landed in the middle of it (three in one evening: a Hyprland with no hyprglass
+pin, opencode's stale hash, ccusage missing zstd), and the lock it made was never the one CI had
+built, so nothing came from the cache. The nightly [`cache.yml`](../../../.github/workflows/cache.yml)
+now owns the lock: it updates, gates, builds, pushes to R2 and only then commits. `upgrade` pulls
+that and rebuilds, mostly downloading. When the last finished nightly failed, `upgrade` says so and
+applies the last lock that passed. `update` is still there for something wanted before the night,
+and it is the only one that moves `duo-streak-daemon`, the private input CI cannot fetch.
+
+**Rebase, not fast-forward.** Commits not pushed yet are normal here, and the bot commits to `main`
+every night, so a fast-forward-only pull would stop most upgrades. `--autostash` lets a dirty tree
+through. `upgrade` replaced `pull-rebuild`, which was the same pull (fast-forward only) plus
+`rebuild`.
 
 **Quiet by default, verbose on request.** `rebuild -v`, `rebuild -vvv` or `upgrade -vv` hand the
 flags to nh, which raises its log level one step per `v`. Until 26/09/2026 the `-vvv` was fixed
@@ -35,13 +51,14 @@ format) stops the run before anything else moves, and the repo is never applied 
 **`update` names no package.** `vendored-bump` is called by store path, and the list of what it
 bumps is derived from the packages themselves, so adding one never edits this file.
 
-`vscode-extensions-dump` goes LAST and touches no input: it rewrites the mirror of the installed
-extensions so the repo shows in the diff which extension came or went. Its trigger is `update` and
-not `rebuild` because `update` is the maintenance ritual; the price is the mirror lagging between
-two updates, which is fine for a record nobody consumes at runtime.
+`vscode-extensions-dump` touches no input: it rewrites the mirror of the installed extensions so
+the repo shows in the diff which extension came or went. Its triggers are `update` and `upgrade`
+and not `rebuild`, because those are the maintenance rituals; the price is the mirror lagging
+between two of them, which is fine for a record nobody consumes at runtime.
 
-**`update` runs as the USER**, and only on success goes on to the rebuild as root. The user is who
-holds the SSH key for the private inputs (duo-streak-daemon), and a broken lock never gets applied.
+**`update` runs as the USER**: that is who holds the SSH key for the private inputs
+(duo-streak-daemon). The pull of `upgrade` runs as the user too, and only on success goes on to
+the rebuild as root.
 
 ## The path goes in EXPLICITLY, not through NH_FLAKE
 

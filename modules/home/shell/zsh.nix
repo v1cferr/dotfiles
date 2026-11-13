@@ -14,11 +14,20 @@ let
   # SSOT of the repo path (rule 11): programs.nh.flake, read here through osConfig.
   flake = osConfig.programs.nh.flake;
 
-  # Composed, never written twice: `upgrade` IS `update && rebuild` by definition. The bumps go
-  # BEFORE the lock (vscode's raises a versioned input), and `&&` stops a half-edited repo. The
-  # bumps run from the CHECKOUT, not a path baked in at build time: a fixed bump works on the very
-  # next run, with no rebuild and no `exec zsh` first (~5 s of eval, measured 24/10/2026).
-  update = "nix run ${flake}#vendored-bump -- ${flake} && ${lockUpdate} && vscode-extensions-dump ${flake}";
+  # The bumps go BEFORE the lock (vscode's raises a versioned input), and `&&` stops a half-edited
+  # repo. The bumps run from the CHECKOUT, not a path baked in at build time: a fixed bump works on
+  # the very next run, with no rebuild and no `exec zsh` first (~5 s of eval, measured 24/10/2026).
+  update = "nix run ${flake}#vendored-bump -- ${flake} && ${lockUpdate} && ${extensionsDump}";
+  extensionsDump = "vscode-extensions-dump ${flake}";
+
+  # What the nightly CI already updated, gated, built and cached (docs/notes/repo/nix-cache.md).
+  # Rebase, not fast-forward: local commits not pushed yet ride on top of the bot's instead of
+  # stopping the pull. A nightly that failed leaves the last lock that passed, and says so.
+  sync = ''
+    git -C ${flake} pull --rebase --autostash && {
+      ( cd ${flake} && ${lib.getExe gh} run list --workflow cache.yml --status completed -L 1 --json conclusion,createdAt,url \
+          --jq '.[0] | select(.conclusion != "success") | "upgrade: the last nightly did not pass (\(.createdAt[:10]), \(.url)); applying the last lock that did."' 2>/dev/null ) || true
+    } && ${extensionsDump}'';
 
   # ~20 GitHub inputs cost ~20 anonymous API calls per run, and that limit is 60/h per public IP:
   # three upgrades ran it dry on 24/10/2026. gh's token goes in through NIX_CONFIG, in a subshell, so
@@ -48,11 +57,10 @@ in
       # The `-i 0` is what makes this work over SSH: hyprctl otherwise demands
       # HYPRLAND_INSTANCE_SIGNATURE, which only exists inside the graphical session.
       rebuild = ''nh os switch "$@" ${flake} && { hyprctl -i 0 reload || true; }'';
-      inherit update; # bumps the lock plus the vendored versions
-      # As the USER first (it holds the SSH key for private inputs), then root.
-      upgrade = ''update && rebuild "$@"'';
-      # Another machine's commits, applied here. Fast-forward only: a local edit stops it loudly.
-      pull-rebuild = ''git -C ${flake} pull --ff-only && rebuild "$@"'';
+      # The bleeding edge, ahead of the nightly: bumps the lock plus the vendored versions here.
+      inherit update;
+      # The day-to-day one: what the nightly validated, mostly downloaded from the R2 cache.
+      upgrade = ''${sync} && rebuild "$@"'';
     };
 
     shellAliases = {

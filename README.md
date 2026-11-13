@@ -61,8 +61,8 @@ Defined in [`modules/home/shell/zsh.nix`](modules/home/shell/zsh.nix):
 
 ```bash
 rebuild   # nh os switch <flake> && hyprctl reload
-update    # every vendored bump + nix flake update + vscode-extensions-dump
-upgrade   # update && rebuild, the equivalent of `apt update && apt full-upgrade`
+update    # every vendored bump + nix flake update + vscode-extensions-dump, ahead of the nightly
+upgrade   # git pull of what the nightly CI validated + rebuild, mostly from the binary cache
 gc        # sudo nix-collect-garbage -d, drops old generations (no rollback after it)
 ```
 

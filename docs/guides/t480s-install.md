@@ -46,9 +46,9 @@ letters, digits and spaces, which sit on the same keys in every layout this hous
 - Clone this repo on the laptop at the SAME path as on the desk,
   `~/Projects/GitHub/v1cferr/dotfiles`: Hyprland's and Quickshell's configs are live links into
   the checkout, and without it the session comes up with no config (10/11/2026).
-- From then on the laptop applies what the desk committed with `pull-rebuild`, and a local edit
-  with `rebuild`; from the desk it is `ssh t480s`. Version bumps (`update`, `upgrade`) stay on
-  the desk, so the two machines never race on `flake.lock`.
+- From then on the laptop applies what was pushed with `upgrade`, and a local edit with
+  `rebuild`; from the desk it is `ssh t480s`. `update` (the local bumps) stays on the desk, so the
+  two machines never race on `flake.lock`.
 - Each person changes their own password with `passwd`. The files in `/var/lib/login-passwords/`
   only seeded the accounts.
 - The greeter's "Own session" entry runs `~/.config/session/start` of whoever logs in. An

@@ -27,6 +27,11 @@ let
       rev = "03a57c4451b4abee38feda2ffb725f55ecc0f2fd";
       hash = "sha256-cQmVmmdaITss2hO6aidKOtq6GtEe85fmgrPcrn1eIUg=";
     };
+    "0.57.2" = {
+      version = "1.1.1";
+      rev = "03a57c4451b4abee38feda2ffb725f55ecc0f2fd";
+      hash = "sha256-cQmVmmdaITss2hO6aidKOtq6GtEe85fmgrPcrn1eIUg=";
+    };
   };
   pin =
     pins.${hyprland.version}

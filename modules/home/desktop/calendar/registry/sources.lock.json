@@ -31,6 +31,10 @@
     "fingerprint": "sha256:4efb7de5e8249b67cc35f6e3174a57df81f48c0aca21bbc9b471878381065e36",
     "seen_at": "2026-10-18"
   },
+  "sp-lei-9497-1997": {
+    "fingerprint": "sha256:dd5b6dc307944fac3c38e524ce7f199a869355c44e063cab84bbdd9e09ca2454",
+    "seen_at": "2026-11-13"
+  },
   "un-observances": {
     "fingerprint": "sha256:691f8792b0bdb8aa8e54e47b03f92da5e82df4680ddede2ca11342973d8af551",
     "seen_at": "2026-10-18"

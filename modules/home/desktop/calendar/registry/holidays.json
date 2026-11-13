@@ -70,8 +70,8 @@
       "url": "https://www.al.sp.gov.br/repositorio/legislacao/lei/1997/lei-9497-05.03.1997.html",
       "authority": "Assembleia Legislativa do Estado de São Paulo",
       "document_id": "Lei SP 9.497/1997",
-      "checked_at": "2026-10-18",
-      "check": "unreachable",
+      "checked_at": "2026-11-13",
+      "check": "read",
       "watch": true
     },
     "sc-lei-10257-1990": {
@@ -343,13 +343,13 @@
         "from": 1997
       },
       "status": "verified",
-      "verified_at": "2026-10-18",
+      "verified_at": "2026-11-13",
       "basis": "Lei estadual 9.497/1997 (the State's data magna, Lei 9.093/1995, art. 1º, II)",
       "sources": [
         "sp-lei-9497-1997",
         "sc-portaria-2083-2025"
       ],
-      "notes": "ALESP's page answered 503 on 18/10/2026; the date and its state nature were confirmed by the municipal Portaria 2083/2025, which lists it as a state holiday."
+      "notes": "Read on ALESP on 13/11/2026: art. 1º institutes 9 July as a civil holiday. Lei 17.264/2020 moved the 2020 observance alone to 25 May, an exception this fixed rule does not model."
     },
     {
       "id": "sc-paixao-de-cristo",

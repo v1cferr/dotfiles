@@ -32,11 +32,15 @@ ColumnLayout {
     // Only while it shows: asking a player that is closing for its position logs a D-Bus error
     // per change, and with nothing on screen nobody reads the answer.
     property real positionNow: 0
+    // A player that stopped is not asked again: its position stands still, and one that stopped
+    // because it is leaving the bus answers with an error (seen in the live log on 12/11/2026).
     function refreshPosition() {
-        if (!card.active)
+        if (!card.active || !card.player || !card.player.positionSupported)
             return;
-        card.positionNow = (card.player && card.player.positionSupported) ? card.player.position : 0;
+        if (card.player.isPlaying || card.positionNow === 0)
+            card.positionNow = card.player.position;
     }
+    onPlayerChanged: card.positionNow = 0
     onActiveChanged: card.refreshPosition()
     function fmt(s) {
         if (!s || s < 0)
@@ -182,8 +186,9 @@ ColumnLayout {
                 function go(x) {
                     if (!card.player || card.length <= 0)
                         return;
-                    card.player.position = Math.max(0, Math.min(1, x / width)) * card.length;
-                    card.refreshPosition();
+                    const to = Math.max(0, Math.min(1, x / width)) * card.length;
+                    card.player.position = to;
+                    card.positionNow = to;
                 }
                 onPressed: m => go(m.x)
                 onPositionChanged: m => {

@@ -4,6 +4,7 @@
 {
   imports = [
     ./zsh.nix # ~/.zshrc (history plus autosuggest plus syntax highlighting plus aliases)
+    ./upgrade-prefetch.nix # a timer that downloads origin/main's system, so `upgrade` only switches
     ./starship.nix # ~/.config/starship.toml (zsh's prompt)
     ./cli.nix # the modern CLI toolkit (eza/bat/fzf/zoxide/direnv/yazi/tealdeer) plus the zsh integration
     ./kitty.nix # ~/.config/kitty/kitty.conf (Hyprland's default terminal)

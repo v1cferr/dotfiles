@@ -29,6 +29,15 @@ that and rebuilds, mostly downloading. When the last finished nightly failed, `u
 applies the last lock that passed. `update` is still there for something wanted before the night,
 and it is the only one that moves `duo-streak-daemon`, the private input CI cannot fetch.
 
+**The download happens before `upgrade`.** The user timer `upgrade-prefetch`
+([`upgrade-prefetch.nix`](../../../modules/home/shell/upgrade-prefetch.nix)) runs at 06:00 and
+13:00, after the nightly has committed: it fetches `origin/main` and builds that COMMIT's system
+(`git+file://...?rev=`), which with the cache filled is only downloading. The working tree is never
+touched, and an out-link in `~/.local/state/upgrade-prefetch` is the GC root that keeps it until the
+next one. `upgrade` then finds the store warm and is left with the pull, the evaluation and the
+switch. A commit already prefetched is skipped, so the second run of the day costs one `git fetch`.
+Run `upgrade-prefetch` by hand to warm the store at any other time.
+
 **Rebase, not fast-forward.** Commits not pushed yet are normal here, and the bot commits to `main`
 every night, so a fast-forward-only pull would stop most upgrades. `--autostash` lets a dirty tree
 through. `upgrade` replaced `pull-rebuild`, which was the same pull (fast-forward only) plus

@@ -56,33 +56,29 @@ Singleton {
     }
 
     // ===== Open: the capsule grown downward (bar/IslandDrop.qml) =====
-    // A pointer that rests on the capsule opens it, and it stays while the pointer is on the
-    // capsule or on what came down; a click on the capsule keeps it. Only with something to show.
+    // Three sizes of one shape. At rest it is the capsule. A pointer that rests on it opens the
+    // SUMMARY (what plays, what was not seen yet), which stays while the pointer is on either
+    // part. A click on the logo or the capsule, or SUPER, opens it FULL: the NixOS Center.
     property bool capsuleHover: false
     property bool dropHover: false
     property bool rested: false // the hover held long enough, and has not been away long enough
-    property bool kept: false   // a click keeps it open
+    property bool forced: false // the summary held open with no pointer: a check over IPC
+    // The NixOS Center is open: the bar's coordinator decides (its `center` pin), this follows.
+    property bool full: false
+    // The screen whose logo it hangs from: the main one, or the one whose logo opened the Center.
+    property string where: ""
     readonly property bool hasMedia: Media.playing && Media.title !== ""
     readonly property bool hasUnseen: Notifs.unseenList.length > 0
     readonly property bool canOpen: root.current !== null && ["media", "unseen", "notification"].indexOf(root.current.kind) >= 0 && (root.hasMedia || root.hasUnseen)
-    readonly property bool open: root.canOpen && (root.rested || root.kept)
+    readonly property bool open: root.full || (root.canOpen && (root.rested || root.forced))
     // How far what came down reaches, in px: the capsule squares its foot against it, and stays
     // wide until it is all the way back up.
     property real dropReach: 0
     readonly property bool wide: root.open || root.dropReach > 0
-    // A click: keep it open, or shut it when it already was kept.
-    function keep() {
-        if (root.kept)
-            root.shut();
-        else
-            root.kept = true;
-    }
     function shut() {
-        root.kept = false;
         root.rested = false;
+        root.forced = false;
     }
-    onCanOpenChanged: if (!root.canOpen)
-        root.kept = false
     Timer {
         interval: Theme.hoverIntent
         running: root.capsuleHover && !root.rested
@@ -93,8 +89,8 @@ Singleton {
         running: root.rested && !root.capsuleHover && !root.dropHover
         onTriggered: root.rested = false
     }
-    // What is shown holds while the pointer is on either part, or while it is kept open.
-    readonly property bool held: root.capsuleHover || root.dropHover || root.kept
+    // What is shown holds while the pointer is on either part, or while the Center is open.
+    readonly property bool held: root.capsuleHover || root.dropHover || root.full
     onHeldChanged: root.freeze(root.held)
     Binding {
         target: Audio

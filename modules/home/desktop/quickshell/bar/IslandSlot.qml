@@ -13,7 +13,13 @@ Item {
     property var barContent: null
     property var barWindow: null
 
-    readonly property var ev: Island.current
+    // Whether the island rests on this strip: only the main monitor's full bar.
+    property bool resting: false
+    // The open island hangs from this strip's logo: here it is the head of the shape.
+    readonly property bool here: !!isle.barWindow && !!isle.barWindow.screen && isle.barWindow.screen.name === Island.where
+    readonly property bool wide: Island.wide && isle.here
+
+    readonly property var ev: isle.resting ? Island.current : null
     readonly property bool shown: isle.ev !== null
     // What it showed last, so the content does not blink out while the capsule closes.
     property var last: null
@@ -121,12 +127,12 @@ Item {
         }
         return none;
     }
-    // A click keeps the island open when it has something to open on; else it leads to the
-    // surface that holds the rest of it.
+    // A click opens the island all the way, the NixOS Center, when it rests on what plays or on
+    // what waits (and shuts it when it is open); else it leads to the surface that holds the rest.
     function act() {
         const k = isle.last ? isle.last.kind : "";
-        if (Island.canOpen)
-            Island.keep();
+        if (Island.canOpen || Island.full)
+            isle.host.togglePanel("center", isle, isle.barContent, isle.barWindow);
         else if (k === "critical")
             Island.dismiss();
         else
@@ -141,14 +147,14 @@ Item {
     readonly property int waveMin: isle.waving ? 5 * wave.bar + 4 * wave.gap + Theme.sp2 : 0
     readonly property int side: Math.min(Theme.islandHalf - isle.inner - Theme.sp3, Math.ceil(Math.max(leftRow.implicitWidth + isle.waveMin, rightRow.implicitWidth)))
     // Open, it is as wide as it gets: what comes down under it has that width.
-    readonly property int half: !isle.shown ? isle.inner : (Island.wide ? Theme.islandHalf : isle.inner + isle.side + Theme.sp3)
+    readonly property int half: isle.wide ? Theme.islandHalf : (isle.shown ? isle.inner + isle.side + Theme.sp3 : isle.inner)
 
     function resize() {
         grow.stop();
         shrink.stop();
         if (Theme.motionReduced) {
             capsule.reach = isle.half;
-        } else if (isle.shown) {
+        } else if (isle.shown || isle.wide) {
             grow.to = isle.half;
             grow.restart();
         } else {
@@ -224,7 +230,7 @@ Item {
     // Open, the capsule is the head of one shape: opaque, down to the bar's foot, its lower corners
     // squaring as the body comes down under them (bar/IslandDrop.qml starts where the bar ends).
     Item {
-        visible: Island.wide
+        visible: isle.wide
         x: capsule.x
         y: capsule.y
         width: capsule.width
@@ -239,6 +245,10 @@ Item {
             border.width: Theme.hairline
             border.color: Theme.colIslandEdge
         }
+        // What the head covers on a strip with no room kept for it takes no click through it.
+        MouseArea {
+            anchors.fill: parent
+        }
     }
     Rectangle {
         id: capsule
@@ -252,7 +262,7 @@ Item {
         width: Math.round(2 * capsule.span)
         height: Theme.barCell
         radius: height / 2
-        color: Island.wide ? "transparent" : Theme.colCellHoverFill
+        color: isle.wide ? "transparent" : Theme.colCellHoverFill
         opacity: isle.shown ? 1 : 0
         Behavior on opacity {
             NumberAnimation {
@@ -392,7 +402,7 @@ Item {
             }
         }
     }
-    // The pointer on it holds it; resting there opens it, and a click keeps it open. The whole
+    // The pointer on it holds it; resting there opens the summary, and a click opens it all. The whole
     // capsule is one zone, up to the screen's edge and down to the bar's foot, so a pointer thrown
     // at the top of the screen lands on it. Never the keyboard: it is not a window.
     MouseArea {

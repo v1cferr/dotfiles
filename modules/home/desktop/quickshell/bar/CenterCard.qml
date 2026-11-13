@@ -7,6 +7,7 @@ import QtQuick
 import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
+import "root:/media"
 import "root:/notifications"
 
 Item {
@@ -268,6 +269,22 @@ Item {
                     action: Notifs.count > 0 ? "Click to clear them all" : ""
                     onClicked: Notifs.clearAll()
                 }
+            }
+
+            // ── What plays, when something does (media/MediaCard.qml) ──
+            MediaCard {
+                Layout.fillWidth: true
+                visible: Island.hasMedia
+                active: center.shown && Island.hasMedia
+                wave: Audio.waveOpen
+                onRevealed: center.bar.closePanels()
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                visible: Island.hasMedia
+                implicitHeight: Theme.hairline
+                color: Theme.colBorder
+                opacity: 0.5
             }
 
             // ── Body: the history, newest first, only the visible cards instantiated ──

@@ -75,20 +75,6 @@ PanelWindow {
             color: Theme.colEdge
         }
 
-        // Under the logo, so the logo and its own click stay on top.
-        IslandSlot {
-            visible: bar.islandHere
-            x: bar.centerX - Theme.islandHalf
-            host: bar.host
-            barContent: barContent
-            barWindow: bar
-        }
-        LogoSlot {
-            x: bar.slotX
-            host: bar.host
-            barContent: barContent
-            barWindow: bar
-        }
         BarLeft {
             anchors.left: parent.left
             anchors.leftMargin: bar.edge
@@ -107,6 +93,22 @@ PanelWindow {
             bar: bar
             barContent: barContent
             room: bar.rightRoom
+        }
+        // Over the sides and under the logo, so the logo and its own click stay on top. Every
+        // strip has one: it rests only where the island lives, and anywhere it is the head of the
+        // NixOS Center while that is open from this strip's logo.
+        IslandSlot {
+            x: bar.centerX - Theme.islandHalf
+            resting: bar.islandHere
+            host: bar.host
+            barContent: barContent
+            barWindow: bar
+        }
+        LogoSlot {
+            x: bar.slotX
+            host: bar.host
+            barContent: barContent
+            barWindow: bar
         }
     }
 }

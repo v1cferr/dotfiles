@@ -50,12 +50,18 @@ Scope {
         function panel(key: string): void {
             root.openForTest(key);
         }
-        // The island, kept open or shut: `open` only does something while it has what to show.
+        // The island's summary, as a hover that rested would open it: `open` only does something
+        // while it has what to show. The full island is the Center: `panel center`.
         function island(state: string): void {
             if (state === "open")
-                Island.kept = true;
+                Island.forced = true;
             else
                 Island.shut();
+        }
+        // How far the open island reaches under the bar, in px: 0 once it is all the way shut,
+        // which is what a screenshot waits for.
+        function islandReach(): int {
+            return Math.round(Island.dropReach);
         }
         // The same, closing it when it is already open: what a key binding wants.
         function toggle(key: string): void {
@@ -1644,6 +1650,12 @@ Scope {
         property: "centerOpen"
         value: root.pinned === "center"
     }
+    // The Center is the island at its full size: the coordinator's pin is the truth, it follows.
+    Binding {
+        target: Island
+        property: "full"
+        value: root.pinned === "center"
+    }
     function openForTest(key, screenName) {
         const name = screenName || (key.startsWith("ops") ? Theme.secondaryMonitor : "");
         const scr = name ? Quickshell.screens.find(x => x.name === name) : Theme.screenPrimary;
@@ -1666,7 +1678,8 @@ Scope {
     onPanelOpenChanged: {
         if (root.panelOpen !== "") {
             root.hideHint();
-            Island.shut(); // one thing open at a time
+            if (root.panelOpen !== "center")
+                Island.shut(); // one thing open at a time; the Center is the island itself
         }
         if (root.panelOpen === "vpn")
             vpnStatsProc.running = true; // a fresh sample when it opens
@@ -1960,10 +1973,6 @@ Scope {
         bar: root
         key: "ops"
     }
-    NixosCenter {
-        bar: root
-    }
-
     // ===== The island grown downward: bar/IslandDrop.qml =====
     IslandDrop {
         bar: root
@@ -1973,7 +1982,7 @@ Scope {
     Connections {
         target: Island
         function onOpenChanged() {
-            if (Island.open) {
+            if (Island.open && !Island.full) {
                 root.closePanels();
                 root.hideHint();
                 root.hideMedia();

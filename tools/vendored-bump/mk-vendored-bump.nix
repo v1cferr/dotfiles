@@ -53,7 +53,9 @@ writeShellApplication {
     }
 
     # Two helpers for `resolve`: hash by downloading, or convert the hash upstream PUBLISHES.
-    prefetch() { nix store prefetch-file --json --hash-type sha256 "$1" | jq -er .hash; }
+    # prefetch's optional NAME is the package's fetchurl name: the build then finds those exact
+    # bytes in the store instead of downloading a URL that may have changed since (soloist).
+    prefetch() { nix store prefetch-file --json --hash-type sha256 ''${2:+--name "$2"} "$1" | jq -er .hash; }
     sri() { nix hash convert --hash-algo "$1" --from base16 --to sri "$2"; }
 
     latest() {

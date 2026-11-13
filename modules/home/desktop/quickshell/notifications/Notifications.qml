@@ -1,5 +1,5 @@
 // The TOASTS, top right of the main monitor under the bar; the history lives in the NixOS Center
-// (bar/NixosCenter.qml). The card is NotifCard.qml: docs/notes/desktop/nixos-center.md
+// (bar/CenterCard.qml). The card is NotifCard.qml: docs/notes/desktop/nixos-center.md
 import Quickshell
 import Quickshell.Wayland
 import QtQuick

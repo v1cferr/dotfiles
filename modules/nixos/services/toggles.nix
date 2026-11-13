@@ -28,5 +28,6 @@
     "libvirt"
     "cockpit"
     "beszel"
+    "home-assistant"
   ] (n: lib.mkEnableOption n);
 }

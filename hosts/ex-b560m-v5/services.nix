@@ -28,6 +28,7 @@
     libvirt = true; # libvirt/KVM plus virt-manager (a disposable Windows 11 guest)
     cockpit = true; # start/stop services from the browser at ops.v1cferr.dev (socket-activated)
     beszel = true; # resource history at stats.v1cferr.dev (the agent waits for my.beszel.hubKey)
+    home-assistant = true; # the daily update of the Home Assistant container (github.com/v1cferr/home-automation)
   };
 
   # EXPOSURE: `expose` is "lan" (home plus WireGuard), "public" (internet, subject to `auth`) or

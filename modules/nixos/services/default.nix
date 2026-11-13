@@ -25,5 +25,6 @@
     ./libvirt.nix # the libvirt/KVM daemon (virt-manager, the GUI, is in modules/home/apps)
     ./cockpit.nix # the web console to start/stop units from the browser (ops.<domain>, LAN only)
     ./beszel.nix # resource history per host and per container (stats.<domain>, LAN only)
+    ./home-assistant.nix # the daily pull of the newest stable Home Assistant image (the stack is its own repo)
   ];
 }

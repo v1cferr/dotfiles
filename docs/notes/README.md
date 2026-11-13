@@ -178,6 +178,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [libvirt](services/libvirt.md)                 | the KVM sandbox, and the three wiki steps that are wrong on 26.05        |
 | [cockpit](services/cockpit.md)                 | start/stop from the browser, and stop versus toggle                      |
 | [beszel](services/beszel.md)                   | the resource history Cockpit cannot keep, and the pairing step           |
+| [home-assistant](services/home-assistant.md)   | the daily update to the newest stable release, and why not Watchtower    |
 
 ### repo
 

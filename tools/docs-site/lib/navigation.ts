@@ -199,6 +199,7 @@ export const navigation: NavItem[] = [
       { title: "libvirt", doc: "notes/services/libvirt.md" },
       { title: "cockpit", doc: "notes/services/cockpit.md" },
       { title: "beszel", doc: "notes/services/beszel.md" },
+      { title: "Home Assistant", doc: "notes/services/home-assistant.md" },
     ],
   },
   {

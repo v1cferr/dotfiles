@@ -145,6 +145,7 @@ let
       jq
       coreutils
       libnotify
+      qsPkg
     ];
     text = ''
       target="''${1:?usage: shell-screenshot primary|secondary|all [copy|save]}"
@@ -157,13 +158,14 @@ let
       esac
       fail() { notify-send -a Screenshot -u normal "Screenshot failed" "$1" || true; exit 1; }
 
-      # The Center closes before this runs: wait until its layer is gone (<=1 s), then past
-      # Hyprland's 100 ms layer fade, so the panel is never in the shot.
+      # The Center closes before this runs, and it is the island going back up into the bar: wait
+      # until the shell says it reaches nowhere (<=1 s), then one more frame, so it is never in
+      # the shot. Its layer stays mapped while shut, so the layer list cannot answer this.
       for _ in $(seq 20); do
-        hyprctl -j layers | jq -e 'any(.[].levels[][]; .namespace == "qs-center")' >/dev/null || break
+        [ "$(qs ipc call bar islandReach 2>/dev/null || echo 0)" = 0 ] && break
         sleep 0.05
       done
-      sleep 0.15
+      sleep 0.05
 
       dir="$HOME/Pictures/Screenshots"
       mkdir -p "$dir"

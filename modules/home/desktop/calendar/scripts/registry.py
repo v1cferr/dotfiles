@@ -281,7 +281,8 @@ def fetch(url: str) -> bytes:
     fetched from the leaf's AIA field, the way a browser does, and the chain is still verified."""
     # A browser-shaped agent that still names the project: Planalto resets a connection otherwise.
     ua = "Mozilla/5.0 (compatible; dotfiles-holiday-registry; +https://github.com/v1cferr/dotfiles)"
-    cmd = ["curl", "-sSL", "--fail", "--max-time", "60", "-A", ua]
+    # 180 s: São Carlos serves its 1.9 MB Portaria at ~20 KB/s, and 60 s cut it short (13/11/2026).
+    cmd = ["curl", "-sSL", "--fail", "--max-time", "180", "-A", ua]
     r = subprocess.run(cmd + [url], capture_output=True)
     if r.returncode == 0:
         return r.stdout
@@ -295,14 +296,10 @@ def fetch(url: str) -> bytes:
     pem = re.search(rb"-----BEGIN CERTIFICATE-----.+?-----END CERTIFICATE-----", leaf, re.S)
     if not pem:
         raise RuntimeError("no certificate from the server")
-    text = subprocess.run(["openssl", "x509", "-noout", "-text"], input=pem[0], capture_output=True).stdout.decode()
-    aia = re.search(r"CA Issuers - URI:(\S+)", text)
-    if not aia:
-        raise RuntimeError("no AIA issuer URL")
-    der = subprocess.run(["curl", "-sS", "--fail", "--max-time", "30", aia[1]], capture_output=True, check=True).stdout
-    issuer = subprocess.run(["openssl", "x509", "-inform", "der"], input=der, capture_output=True, check=True).stdout
-    # The AIA certificate is UNTRUSTED. Verify the leaf, hostname and full chain
-    # against the SYSTEM roots before including this intermediate in curl's CA bundle.
+    # The AIA certificates are UNTRUSTED. Each hop's issuer joins the untrusted set, and the leaf,
+    # hostname and full chain are verified against the SYSTEM roots before any of them reaches
+    # curl's CA bundle. Up to 3 hops: Let's Encrypt's YR1 needs two (YR1, then Root YR cross-signed
+    # by ISRG Root X1), since Root YR itself is not in the system stores yet (13/11/2026).
     system = next((p for p in ("/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/cert.pem") if Path(p).exists()), None)
     if system is None:
         raise RuntimeError("no system CA bundle to verify the AIA intermediate")
@@ -311,17 +308,28 @@ def fetch(url: str) -> bytes:
         issuer_path = Path(td) / "issuer.pem"
         bundle_path = Path(td) / "bundle.pem"
         leaf_path.write_bytes(pem[0] + b"\n")
-        issuer_path.write_bytes(issuer)
-        verified = subprocess.run(
-            ["openssl", "verify", "-purpose", "sslserver", "-verify_hostname", host,
-             "-CAfile", system, "-untrusted", str(issuer_path), str(leaf_path)],
-            capture_output=True, timeout=30,
-        )
-        if verified.returncode != 0:
+        chain, cert = b"", pem[0]
+        for _ in range(3):
+            text = subprocess.run(["openssl", "x509", "-noout", "-text"], input=cert, capture_output=True).stdout.decode()
+            aia = re.search(r"CA Issuers - URI:(\S+)", text)
+            if not aia:
+                raise RuntimeError("no AIA issuer URL")
+            der = subprocess.run(["curl", "-sS", "--fail", "--max-time", "30", aia[1]], capture_output=True, check=True).stdout
+            cert = subprocess.run(["openssl", "x509", "-inform", "der"], input=der, capture_output=True, check=True).stdout
+            chain += cert
+            issuer_path.write_bytes(chain)
+            verified = subprocess.run(
+                ["openssl", "verify", "-purpose", "sslserver", "-verify_hostname", host,
+                 "-CAfile", system, "-untrusted", str(issuer_path), str(leaf_path)],
+                capture_output=True, timeout=30,
+            )
+            if verified.returncode == 0:
+                break
+        else:
             raise RuntimeError("AIA certificate chain could not be verified against system roots: "
                                + verified.stderr.decode(errors="replace").strip()[:300])
-        bundle_path.write_bytes(issuer + Path(system).read_bytes())
-        r = subprocess.run(cmd + ["--cacert", str(bundle_path), url], capture_output=True, timeout=70)
+        bundle_path.write_bytes(chain + Path(system).read_bytes())
+        r = subprocess.run(cmd + ["--cacert", str(bundle_path), url], capture_output=True, timeout=190)
         if r.returncode != 0:
             raise RuntimeError(f"curl exit {r.returncode} after verified AIA: {r.stderr.decode(errors='replace').strip()}")
         return r.stdout

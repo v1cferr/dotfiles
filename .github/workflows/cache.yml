@@ -64,7 +64,9 @@ jobs:
           tools/ci/cache-push.sh ".#nixosConfigurations.$HOST.config.system.build.toplevel" "$key" --override-input duo-streak-daemon path:./tools/ci/stub-duo
 
       # Only after the gate AND every build passed: one commit per bumped package, then the lock,
-      # the same history `update` leaves at home.
+      # the same history `update` leaves at home. The run takes over an hour and main moves under
+      # it, so the commits are rebased onto the current main before the push (they only touch
+      # files a human does not edit by hand, so the rebase does not conflict).
       - name: commit to main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -76,5 +78,14 @@ jobs:
             old=$(git show "HEAD:$f" | jq -r .version)
             git commit -q -m "chore($p): $old -> $(jq -r .version "$f")" -- "$f"
           done
+          # wow-addons keeps one entry per add-on in sources.json, so it gets one commit for all.
+          f=pkgs/wow-addons/sources.json
+          if ! git diff --quiet -- "$f"; then
+            n=$(jq -n --slurpfile a <(git show "HEAD:$f") --slurpfile b "$f" \
+              '[$b[0] | to_entries[] | select(.value.version != $a[0][.key].version)] | length')
+            git commit -q -m "chore(wow-addons): bump $n add-on(s)" -- "$f"
+          fi
           git diff --quiet -- flake.lock || git commit -q -m "chore(flake): update the lock" -- flake.lock
-          git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY" HEAD:main
+          remote="https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY"
+          git pull -q --rebase "$remote" main
+          git push "$remote" HEAD:main

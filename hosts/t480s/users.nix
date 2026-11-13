@@ -1,6 +1,6 @@
 # The t480s's accounts: cesar beside the shared v1cferr, and the password hashes of both.
 # Why the hashes are files and whose home is whose: docs/decisions/0018-a-shared-laptop.md
-{ config, ... }:
+{ config, pkgs, ... }:
 
 let
   # Root-only files written ONCE by the install, outside the store and outside git. They seed the
@@ -19,6 +19,8 @@ in
       "networkmanager"
     ];
     hashedPasswordFile = passwordFile "cesar";
+    # zsh as his login shell; how it behaves (aliases, history) is his, in his own Home Manager.
+    shell = pkgs.zsh;
   };
 
   # The same trap as v1cferr's home (modules/nixos/core/users.nix): tmpfiles, not only createHome.

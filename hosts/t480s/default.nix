@@ -2,6 +2,10 @@
 # One system here, two homes elsewhere: docs/decisions/0018-a-shared-laptop.md
 { ... }:
 
+let
+  # The desk's own key, which administers this machine (it is not among the keys users.nix lists).
+  deskKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK2NY1qOnqUqQhPs6sTK5MUCL+onwz1pOjzQo9p6rE+z v1cferr@nixos-seagate";
+in
 {
   imports = [
     ./disko.nix # disko generates the KIOXIA's fileSystems (LUKS, then btrfs plus subvolumes)
@@ -16,19 +20,22 @@
   # The house's router, so `ssh router` works from here too; this machine does not manage it.
   my.router = import ../cudy-wr3000;
 
-  # The desk's own key: it is not in users.nix, which lists who logs INTO an account from outside.
-  users.users.v1cferr.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK2NY1qOnqUqQhPs6sTK5MUCL+onwz1pOjzQo9p6rE+z v1cferr@nixos-seagate"
-  ];
+  users.users.v1cferr.openssh.authorizedKeys.keys = [ deskKey ];
+  # Into Cesar's account too, to help him with his home without his password. He knows: it sits in
+  # /etc/ssh/authorized_keys.d/cesar, which he can read.
+  users.users.cesar.openssh.authorizedKeys.keys = [ deskKey ];
 
-  # SSH for administration, by key only and for me only: it is how the desk deploys this machine.
+  # SSH for administration, by key only: it is how the desk deploys and supports this machine.
   services.openssh = {
     enable = true;
     settings = {
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
       PermitRootLogin = "no";
-      AllowUsers = [ "v1cferr" ];
+      AllowUsers = [
+        "v1cferr"
+        "cesar"
+      ];
     };
   };
 

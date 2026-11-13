@@ -61,9 +61,7 @@ jobs:
         run: |
           key="$RUNNER_TEMP/nix-cache.key"
           (umask 077; printf '%s' "$SIGNING_KEY" >"$key")
-          c=modules/nixos/core/nix-cache/cache.json
-          store="s3://$(jq -r .bucket $c)?endpoint=$(jq -r .account $c).r2.cloudflarestorage.com&region=auto&compression=zstd&parallel-compression=true&secret-key=$key"
-          tools/ci/cache-push.sh ".#nixosConfigurations.$HOST.config.system.build.toplevel" "$store" --override-input duo-streak-daemon path:./tools/ci/stub-duo
+          tools/ci/cache-push.sh ".#nixosConfigurations.$HOST.config.system.build.toplevel" "$key" --override-input duo-streak-daemon path:./tools/ci/stub-duo
 
       # Only after the gate AND every build passed: one commit per bumped package, then the lock,
       # the same history `update` leaves at home.

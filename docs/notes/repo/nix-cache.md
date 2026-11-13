@@ -36,8 +36,13 @@ builders (units, `writeText`, `buildEnv`, wrappers) set `allowSubstitutes = fals
 is ever asked for them and they rebuild at home in seconds; the script drops them. jq's `//`
 reads `false` as missing, which is why the filter asks `has("allowSubstitutes")` explicitly.
 
-**`nix copy --no-recursive`.** A pushed path's references are either on cache.nixos.org or in the
-same pushed list, so copying closures would only re-upload nixpkgs into a 10 GB free tier.
+**Through a staging cache, not straight to R2.** Copying closures would re-upload nixpkgs into a
+10 GB free tier, but a binary cache refuses a path whose references it does not hold (`cannot add
+... because the reference ... is not valid`), so a plain `nix copy --no-recursive` to R2 pushed
+almost nothing. The script copies into a local `file://` cache instead, where each outside
+reference is only its real narinfo, fetched from cache.nixos.org or from R2, then uploads just
+the pushed paths' files with the aws CLI. Clients take those references from cache.nixos.org as
+usual. A reference neither cache has (a trivial builder's output) joins the push.
 
 **The stub does not change the hashes that matter.** Only derivations that read the private
 input differ between CI and home, and none of the compiled ones do.

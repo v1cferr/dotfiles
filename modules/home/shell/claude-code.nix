@@ -15,13 +15,22 @@ let
     azure-mcp
     coreutils
     fzf
+    pkg-config
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     uv
     writeShellApplication
     writeText
+    zstd
     ;
 
   claude = unstable.claude-code;
+
+  # Unstable's 20.0.47 links zstd-sys against the system libzstd but declares neither it nor
+  # pkg-config, so it fails to build (13/11/2026). Drop the override once unstable's own builds.
+  ccusage = unstable.ccusage.overrideAttrs (old: {
+    nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ pkg-config ];
+    buildInputs = old.buildInputs or [ ] ++ [ zstd ];
+  });
 
   # The CLONED repo, from its SSOT programs.nh.flake (rule 11): the flake itself is in the store.
   repo = "${osConfig.programs.nh.flake}/modules/home/shell/claude";
@@ -253,7 +262,7 @@ in
     # bin/claude would collide at activation.
     claudeDefault
     # ccusage reads the SHARED archive, so the report is per machine, not per subscription.
-    unstable.ccusage
+    ccusage
     pick
     # Also a command, because the device-code login has to happen OUTSIDE a session.
     # Closure cost zero: the MCP config already references this store path.

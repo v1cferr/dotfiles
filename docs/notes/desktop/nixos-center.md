@@ -1,7 +1,9 @@
 # The NixOS Center: notifications and the session, behind the logo
 
-`modules/home/desktop/quickshell/bar/NixosCenter.qml`, with the service in `Notifs.qml` and the
-toasts in `notifications/`. Since 17/10/2026 the official NixOS logo at the center of the bar opens
+`modules/home/desktop/quickshell/bar/CenterCard.qml`, with the service in `Notifs.qml` and the
+toasts in `notifications/`. Since 12/11/2026 it is the ISLAND at its full size
+([island.md](island.md#open)): the same shape that rests around the logo, grown down. Since
+17/10/2026 the official NixOS logo at the center of the bar opens
 ONE panel holding everything that used to be spread over three controls: the notification history,
 do-not-disturb, and the session (lock, darken, log out, suspend, reboot, shut down). The bell pill,
 the band's bell and the power menu are gone; their functions are all here.
@@ -92,13 +94,17 @@ with?", so the cards stay readable without the boot notes.
 
 ## How it opens and closes
 
-It is a `BarPanel` keyed `center` in the bar's coordinator
+It is the `center` pin in the bar's coordinator
 ([bar.md](bar.md#contextual-expansion-one-panel-at-a-time-17102026)), so it follows the same rules as
-every bar panel, with one difference: it opens on a CLICK only, never on hover.
+every bar panel, with two differences: it opens on a CLICK only, never on hover, and since
+12/11/2026 it has no window of its own. The island's body draws it (`bar/IslandDrop.qml`), holds
+its keys and closes it on a click outside; the card itself (`bar/CenterCard.qml`) owns no surface.
+A hover on the island opens its summary, which is not the Center.
 
-- **Where:** centered under the logo of the bar that was clicked, 520 px wide or the screen's width
-  less the windows' outer gap on each side, 8 px under the bar. Measured on 17/10/2026: x 1020 with
-  520 px on the 2560 px panel, so its center is 1280, the logo's.
+- **Where:** hung from the logo of the bar that was clicked, as one shape with it: 520 px wide or
+  the screen's width less the windows' outer gap on each side, flush under the bar. Measured on
+  12/11/2026: 260 px each side of x 1280, the logo's, and 258 each side of 540 on the second
+  monitor.
 - **One at a time:** opening it closes any other panel, the VPN menu and the media panel (over the
   media panel's IPC, since that one lives outside the coordinator). Clicking the logo of the OTHER
   monitor moves it there; the logical instance is one.
@@ -178,8 +184,10 @@ default (as the keybinds do) or a PNG in `~/Pictures/Screenshots`, named
 connected greys its button out.
 
 A click closes the Center and runs `shell-screenshot <target> <copy|save>` (`flameshot.nix`), which
-reuses Flameshot and `my.monitors`: it waits for the Center's own layer, `qs-center`, to leave the
-frame and for Hyprland's 100 ms layer fade, then shoots. The capture is Flameshot's, the same backend
+reuses Flameshot and `my.monitors`: it waits for the island to go back up, asking the shell how
+far it reaches (`qs ipc call bar islandReach`, 0 when shut), then shoots. Until 12/11/2026 it
+waited for the Center's own layer, `qs-center`, to leave the frame; the island's layer stays
+mapped while shut, so the layer list no longer answers that. The capture is Flameshot's, the same backend
 as `sc1`, `sc2` and `scfull`, and Flameshot's own notification is the success feedback; a failure
 (a monitor gone, Flameshot failing) is a notification too. No new daemon.
 

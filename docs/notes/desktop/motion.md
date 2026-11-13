@@ -197,7 +197,8 @@ of it.
 
 The island opening downward on a hover ([island.md](island.md#open)) is the same exception and the
 same two tokens: its body comes down on the spring (3.6% past its height, at rest in 352 ms) and
-goes back up on the short ease.
+goes back up on the short ease. At its full size, the NixOS Center, the way down is long and the
+spring is damped harder (0.45), so it settles in 425 ms with no bounce.
 
 The wave beside the cover ([island.md](island.md#the-wave)) never stops while music plays, and is
 not decoration: it is the spectrum of what is heard, a status that IS motion. Unlike the other such

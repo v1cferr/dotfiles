@@ -105,8 +105,9 @@ windows had it, by tag). The global switch is on and the plugin skips what is op
 but barely shows: Hyprland's window opacity fades the text along with the background, and only an
 app that draws its own translucent background (kitty) can show more without losing contrast. Tagged
 off: Hearthstone, Overwatch, Steam games, Picture-in-Picture and Flameshot's overlay. Layer glass
-covers `qs-bar`, `qs-dash` (the LG's band), `qs-panel` (panels, toasts, the OSD, the band's
-tooltips) and `qs-center` at a 0.5 alpha mask, so the shell's transparent gaps get no glass.
+covers `qs-bar`, `qs-dash` (the LG's band) and `qs-panel` (panels, toasts, the OSD, the band's
+tooltips) at a 0.5 alpha mask, so the shell's transparent gaps get no glass. The island and the
+NixOS Center in it (`qs-island`) are opaque and get none.
 
 **Fullscreen is an event, not a rule**, and both rules were measured in the nested session on
 0.56.2. `match = { fullscreen = true }` also matches the MAXIMIZED state (1) a lone scrolling column

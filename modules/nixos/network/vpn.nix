@@ -17,7 +17,6 @@ let
     libnotify
     nxbender
     openconnect
-    openssh
     openssl
     systemd
     writeShellApplication
@@ -39,42 +38,22 @@ let
     "14:0f:b2:28:65:52:27:c4:13:13:1a:68:64:72:5d:84:5a:ba:8d:75"
   ];
 
-  # The portal is reached through an SSH forward on the VPS: the direct path loses 12-70% of its
-  # packets at UFSCar's edge (AS52888) and TCP-in-TCP turns that into resets, while home->VPS->portal
-  # measured 0% (2026-10-27). Note: docs/notes/network/vpn.md.
+  # The portal, dialed directly: docs/notes/network/vpn.md.
   faiPortalHost = "200.133.233.101";
   faiPortalPort = 4433;
-  faiPortal = "${faiPortalHost}:${toString faiPortalPort}";
   faiUser = "victor.ferreira";
   faiDomain = "fai2008";
-  faiRelayPort = 14433;
-  # The relay's far end, as the `vps` block of ssh.nix names it; only probed, never trusted.
-  faiVpsHost = "vps.v1cferr.dev";
 
   # Pins whichever allowlisted cert the portal serves NOW; nxBender still enforces that pin, so a
   # cert swapped between this probe and the login fails closed.
   faiUp = writeShellScript "vpn-fai-up" ''
-    # The relay starts first (Wants=), but its port opens only once ssh has logged in.
-    server=127.0.0.1
-    port=${toString faiRelayPort}
-    # A VPS whose sshd does not answer at all is not waited for: the punches run on a deadline.
-    if ${coreutils}/bin/timeout 3 ${bash}/bin/bash -c 'exec 3<>/dev/tcp/${faiVpsHost}/22' 2>/dev/null; then
-      for _ in $(${coreutils}/bin/seq 1 15); do
-        (exec 3<>/dev/tcp/$server/$port) 2>/dev/null && break
-        ${coreutils}/bin/sleep 1
-      done
-    fi
-    # A dead VPS must not take the VPN with it: the direct path is lossy, not closed.
-    if ! (exec 3<>/dev/tcp/$server/$port) 2>/dev/null; then
-      echo "the VPS relay never listened, going to the portal directly" >&2
-      server=${faiPortalHost}
-      port=${toString faiPortalPort}
-    fi
+    server=${faiPortalHost}
+    port=${toString faiPortalPort}
     fp="$(echo | ${coreutils}/bin/timeout 10 ${openssl}/bin/openssl s_client -connect "$server:$port" 2>/dev/null \
       | ${openssl}/bin/openssl x509 -noout -fingerprint -sha1 | ${coreutils}/bin/cut -d= -f2 | ${coreutils}/bin/tr 'A-F' 'a-f')"
     case "$fp" in
       ${builtins.concatStringsSep " | " faiFingerprints}) ;;
-      "") echo "no certificate from the portal (unreachable, or the VPS relay is down?)" >&2; exit 1 ;;
+      "") echo "no certificate from the portal (unreachable?)" >&2; exit 1 ;;
       *) echo "Fingerprints did not match: the portal serves $fp, which is not allowlisted" >&2; exit 1 ;;
     esac
     # $1: another config, so `rotate-fai-password` tests a new password through this same path.
@@ -108,10 +87,6 @@ let
       cleanup() {
         sudo systemctl stop "$test_unit" 2>/dev/null || true
         sudo rm -f "$test_conf"
-        # The relay is PartOf vpn-fai, so only a test run can leave it up on its own.
-        if ! systemctl is-active --quiet vpn-fai.service; then
-          sudo systemctl stop vpn-fai-relay.service 2>/dev/null || true
-        fi
       }
       trap cleanup EXIT INT TERM
 
@@ -147,9 +122,8 @@ let
       if systemctl is-active --quiet vpn-fai.service; then
         was_active=true
       fi
-      # The unit retries with the old password, and two tunnels cannot share the relay.
+      # The unit retries with the old password, and two tunnels cannot share the account.
       sudo systemctl stop vpn-fai.service
-      sudo systemctl start vpn-fai-relay.service
       printf 'username = %s\ndomain = %s\npassword = %s\n' ${faiUser} ${faiDomain} "$password" |
         sudo install -m 0600 -o root /dev/stdin "$test_conf"
       since="$(date '+%Y-%m-%d %H:%M:%S')"
@@ -231,7 +205,7 @@ let
       # Per-VPN metadata: the unit plus the portal (host/port) that has to be up.
       vpn_meta() {
         case "$1" in
-          fai)    echo "vpn-fai.service ${faiPortalHost} ${toString faiPortalPort}" ;; # the portal itself: the VPS relay is optional
+          fai)    echo "vpn-fai.service ${faiPortalHost} ${toString faiPortalPort}" ;;
           ufscar) echo "vpn-ufscar.service acessoremoto-scl.ufscar.br 443" ;;
           *)      return 1 ;;
         esac
@@ -556,40 +530,14 @@ in
   # FAI: SonicWall through nxBender, reading the config rendered by sops (with the password).
   systemd.services.vpn-fai = {
     description = "FAI VPN (SonicWall through nxBender)";
-    # Wants, not Requires: a restart of the relay propagates through Requires=, and a dead VPS
-    # restarts it every ten seconds, which on 2026-11-12 took the tunnel down with it each time.
-    wants = [
-      "network-online.target"
-      "vpn-fai-relay.service"
-    ];
-    after = [
-      "network-online.target"
-      "vpn-fai-relay.service"
-    ];
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" ];
     restartIfChanged = false; # same: reconnecting the VPN is my decision, not a rebuild side effect
     serviceConfig = {
       Type = "simple";
       ExecStart = faiUp;
     }
     // vpnRestart;
-    startLimitIntervalSec = 0;
-  };
-
-  # The forward to the portal through the VPS, as ME: it reuses my key and the `vps` block of
-  # ssh.nix. PartOf: `vpn disconnect fai` takes it down too.
-  systemd.services.vpn-fai-relay = {
-    description = "SSH forward to the FAI portal through the VPS";
-    wants = [ "network-online.target" ];
-    after = [ "network-online.target" ];
-    partOf = [ "vpn-fai.service" ];
-    restartIfChanged = false;
-    serviceConfig = {
-      Type = "simple";
-      User = "v1cferr";
-      ExecStart = "${openssh}/bin/ssh -N -o BatchMode=yes -o ConnectTimeout=5 -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -L 127.0.0.1:${toString faiRelayPort}:${faiPortal} vps";
-      Restart = "always";
-      RestartSec = 5;
-    };
     startLimitIntervalSec = 0;
   };
 

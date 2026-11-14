@@ -209,40 +209,20 @@ when it changed, touches `/run/vpn-fai/rotated`; a user path unit in
 [`ssh.nix`](../../../modules/home/shell/ssh.nix) reacts with `ssh -O exit` on every host carrying
 a master. When the same IP comes back, nothing is touched, because those sessions can survive.
 
-## The portal is reached through the VPS
+## The portal is dialed directly (the VPS relay is gone)
 
-On 21/10 and 27/10/2026 the resets came every few minutes, and `mtr` showed why: 0% loss across
-Algar and RNP, then 12% to 70% starting at UFSCar's edge (`200.133.233.200`, AS52888) and carried to
-the portal, while the VPS reached the same portal with 0% and 8 ms. The tunnel is PPP inside ONE
-TLS connection, so outer loss turns into stacked retransmits (pings of 4 to 8 s inside it) until
-the appliance gives up.
+From 27/10 to 11/11/2026 nxBender reached the portal through an SSH forward on the KingHost VPS
+(`vpn-fai-relay`), because the direct path loses 12% to 70% of its packets at UFSCar's edge
+(`200.133.233.200`, AS52888) and a TLS-wrapped PPP tunnel turns that into stacked retransmits,
+while the VPS reached the same portal with 0% and 8 ms. The VPS went unpaid on 2026-11-11 and was
+cancelled for good on 2026-11-14, so the relay, its `Wants=` and the VPS probe in `vpn-fai-up` are
+gone. Kept alive with `Restart=always` against a dead address, the relay was in `failed` for a
+moment every five seconds, and any `rebuild` that caught it there ended with exit 4.
 
-So `vpn-fai-relay` holds `ssh -L 127.0.0.1:14433:200.133.233.101:4433 vps` and nxBender connects
-to that port (`-s`/`-P` override the sops file). Both legs measured clean (home to VPS 0% / 14 ms).
-The VPS needs nothing: its sshd allows forwarding by default. The fingerprint pin still holds,
-because the TLS session is end to end; the VPS only sees ciphertext. The relay runs as my user so
-it reuses my key and the `vps` block of `ssh.nix`, and `PartOf=` takes it down with the VPN. The
-trade: the FAI VPN now depends on the VPS being up, and `vpn diagnose fai` checks the relay first.
-
-That dependency is no longer total. On 2026-11-11 the VPS stopped answering anything (ping, 22,
-80, 443) while the portal answered directly with its allowlisted cert, and the VPN, the password
-rotation and every Acuttis punch went down with the VPS. `vpn-fai-up` now waits its fifteen
-seconds for the relay and, if the port never opened, dials the portal directly and logs that it
-did. The direct path loses packets; a lossy tunnel still beats none.
-
-The VPS went unpaid that day, and whether it comes back is open, so the relay is now OPTIONAL
-rather than assumed. `vpn-fai-up` gives the VPS's sshd three seconds; if it does not answer, the
-fifteen second wait is skipped and the portal is dialled at once, which keeps a punch's deadline.
-The relay's ssh carries `ConnectTimeout=5`, so it fails fast instead of hanging on a dead address,
-and `vpn diagnose fai` checks the portal itself and no longer blames a stopped relay.
-That fast failure exposed a second link the next morning: `vpn-fai` held the relay with
-`Requires=`, and a restart of a required unit restarts its dependants too. The relay now failed
-every five seconds and restarted, so every Acuttis run of 2026-11-12 saw a tunnel that came up and
-was torn down ten seconds later. The VPN holds it with `Wants=` now: started alongside, never
-followed down. A VPS that
-answers again is used again with no change here. If it is cancelled for good, the relay unit, its
-`Wants=` and `faiVpsHost` can go; a recycled address is harmless meanwhile, because ssh refuses
-a host key it does not know and nxBender still pins the portal's certificate.
+The trade is back to the lossy direct path: a resetting tunnel still beats none. If the resets
+become unbearable, any always-on host outside UFSCar's edge can play the same role with one
+`ssh -L 127.0.0.1:<port>:200.133.233.101:4433` and `-s`/`-P` on nxBender; the fingerprint pin holds
+either way, because the TLS session stays end to end.
 
 ## Removed on 30/07: the `menu` subcommand
 

@@ -48,6 +48,19 @@ Scope {
         function hide(): void {
             root.panelVisible = false;
         }
+        // The media keys (keybinds.lua): the player the shell shows, not playerctl's own pick.
+        function playPause(): void {
+            if (Media.player && Media.player.canTogglePlaying)
+                Media.player.togglePlaying();
+        }
+        function next(): void {
+            if (Media.player && Media.player.canGoNext)
+                Media.player.next();
+        }
+        function previous(): void {
+            if (Media.player && Media.player.canGoPrevious)
+                Media.player.previous();
+        }
     }
 
     // It closes when the pointer has left it for a while (the same as the VPN panel).

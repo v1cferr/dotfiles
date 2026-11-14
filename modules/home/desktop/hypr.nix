@@ -212,7 +212,7 @@ in
     wl-clipboard # wl-copy/wl-paste (used by wl-clip-persist and by hand)
     wl-clip-persist # keeps the copy alive after the app closes; Vicinae only records history
     pamixer
-    playerctl
+    playerctl # MPRIS by hand; the media keys go through `qs ipc call mpris`
     pavucontrol
   ];
 

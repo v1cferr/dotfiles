@@ -117,8 +117,11 @@ reload. The `sleep 0.4` lets Hyprland settle the hotplug before the reload.
 
 The Hyprland SESSION tools the Lua invokes, with app and config in home (rule 4): the three scripts
 above, plus `wl-clipboard` and `wl-clip-persist` as the clipboard's base (the history is Vicinae's,
-[vicinae.md](vicinae.md)), `pamixer` and `playerctl` for the media keys, and `pavucontrol` as the
-mixer on SUPER+S. The launcher is Vicinae too, in `desktop/vicinae/`.
+[vicinae.md](vicinae.md)), `pamixer`, `playerctl` to inspect and drive MPRIS players by hand, and
+`pavucontrol` as the mixer on SUPER+S. The media keys do NOT use `playerctl`: they call
+`qs ipc call mpris playPause|next|previous`, so they drive the player the shell shows
+([quickshell.md](quickshell.md#audio-and-media)), at the cost of doing nothing while the shell is
+down. The launcher is Vicinae too, in `desktop/vicinae/`.
 
 ## The Lua modules
 

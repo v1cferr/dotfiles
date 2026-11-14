@@ -67,8 +67,12 @@ RowLayout {
             left.host.anchorPopover(spPill, left.barContent, left.bar);
             left.host.launch(["qs", "ipc", "call", "mpris", "toggleAt", "" + left.host.popLeft(360)]);
         }
-        onRightClicked: left.host.launch(["playerctl", "--player=spotifast", "play-pause"])
-        onScrolledUp: left.host.launch(["playerctl", "--player=spotifast", "next"])
-        onScrolledDown: left.host.launch(["playerctl", "--player=spotifast", "previous"])
+        // The player the pill shows, never one named here (Media.qml picks it).
+        onRightClicked: if (Media.player && Media.player.canTogglePlaying)
+            Media.player.togglePlaying()
+        onScrolledUp: if (Media.player && Media.player.canGoNext)
+            Media.player.next()
+        onScrolledDown: if (Media.player && Media.player.canGoPrevious)
+            Media.player.previous()
     }
 }

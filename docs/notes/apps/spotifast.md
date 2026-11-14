@@ -77,8 +77,9 @@ engine, so it plays. No Electron, no CEF.
 
 ## Around it
 
-- **Media controls.** It registers MPRIS as `spotifast`, so `playerctl --player=spotifast`; the bar
-  pill and the media panel match that name (`modules/home/desktop/quickshell/`).
+- **Media controls.** It registers MPRIS as `spotifast`, so `playerctl --player=spotifast`. The
+  shell no longer matches that name: it shows and drives whichever player most recently started
+  playing ([quickshell.md](../desktop/quickshell.md#audio-and-media)).
 - **Autostart.** The `spotifast` entry in `my.autostart` opens it with `--start-hidden`. Its own
   "start with computer" stays Off, or it becomes a second owner
   ([autostart.md](../desktop/autostart.md)).

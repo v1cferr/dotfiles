@@ -1015,7 +1015,7 @@ Scope {
             return root.wsHint(root.hintWs);
         if (key === "music")
             return {
-                title: Media.title || "Spotifast",
+                title: Media.title || Media.source || "Media",
                 lines: [Media.artist, Media.playing ? "Playing" : "Paused"].filter(l => l !== ""),
                 action: "Click for the player · right-click to " + (Media.playing ? "pause" : "play") + " · scroll to skip"
             };

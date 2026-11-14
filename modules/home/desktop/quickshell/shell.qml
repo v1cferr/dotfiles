@@ -17,7 +17,7 @@ ShellRoot {
     // The volume/mic OSD (a toast), bottom-center on the main monitor. The component is in Osd.qml.
     Osd {}
 
-    // The media control panel (Spotifast). The component is in Mpris.qml.
+    // The media control panel (whichever player Media.qml picks). The component is in Mpris.qml.
     Mpris {}
 
     // The main bar, replacing Waybar. The component is in Bar.qml.

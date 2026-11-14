@@ -1,26 +1,46 @@
 pragma Singleton
-// The ONE choice of media player for the shell: Spotifast when it is up, else whichever is playing,
-// else the first. The bar and the media panel both read it. docs/notes/desktop/quickshell.md#audio-and-media
+// The ONE choice of media player for the shell: the one that most recently started playing (rules in
+// media/MediaMath.qml). Every media surface reads it. docs/notes/desktop/quickshell.md#audio-and-media
 import Quickshell
 import Quickshell.Services.Mpris
 import Quickshell.Wayland
+import QtQml.Models
 import QtQuick
+import "root:/media"
 
 Singleton {
     id: root
 
-    readonly property var player: {
-        const m = Mpris.players;
-        const list = (m && m.values) ? m.values : [];
-        for (let i = 0; i < list.length; i++) {
-            const p = list[i];
-            if (p && (p.identity === "Spotifast" || (p.dbusName || "").toLowerCase().indexOf("spotifast") >= 0))
-                return p;
+    MediaMath {
+        id: math
+    }
+    readonly property var players: (Mpris.players && Mpris.players.values) ? Mpris.players.values.filter(p => !!p) : []
+    // When each player last STARTED playing, by D-Bus name; written only by the watchers below.
+    property var seen: ({})
+    function started(p) {
+        if (p && p.isPlaying)
+            root.seen = math.stamp(root.seen, p.dbusName || "", Date.now());
+    }
+    Instantiator {
+        model: root.players
+        delegate: Connections {
+            required property var modelData
+            target: modelData
+            function onIsPlayingChanged() {
+                root.started(modelData);
+            }
         }
-        for (let i = 0; i < list.length; i++)
-            if (list[i] && list[i].isPlaying)
-                return list[i];
-        return list.length ? list[0] : null;
+        // One already playing when it appears (or when the shell starts) counts as a start.
+        onObjectAdded: (i, o) => root.started(o.modelData)
+        onObjectRemoved: root.seen = math.prune(root.seen, root.players.map(p => p.dbusName || ""))
+    }
+
+    readonly property var player: {
+        const key = math.pick(root.players.map(p => ({
+                        key: p.dbusName || "",
+                        playing: p.isPlaying
+                    })), root.seen);
+        return root.players.find(p => (p.dbusName || "") === key) || null;
     }
     readonly property bool hasPlayer: !!root.player
     readonly property bool playing: !!(root.player && root.player.isPlaying)

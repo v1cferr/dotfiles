@@ -3,7 +3,7 @@
 `modules/home/desktop/quickshell/bar/`. The desktop's bar, the only one; Waybar left in the migration to
 Quickshell. It is loaded by `shell.qml` (`Bar {}`), and the popovers live in files next to it.
 
-It shows: the workspaces per monitor plus the focused app's name and Spotifast (Mpris), the NixOS logo (the way
+It shows: the workspaces per monitor plus the focused app's name and what plays (Mpris), the NixOS logo (the way
 into notifications and the session, [nixos-center.md](nixos-center.md)), the network, the VPN and
 Tor, audio (Pipewire), the notification state, the tray and the clock, and on the standing monitor
 the operational alerts. The CPU, the disk and a stopped hypridle show only while they need a look;

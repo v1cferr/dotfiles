@@ -197,9 +197,8 @@ media item opens where the island is off, and `qs ipc call mpris toggle` anywher
 state that used to be computed in several places (11/11/2026). `Audio` binds the default sink and
 source and holds the only setters (`changeVolume`, `toggleMute`); the bar's volume item and the OSD
 read it, where before each kept its own `PwObjectTracker` and the microphone existed only in the
-OSD. `Media` holds the player choice (Spotifast when it is up, else whichever is playing, else the
-first) and its track; the bar's media item and the media panel read it, where before the same
-twelve lines stood in both. The lock keeps its own, different rule (the first playing player or
+OSD. `Media` holds the player choice and its track; the bar's media item and the media panel read
+it, where before the same twelve lines stood in both. The lock keeps its own, different rule (the first playing player or
 none), since it runs as a separate process from a store copy of the tree. Checked on 11/11/2026 in
 the headless harness: the bar and the media panel render pixel for pixel as before.
 
@@ -209,6 +208,15 @@ only while one of its three askers wants it: the capsule while media is what it 
 ([island.md](island.md#the-wave)). `Media` says a track once:
 an artist repeated in the title is cut from it, and YouTube's "X - Topic" is X. It also finds the
 window what plays lives in (`reveal`), and `Audio` sets the volume of what plays (`mediaNode`).
+
+**The player choice** (13/11/2026, `media/MediaMath.qml`, tested by `tests/tst_media.qml`): the
+player that most recently STARTED playing wins; with none playing, the last one that played stays,
+so a paused track is still shown; with no history, the D-Bus name decides, never the order players
+reached the bus. Only a transition to playing moves the clock (a pause between tracks, a seek or a
+new track never does), so two players never flicker, and one that closes takes its stamp with it.
+It replaced "Spotifast when it is up", which kept a paused Spotifast, hidden in the tray, on screen
+while another player was the one playing. No player is named: Spotifast, Pear Desktop, a browser
+tab, VLC and mpv all go through the same rule.
 
 ### `Pill.qml`
 

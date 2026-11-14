@@ -2,9 +2,9 @@
   "questie": {
     "source": "github",
     "repo": "Questie/Questie",
-    "version": "bundle/v12.8.0+v1.0.16",
-    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.8.0%2Bv1.0.16/Questie-v12.8.0%2Bv1.0.16.zip",
-    "hash": "sha256-siXQbUqC5gW0HtkeClXiGr1L8menUsTnA7UN7Tf9DnU="
+    "version": "bundle/v12.9.0+v1.1.1",
+    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.9.0%2Bv1.1.1/Questie-v12.9.0%2Bv1.1.1.zip",
+    "hash": "sha256-nGElNHE7dcBkicwtmzhCS0v/M1ARkQEd0zqgDus/tsc="
   },
   "dbm": {
     "source": "github",

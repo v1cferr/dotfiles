@@ -69,15 +69,10 @@ let
       icon = "folder-publicshare";
     }
     # Remote: KIO's own sftp through the ~/.ssh/config aliases, so they show under "Remote". The
-    # rclone mounts (~/FAI-workstation, ~/VPS) stay for the terminal and the cache.
+    # rclone mount (~/FAI-workstation) stays for the terminal and the cache.
     {
       title = "FAI Workstation";
       url = "sftp://workstation/"; # needs the FAI VPN
-      icon = "folder-remote";
-    }
-    {
-      title = "VPS";
-      url = "sftp://vps/"; # the KingHost VPS' root
       icon = "folder-remote";
     }
     # Personal

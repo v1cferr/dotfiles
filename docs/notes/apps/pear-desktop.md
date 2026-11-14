@@ -38,6 +38,28 @@ text-input IME flags whenever `NIXOS_OZONE_WL` and `WAYLAND_DISPLAY` are set, an
 flags file. The `.desktop` is `com.github.th-ch.youtube-music.desktop`, the same string as the
 Wayland `app_id`, which is what the shell matches to find the window.
 
+## The two keys Nix owns in its config
+
+The app keeps its settings in `~/.config/YouTube Music/config.json` and rewrites it at runtime, so
+Nix does not own the file (rule 14). An activation merges two keys into it with `jq` and touches
+nothing else: no session, no other plugin, no theme. Already set means no write; a file `jq`
+cannot parse is left alone with a warning.
+
+- **`plugins.shortcuts.enabled = true`**. Pear's own MPRIS player is registered by this plugin,
+  which ships OFF. Without it only Chromium's generic `chromium.instance<pid>` player is left,
+  with no `Shuffle`/`LoopStatus` and a `DesktopEntry` that does not match the app, so the media
+  panel's "Go to" cannot find the window. With it on, Pear disables Chromium's
+  (`MediaSessionService`), so there is one player, `org.mpris.MediaPlayer2.YoutubeMusic`, whose
+  `DesktopEntry` nixpkgs patches to the `.desktop` name. The plugin's global shortcuts stay empty
+  and `overrideMediaKeys` stays off: the media keys belong to Hyprland.
+- **`options.autoUpdates = false`**. Nix is the updater. The in-app check is `electron-updater`
+  with `autoDownload = false`, which outside an AppImage should not even run (no `APPIMAGE` in the
+  environment), so this is the belt to that braces: no "update available" dialog pointing at a
+  GitHub download.
+
+A plugin change needs an app restart, and so does the first run after the activation if the app
+was open.
+
 ## What it does not get
 
 - **No autostart**: it opens by hand. If it ever should, it goes in `my.autostart`

@@ -22,6 +22,8 @@ let
   addonDir = "${config.my.games.root}/World of Warcraft/_forever_/Interface/AddOns";
   # What the last switch put there, so an add-on that leaves the list is removed too.
   manifest = "${config.xdg.stateHome}/wow-addons/managed";
+  # The bundle the last switch copied, so a new one is compared by content (see the activation).
+  lastBundle = "${config.xdg.stateHome}/wow-addons/bundle";
 
   # `wow-addons-key`: the CurseForge key in one go (Bitwarden, index, sync-secrets, bump, switch).
   wow-addons-key = writeShellApplication {
@@ -44,6 +46,10 @@ in
   # The NTFS mount has `acl`, so it KEEPS unix modes, and rsync hands new files the store's
   # read-only ones: removing Bagnon then failed with "Permission denied" (06/11/2026). `writable`
   # gives the owner write back before any delete, and --chmod keeps new copies writable.
+  #
+  # Every store file has mtime 1, so rsync's size+mtime check skipped any edit that kept the size:
+  # Questie 12.9.0 kept its old 1858-byte HBDHooks.lua and failed to load a library (14/11/2026),
+  # with 38 more stale files. A new bundle is therefore compared by checksum (~25 s over NTFS).
   home.activation.wowAddons = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     # Only what lacks it: a chmod -R over 2 GiB of NTFS on every switch would cost for nothing.
     writable() { [ ! -e "$1" ] || run find "$1" ! -perm -u+w -exec chmod u+w {} +; }
@@ -59,13 +65,18 @@ in
           fi
         done < ${lib.escapeShellArg manifest}
       fi
+      byContent=()
+      [ "$(cat ${lib.escapeShellArg lastBundle} 2>/dev/null)" = ${wow-addons} ] || byContent=(--checksum)
       for dir in ${wow-addons}/*/; do
         folder=$(basename "$dir")
         writable ${lib.escapeShellArg addonDir}/"$folder"
-        run ${lib.getExe rsync} -rt --delete --no-perms --no-owner --no-group --chmod=Du+w,Fu+w \
-          "$dir" ${lib.escapeShellArg addonDir}/"$folder"/
+        run ${lib.getExe rsync} -rt "''${byContent[@]}" --delete --no-perms --no-owner --no-group \
+          --chmod=Du+w,Fu+w "$dir" ${lib.escapeShellArg addonDir}/"$folder"/
       done
-      [ -v DRY_RUN ] || ls ${wow-addons} > ${lib.escapeShellArg manifest}
+      if [ ! -v DRY_RUN ]; then
+        ls ${wow-addons} > ${lib.escapeShellArg manifest}
+        echo ${wow-addons} > ${lib.escapeShellArg lastBundle}
+      fi
     fi
   '';
 }

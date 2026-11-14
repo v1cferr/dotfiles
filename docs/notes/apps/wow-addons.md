@@ -53,6 +53,12 @@ symlinks: the folder is on NTFS (`my.games.linked`, [games-disk](../boot-and-sto
 and Windows plays from it too. `~/.local/state/wow-addons/managed` remembers what the last switch
 put there, so an add-on that leaves the list is deleted, and folders Nix never managed stay.
 
+`~/.local/state/wow-addons/bundle` holds the store path last copied. When the bundle changes, rsync
+runs with `--checksum`: every store file has mtime 1, so the default size and mtime check skipped
+any edit that kept a file's size. Questie 12.9.0 kept its old `HBDHooks.lua` that way on
+14/11/2026 and failed to load, with 38 more stale files across 27 add-ons. The checksum pass costs
+about 25 s over NTFS, so a switch with the same bundle keeps the quick check.
+
 ## The CurseForge key
 
 The bump needs a personal key from <https://console.curseforge.com>, read from

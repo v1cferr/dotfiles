@@ -1,6 +1,6 @@
 # Host t480s: a Lenovo ThinkPad T480s, the laptop two people share, each with their own home.
 # One system here, two homes elsewhere: docs/decisions/0018-a-shared-laptop.md
-{ ... }:
+{ config, lib, ... }:
 
 let
   # The desk's own key, which administers this machine (it is not among the keys users.nix lists).
@@ -38,6 +38,16 @@ in
       ];
     };
   };
+
+  # TEMPORARY (15/11/2026): Cesar's PC key has a passphrase he does not have, so his account takes
+  # a password too, from the home IPv4 range only. Remove once his key works.
+  services.openssh.extraConfig = ''
+    Match User cesar Address ${config.my.net.lanSubnet}
+      PasswordAuthentication yes
+  '';
+  # With PasswordAuthentication off globally, the module drops pam_unix from sshd's stack, which
+  # would refuse that password no matter what the Match says.
+  security.pam.services.sshd.unixAuth = lib.mkForce true;
 
   # Limine signs with keys it generates at the install, since a new machine has none. They are
   # NOT enrolled: Secure Boot stays off in the firmware until that is done by hand.

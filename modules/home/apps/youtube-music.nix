@@ -9,6 +9,10 @@ let
   want = {
     options.autoUpdates = false; # Nix updates it; the in-app check is inert outside AppImage anyway
     plugins.shortcuts.enabled = true; # this plugin is what registers Pear's own MPRIS player
+    plugins.do-not-track = {
+      enabled = true; # the built-in ad blocker (ex-"adblocker"), which ships off
+      blocker = "In player"; # skips the ads in the player itself, no downloaded filter lists
+    };
   };
   wantJson = builtins.toJSON want;
   seed = writeText "pear-desktop-config.json" wantJson;
@@ -22,7 +26,7 @@ in
     cfg="''${XDG_CONFIG_HOME:-$HOME/.config}/YouTube Music/config.json"
     if [ ! -e "$cfg" ]; then
       run install -Dm600 ${seed} "$cfg"
-    elif ! ${lib.getExe jq} -e '.options.autoUpdates == false and .plugins.shortcuts.enabled == true' "$cfg" >/dev/null 2>&1; then
+    elif ! ${lib.getExe jq} -e --argjson want '${wantJson}' '. * $want == .' "$cfg" >/dev/null 2>&1; then
       if merged=$(${lib.getExe jq} --argjson want '${wantJson}' '. * $want' "$cfg" 2>/dev/null); then
         run install -m600 /dev/stdin "$cfg" <<<"$merged"
       else

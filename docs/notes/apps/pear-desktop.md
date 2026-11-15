@@ -38,10 +38,10 @@ text-input IME flags whenever `NIXOS_OZONE_WL` and `WAYLAND_DISPLAY` are set, an
 flags file. The `.desktop` is `com.github.th-ch.youtube-music.desktop`, the same string as the
 Wayland `app_id`, which is what the shell matches to find the window.
 
-## The two keys Nix owns in its config
+## The keys Nix owns in its config
 
 The app keeps its settings in `~/.config/YouTube Music/config.json` and rewrites it at runtime, so
-Nix does not own the file (rule 14). An activation merges two keys into it with `jq` and touches
+Nix does not own the file (rule 14). An activation merges the keys below into it with `jq` and touches
 nothing else: no session, no other plugin, no theme. Already set means no write; a file `jq`
 cannot parse is left alone with a warning.
 
@@ -56,6 +56,10 @@ cannot parse is left alone with a warning.
   with `autoDownload = false`, which outside an AppImage should not even run (no `APPIMAGE` in the
   environment), so this is the belt to that braces: no "update available" dialog pointing at a
   GitHub download.
+- **`plugins.do-not-track = { enabled = true; blocker = "In player"; }`**. The built-in ad
+  blocker, named `adblocker` until 3.12 (the app migrates the old key), ships OFF. "In player"
+  skips the ads inside the player; the other mode, "With blocklists", runs Ghostery's engine on
+  filter lists it downloads, which the player ads do not need.
 
 A plugin change needs an app restart, and so does the first run after the activation if the app
 was open.

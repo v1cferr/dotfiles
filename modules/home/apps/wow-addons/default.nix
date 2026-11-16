@@ -11,6 +11,7 @@ let
   # Rule 19: everything this module reaches for, named once.
   inherit (pkgs)
     bitwarden-cli
+    gh
     git
     jq
     rsync
@@ -25,11 +26,12 @@ let
   # The bundle the last switch copied, so a new one is compared by content (see the activation).
   lastBundle = "${config.xdg.stateHome}/wow-addons/bundle";
 
-  # `wow-addons-key`: the CurseForge key in one go (Bitwarden, index, sync-secrets, bump, switch).
+  # `wow-addons-key`: the CurseForge key in one go (Bitwarden, GitHub secret, index, sync, bump, switch).
   wow-addons-key = writeShellApplication {
     name = "wow-addons-key";
     runtimeInputs = [
       bitwarden-cli
+      gh # the CI's copy of the key, as a repo secret
       git
       jq
       sops # sync-secrets wants it on PATH, outside the devShell too

@@ -32,8 +32,9 @@ curl() {
 # --name: an upstream filename may hold `!` or spaces, which a store name rejects.
 prefetch() { nix store prefetch-file --json --hash-type sha256 --name addon.zip "$1" | jq -er .hash; }
 
-cf_key=""
-[ -r "$key_file" ] && cf_key=$(<"$key_file")
+# The env wins: the nightly CI has no /run/secrets and gets the key as the CURSEFORGE_API_KEY secret.
+cf_key="${CURSEFORGE_API_KEY:-}"
+[ -z "$cf_key" ] && [ -r "$key_file" ] && cf_key=$(<"$key_file")
 
 # Prints {"version","url"} of the newest stable Forever file of a CurseForge project, or of the
 # newest stable-or-beta one when the entry's channel ($2) is "beta" (an add-on that only ships
@@ -92,7 +93,7 @@ for name in $(jq -r 'keys[]' <<<"$new"); do
   case "$(jq -r .source <<<"$entry")" in
     curseforge)
       if [ -z "$cf_key" ]; then
-        echo "wow-addons-bump: no CurseForge key at $key_file, kept $name." >&2
+        echo "wow-addons-bump: no CurseForge key (CURSEFORGE_API_KEY or $key_file), kept $name." >&2
         continue
       fi
       latest=$(cf_latest "$(jq -r .projectId <<<"$entry")" "$(jq -r '.channel // "stable"' <<<"$entry")")

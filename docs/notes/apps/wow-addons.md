@@ -63,8 +63,13 @@ about 25 s over NTFS, so a switch with the same bundle keeps the quick check.
 
 The bump needs a personal key from <https://console.curseforge.com>, read from
 `/run/secrets/curseforge_api_key` ([secrets](../repo/secrets.md)). `wow-addons-key` sets it in one
-go: Bitwarden item, index line, `sync-secrets`, switch, bump, switch. Without the key the bump keeps
-the CurseForge pins and warns; the GitHub ones still move.
+go: Bitwarden item, GitHub secret, index line, `sync-secrets`, switch, bump, switch. Without the key
+the bump keeps the CurseForge pins and warns; the GitHub ones still move.
+
+The nightly CI (`cache.yml`) runs the same bump, and `upgrade` only pulls what it committed. It has
+no `/run/secrets`, so it gets the key as the repo secret `CURSEFORGE_API_KEY`, which the bump reads
+before the file. Until 16/11/2026 the CI had no key: it moved only the GitHub add-ons, and the 35
+CurseForge ones (Polestar 0.4.0.1 among them) waited for a local `update`.
 
 ## Adding an add-on
 

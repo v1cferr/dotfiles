@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Sets the CurseForge API key end to end: the Bitwarden item, the index line, sync-secrets, then
-# the add-on bump and the switch that copies them. docs/notes/apps/wow-addons.md
+# Sets the CurseForge API key end to end: the Bitwarden item, the GitHub secret, the index line,
+# sync-secrets, then the add-on bump and the switch that copies them. docs/notes/apps/wow-addons.md
 set -euo pipefail
 
 key="curseforge_api_key"
@@ -39,6 +39,9 @@ else
     bw encode | bw create item >/dev/null
   echo "Created the Bitwarden item \"$item\"."
 fi
+# The nightly CI bumps the add-ons too, and has no /run/secrets: the same key as a repo secret.
+printf '%s' "$CF_KEY" | gh secret set CURSEFORGE_API_KEY
+echo "Set the GitHub secret CURSEFORGE_API_KEY."
 unset CF_KEY
 
 # The index line joins only now: dead-config rejects an entry whose value is not in sops yet.

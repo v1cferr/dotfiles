@@ -63,6 +63,8 @@ jobs:
       - name: bumps plus the lock
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Without it the wow-addons bump keeps every CurseForge pin (docs/notes/apps/wow-addons.md).
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
         run: |
           export NIX_CONFIG="access-tokens = github.com=$GH_TOKEN"
           nix run .#vendored-bump --override-input duo-streak-daemon path:./tools/ci/stub-duo -- "$PWD"

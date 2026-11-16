@@ -79,6 +79,9 @@ in
       tor-on = "systemctl start tor";
       tor-off = "systemctl stop tor";
 
+      # Same as SUPER+L: lock the session, which also hides the vault apps (vault.md).
+      lock = "session-lock";
+
       # ls/ll/la/lt (eza) and cat (bat) live in cli.nix, next to the toolkit.
       ".." = "cd ..";
       "..." = "cd ../..";

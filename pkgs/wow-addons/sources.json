@@ -2,9 +2,9 @@
   "questie": {
     "source": "github",
     "repo": "Questie/Questie",
-    "version": "bundle/v12.9.0+v1.1.1",
-    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.9.0%2Bv1.1.1/Questie-v12.9.0%2Bv1.1.1.zip",
-    "hash": "sha256-nGElNHE7dcBkicwtmzhCS0v/M1ARkQEd0zqgDus/tsc="
+    "version": "bundle/v12.10.0+v1.1.2",
+    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.10.0%2Bv1.1.2/Questie-v12.10.0%2Bv1.1.2.zip",
+    "hash": "sha256-MjUzJABfeje0ebNpgY/e2GLtoSMfehPCIYDmtDGPhko="
   },
   "dbm": {
     "source": "github",
@@ -16,9 +16,9 @@
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9654738",
-    "url": "https://edge.forgecdn.net/files/9654/738/LayerSwap-1.14.26.zip",
-    "hash": "sha256-ojA7zEGHApNo0mbVkYdy0ot+y3WerfcnuMsI8sw7UQg="
+    "version": "9665765",
+    "url": "https://edge.forgecdn.net/files/9665/765/LayerSwap-1.14.27.zip",
+    "hash": "sha256-q/tZ57ZMC1LhQB6yWJYrbtMoth2U2yen9hVgGTcvyr4="
   },
   "leatrix-plus": {
     "source": "curseforge",
@@ -58,9 +58,9 @@
   "openmap": {
     "source": "curseforge",
     "projectId": 1735937,
-    "version": "9606381",
-    "url": "https://edge.forgecdn.net/files/9606/381/OpenMap-v0.8.9-forever.zip",
-    "hash": "sha256-BFZHub0CERptJuGPPCsiP+w/WK64QX8mh8lPDf1Guuo="
+    "version": "9657589",
+    "url": "https://edge.forgecdn.net/files/9657/589/OpenMap-v0.8.10-forever.zip",
+    "hash": "sha256-t1Zr3AmKWhJ+RxCOx3GrnX1ysBl8jAA5foXo0uvlvx8="
   },
   "forever-loot-sparkles": {
     "source": "curseforge",
@@ -86,9 +86,9 @@
   "glowing-bars": {
     "source": "curseforge",
     "projectId": 1754997,
-    "version": "9640999",
-    "url": "https://edge.forgecdn.net/files/9640/999/GlowingBars-4.1.0.zip",
-    "hash": "sha256-Ub8Xv1Av0ktxgQRtiFj+q2FAfxwlDcuKPFWlvJGedhI="
+    "version": "9657783",
+    "url": "https://edge.forgecdn.net/files/9657/783/GlowingBars-4.1.1.zip",
+    "hash": "sha256-ANtRHf8yS3oquBnvcMO3XFLHt4Df4QVBkfGubvLnLOM="
   },
   "prettytooltip": {
     "source": "curseforge",
@@ -107,9 +107,9 @@
   "social-diary": {
     "source": "curseforge",
     "projectId": 1733454,
-    "version": "9650208",
-    "url": "https://edge.forgecdn.net/files/9650/208/social_diary-v4.1.0.zip",
-    "hash": "sha256-DlxSHc/VQA2YrYoP14VBglRwSq2KAXxnwcZ3QxkFQ+4="
+    "version": "9664628",
+    "url": "https://edge.forgecdn.net/files/9664/628/social_diary-v4.1.1.zip",
+    "hash": "sha256-GNA8AFMYWbN4e84WvAO8wNVdDpf7WCijGm+8CMgzDNE="
   },
   "happy-camper": {
     "source": "curseforge",
@@ -142,9 +142,9 @@
   "dialogueui": {
     "source": "curseforge",
     "projectId": 989270,
-    "version": "9575134",
-    "url": "https://edge.forgecdn.net/files/9575/134/DialogueUI-1.0.7-c.zip",
-    "hash": "sha256-XY9AcpgedqEJr6KUi/RfafCcj45Zx29ll/LrgpxSKf0="
+    "version": "9666149",
+    "url": "https://edge.forgecdn.net/files/9666/149/DialogueUI-1.0.7-d.zip",
+    "hash": "sha256-5juRaAmTiHlA2sDayNBPy3ZtoKFoPtNarUsnZFEWYNc="
   },
   "spoken": {
     "source": "curseforge",
@@ -215,9 +215,9 @@
   "battletext-forever": {
     "source": "curseforge",
     "projectId": 1722502,
-    "version": "9655775",
-    "url": "https://edge.forgecdn.net/files/9655/775/BattleTextForever-v1.19.0-forever.zip",
-    "hash": "sha256-rnU5mEovgVxDAQ2YO2ESQtLeByN82jN3iNJyDkC40HU="
+    "version": "9661993",
+    "url": "https://edge.forgecdn.net/files/9661/993/BattleTextForever-v1.21.4-forever.zip",
+    "hash": "sha256-+Vku6GOO7Ip1gaVtW9nzfbePPO7VleW2tp/lbL7ucuE="
   },
   "easy-experience-bar": {
     "source": "curseforge",
@@ -229,9 +229,9 @@
   "baganator": {
     "source": "curseforge",
     "projectId": 914482,
-    "version": "9648578",
-    "url": "https://edge.forgecdn.net/files/9648/578/Baganator-861.zip",
-    "hash": "sha256-BX9kSD3JLMkm1wjcuub/OkPnYJCp/oxBjdbvZ+knxkE="
+    "version": "9659116",
+    "url": "https://edge.forgecdn.net/files/9659/116/Baganator-862.zip",
+    "hash": "sha256-Cz2+RBAcVe3l0A5CeMrkj8qEzvg4+9b4Xk2kE4v2hK0="
   },
   "syndicator": {
     "source": "curseforge",

@@ -9,6 +9,7 @@ Modules: [`tools/vendored-bump/package.nix`](../../../tools/vendored-bump/packag
 [`pkgs/stack-wallet/bump.nix`](../../../pkgs/stack-wallet/bump.nix),
 [`pkgs/zapfast/bump.nix`](../../../pkgs/zapfast/bump.nix),
 [`pkgs/spotifast/bump.nix`](../../../pkgs/spotifast/bump.nix),
+[`pkgs/pdfcraft/bump.nix`](../../../pkgs/pdfcraft/bump.nix),
 [`pkgs/soloist/bump.nix`](../../../pkgs/soloist/bump.nix),
 [`pkgs/hydralauncher/bump.nix`](../../../pkgs/hydralauncher/bump.nix),
 [`pkgs/wow-addons/bump.nix`](../../../pkgs/wow-addons/bump.nix)

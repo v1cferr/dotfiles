@@ -177,6 +177,7 @@ export const navigation: NavItem[] = [
       { title: "Zen", doc: "notes/apps/zen.md" },
       { title: "ZapFast", doc: "notes/apps/zapfast.md" },
       { title: "Spotifast", doc: "notes/apps/spotifast.md" },
+      { title: "PdfCraft", doc: "notes/apps/pdfcraft.md" },
       { title: "Pear Desktop", doc: "notes/apps/pear-desktop.md" },
       { title: "Crypto", doc: "notes/apps/crypto.md" },
       { title: "Apps and MIME", doc: "notes/apps/apps-and-mime.md" },

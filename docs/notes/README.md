@@ -155,6 +155,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [bottles](apps/bottles.md)                           | the library declared without owning the prefix, and the name that is not the directory      |
 | [mega](apps/mega.md)                                 | megatools, the quota, and why the loop waits                                                |
 | [spotifast](apps/spotifast.md)                       | the native Spotify client, why the release binary, and the theme that must be a real file   |
+| [pdfcraft](apps/pdfcraft.md)                         | the one PDF reader and editor, why the release binary, and the OCR models it has to find    |
 | [apps-and-mime](apps/apps-and-mime.md)               | media, office, MangoHud, OpenAL, and the CANONICAL mimetype                                 |
 | [zen](apps/zen.md)                                   | the launch guard, and the NSS check that had to be written backwards                        |
 | [web-apps](apps/web-apps.md)                         | sites lighter than their vendor app, one list, Chrome PWA or a Zen profile with tabs        |

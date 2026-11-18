@@ -6,20 +6,17 @@ home-manager merges `defaultApplications` from EVERY module into a single `mimea
 these modules each declare only their own types and the result composes. `modules/home/desktop/xdg.nix`
 holds the browser plus text/code, and `modules/home/apps/curseforge.nix` holds the URL schemes.
 
-## Media: Gwenview plus Papers
+## Media: Gwenview plus PdfCraft
 
 Gwenview (images) because this system is already Qt/Kvantum plus Dolphin, so it comes in themed
 for free and integrates with the file manager (open-with, thumbnails).
 
-Documents left Okular for a more modern look. Papers (GNOME's GTK4/libadwaita reader) is the ONE
-reader, for PDF and CBZ: Stylix already recolors libadwaita, so it follows the palette with no extra
-config. It is the STOCK package, Nautilus extension included: until 05/11/2026 it was built with
-`supportNautilus = false` to keep Nautilus, `gnome-user-share` and `apache-httpd` off a Dolphin
-desktop, and that override missed the binary cache, a ~28 min local build on every nixpkgs bump.
-A few unused packages in the closure cost less than that. Papers does not open EPUB, and no EPUB
-default is declared, so OnlyOffice takes it (see the trap below). Readest (Tauri + Next.js) was
-tried as a second reader for EPUB and dropped: one reader on the machine, not two. JoPDF was considered and rejected: it is
-proprietary, from an unidentified vendor, ships only as a `.deb` and is not in nixpkgs.
+Documents went Okular, then Papers (GNOME's GTK4/libadwaita reader), then on 18/11/2026
+[PdfCraft](pdfcraft.md), a native Rust reader AND editor. It is the ONE reader, for PDF only: CBZ
+left with Papers and has no default. No EPUB default is declared either, so OnlyOffice takes it
+(see the trap below). Readest (Tauri + Next.js) was tried as a second reader for EPUB and dropped:
+one reader on the machine, not two. JoPDF was considered and rejected: it is proprietary, from an
+unidentified vendor, ships only as a `.deb` and is not in nixpkgs.
 `kimageformats` plus `qtimageformats` give the modern formats (AVIF/HEIF/JXL/WebP/RAW/PSD).
 
 mpv is configured through its `programs.*` module, so it stays idiomatic: `hwdec = "auto-safe"`
@@ -58,7 +55,7 @@ fontconfig already sees them. There is NO need for the "copy the .ttf into
 [`fonts.md`](../hardware/fonts.md).
 
 **A trap**: OnlyOffice's `.desktop` claims 61 mimetypes, pdf, epub, `text/plain`, markdown and csv
-included. The explicit defaults in `media.nix` (Papers) and `xdg.nix` (VS Code) still win, but if
+included. The explicit defaults in `media.nix` (PdfCraft) and `xdg.nix` (VS Code) still win, but if
 they ever disappear, OnlyOffice starts opening PDFs and `.txt` files.
 
 ## OpenAL: the mute-game fix

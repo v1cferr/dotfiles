@@ -1,4 +1,4 @@
-# MEDIA: Gwenview (KDE), Papers for documents, plus VLC and mpv.
+# MEDIA: Gwenview (KDE), PdfCraft for documents, plus VLC and mpv.
 # ALWAYS the CANONICAL mimetype, never an alias: docs/notes/apps/apps-and-mime.md
 { pkgs, ... }:
 
@@ -6,7 +6,7 @@ let
   # The apps' .desktop files, used only in the associations below.
   app = {
     gwenview = "org.kde.gwenview.desktop";
-    papers = "org.gnome.Papers.desktop";
+    pdfcraft = "ai.storyteller.pdfcraft.desktop";
     vlc = "vlc.desktop";
   };
 
@@ -24,9 +24,7 @@ in
 {
   home.packages = with pkgs; [
     kdePackages.gwenview # an image viewer (KDE): basic editing plus thumbnails
-    # The ONE document reader (GTK4/libadwaita, recolored by Stylix). Stock, so it comes from the
-    # cache: dropping its Nautilus extension cost a ~28 min local build on every nixpkgs bump.
-    papers
+    pdfcraft # the ONE PDF reader and editor (Rust/egui), the vendored release binary, pkgs/pdfcraft
     kdePackages.kimageformats # format plugins for KDE apps: AVIF/HEIF/JXL/PSD/RAW
     kdePackages.qtimageformats # Qt plugins: WebP/TIFF/ICNS (it complements kimageformats)
     vlc # the do-everything GUI video player (it is the video default, further down)
@@ -68,8 +66,7 @@ in
       "image/vnd.microsoft.icon" = app.gwenview; # .ico (Qt reads it natively; the .desktop does not declare it)
       "image/vnd.adobe.photoshop" = app.gwenview; # .psd (through kimageformats)
       # Documents.
-      "application/pdf" = app.papers;
-      "application/vnd.comicbook+zip" = app.papers; # .cbz
+      "application/pdf" = app.pdfcraft; # .cbz has NO default since Papers left (docs/notes/apps/pdfcraft.md)
       # Video. mpv is left for opening by hand or from the CLI.
       "video/mp4" = app.vlc; # .mp4/.m4v
       "video/x-matroska" = app.vlc; # .mkv

@@ -16,16 +16,16 @@
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9691174",
-    "url": "https://edge.forgecdn.net/files/9691/174/LayerSwap-1.14.35.zip",
-    "hash": "sha256-hphwEyrSnT2ZKXWbwHcxfONLGvoo8v/yOmof4dzxEEU="
+    "version": "9700952",
+    "url": "https://edge.forgecdn.net/files/9700/952/LayerSwap-1.14.36.zip",
+    "hash": "sha256-EShNQbGTRHwF2uxeZJxIUWMTjUpBPUMJSvqJq4Vc4PM="
   },
   "leatrix-plus": {
     "source": "curseforge",
     "projectId": 94855,
-    "version": "9691047",
-    "url": "https://edge.forgecdn.net/files/9691/47/Leatrix_Plus-1.60.33-forever.zip",
-    "hash": "sha256-LdcznHV+LEt1H1g1eUljoa2XBZttPSiT8N+YPoaBvW8="
+    "version": "9696700",
+    "url": "https://edge.forgecdn.net/files/9696/700/Leatrix_Plus-1.60.34-forever.zip",
+    "hash": "sha256-PYq+5cmM+ndZWA/vO2WgG78VLglY1faOpKLgTK/q1nM="
   },
   "auctionator": {
     "source": "curseforge",
@@ -107,9 +107,9 @@
   "social-diary": {
     "source": "curseforge",
     "projectId": 1733454,
-    "version": "9683792",
-    "url": "https://edge.forgecdn.net/files/9683/792/social_diary-v4.2.0.zip",
-    "hash": "sha256-O0lLdC2fbcKpZWf55dcFxjI4x7tiTmttjV+9AKKHsdk="
+    "version": "9699747",
+    "url": "https://edge.forgecdn.net/files/9699/747/social_diary-v4.2.1.zip",
+    "hash": "sha256-w+LQB0dWHlb0Pl/l4SInYm4y9TXsnQwYWLfVOu+5oxE="
   },
   "happy-camper": {
     "source": "curseforge",
@@ -205,9 +205,9 @@
   "chat-translator": {
     "source": "curseforge",
     "projectId": 1726863,
-    "version": "9683436",
-    "url": "https://edge.forgecdn.net/files/9683/436/ChatTranslator-0.7.11.zip",
-    "hash": "sha256-Ju9sKAV4d57lJq1pQ0auOs2YI1tXcUgW5IeaOuFltLQ="
+    "version": "9700712",
+    "url": "https://edge.forgecdn.net/files/9700/712/ChatTranslator-0.7.12.zip",
+    "hash": "sha256-poRCPCclRNUG+x6x1rhRRZQduCVeXs4bMAgreAXgFyE="
   },
   "blizzmove": {
     "source": "curseforge",
@@ -240,9 +240,9 @@
   "battletext-forever": {
     "source": "curseforge",
     "projectId": 1722502,
-    "version": "9689934",
-    "url": "https://edge.forgecdn.net/files/9689/934/BattleTextForever-v1.24.0-forever.zip",
-    "hash": "sha256-/O6IwsjaRtoVSJ198yPWE1QmOQDOO9TtlrGy6wmADtU="
+    "version": "9696375",
+    "url": "https://edge.forgecdn.net/files/9696/375/BattleTextForever-v1.24.3-forever.zip",
+    "hash": "sha256-b5JGN6uGGhviA0azr7rllmudGZ4r7MVwCWS1f4PE/zk="
   },
   "easy-experience-bar": {
     "source": "curseforge",
@@ -332,9 +332,9 @@
   "tacotip": {
     "source": "curseforge",
     "projectId": 1555962,
-    "version": "9673963",
-    "url": "https://edge.forgecdn.net/files/9673/963/TacoTip.zip",
-    "hash": "sha256-34ke14Nxn9fTEPzIXhhLoQxWQNJPOQCs0UC8x116/lE="
+    "version": "9695501",
+    "url": "https://edge.forgecdn.net/files/9695/501/TacoTip.zip",
+    "hash": "sha256-qLdxkewvJ0g0lDxbDVcbIXie1F9SEB2PgITItGZkFYU="
   },
   "skald": {
     "source": "curseforge",
@@ -346,9 +346,9 @@
   "forever-immersion": {
     "source": "curseforge",
     "projectId": 1702985,
-    "version": "9656342",
-    "url": "https://edge.forgecdn.net/files/9656/342/ForeverImmersion-1.11.0.zip",
-    "hash": "sha256-tqlf+YmmpM4DkDzlrAlw9kAtTCdgxj4XgaU9IfyNUSA="
+    "version": "9700830",
+    "url": "https://edge.forgecdn.net/files/9700/830/ForeverImmersion-1.11.1.zip",
+    "hash": "sha256-f+vUpmLW0qpgmkPnLWBXig5i7R0xYyHAL4UPs6yuNpA="
   },
   "fame": {
     "source": "curseforge",

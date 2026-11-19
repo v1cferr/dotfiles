@@ -342,5 +342,12 @@
     "version": "9597329",
     "url": "https://edge.forgecdn.net/files/9597/329/Skald-v1.0.8.zip",
     "hash": "sha256-+2depCbUaMtxWiTybfgEOO1hHpAcXptmjlEEzTr1EY4="
+  },
+  "forever-immersion": {
+    "source": "curseforge",
+    "projectId": 1702985,
+    "version": "9656342",
+    "url": "https://edge.forgecdn.net/files/9656/342/ForeverImmersion-1.11.0.zip",
+    "hash": "sha256-tqlf+YmmpM4DkDzlrAlw9kAtTCdgxj4XgaU9IfyNUSA="
   }
 }

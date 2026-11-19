@@ -349,5 +349,12 @@
     "version": "9656342",
     "url": "https://edge.forgecdn.net/files/9656/342/ForeverImmersion-1.11.0.zip",
     "hash": "sha256-tqlf+YmmpM4DkDzlrAlw9kAtTCdgxj4XgaU9IfyNUSA="
+  },
+  "fame": {
+    "source": "curseforge",
+    "projectId": 1728351,
+    "version": "9593611",
+    "url": "https://edge.forgecdn.net/files/9593/611/ForeverAmbientMusicExtended-2.0.0.zip",
+    "hash": "sha256-1Ba1SYSEePkpd9BK3q7411mCpF5FrAWgfkUWsK3DvE0="
   }
 }

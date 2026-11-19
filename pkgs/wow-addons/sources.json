@@ -202,13 +202,6 @@
     "url": "https://edge.forgecdn.net/files/9492/856/BlizzMove-v3.8.8.zip",
     "hash": "sha256-VUQEFw1301vaBrnfW+yH2qA2Gpw+uuODuVUrCsE45EE="
   },
-  "training-up": {
-    "source": "curseforge",
-    "projectId": 1716050,
-    "version": "9632352",
-    "url": "https://edge.forgecdn.net/files/9632/352/training-up-v0.20.0.zip",
-    "hash": "sha256-6Pobbmlq73WnbBeyQFnMUKcwJ51YZGs+3LCw+hpc2k4="
-  },
   "auto-spell-ranks": {
     "source": "curseforge",
     "projectId": 1704071,

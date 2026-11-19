@@ -45,6 +45,18 @@ stdenvNoCC.mkDerivation {
       done
     '') zips
   )
+  # Add-ons written here (local/), for what no published add-on does; same duplicate guard.
+  + ''
+    for dir in ${./local}/*/; do
+      folder=$(basename "$dir")
+      if [ -e "$out/$folder" ]; then
+        echo "wow-addons: local/$folder clashes with an add-on from sources.json" >&2
+        exit 1
+      fi
+      cp -r "$dir" "$out/$folder"
+      chmod -R u+w "$out/$folder"
+    done
+  ''
   # Upstream ships ONE zip for every flavour (DBM's Midnight raids),
   # and the game lists those folders as incompatible. A folder whose TOCs declare no Forever
   # support (interface 160xx, a _Forever/_Camelot TOC, or AllowLoadGameType) is dropped. Pawn's

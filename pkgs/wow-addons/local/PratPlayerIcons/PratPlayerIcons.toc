@@ -1,0 +1,8 @@
+## Interface: 16001
+## Title: Prat Player Icons
+## Notes: Class and race icons before each player name in Prat chat
+## Author: v1cferr
+## Version: 1.0.0
+## Dependencies: Prat-3.0
+
+PratPlayerIcons.lua

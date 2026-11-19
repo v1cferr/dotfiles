@@ -3,9 +3,9 @@
 Modules: [`pkgs/wow-addons/`](../../../pkgs/wow-addons/package.nix),
 [`modules/home/apps/wow-addons/default.nix`](../../../modules/home/apps/wow-addons/default.nix)
 
-Every WoW Forever add-on is a pinned zip in
-[`sources.json`](../../../pkgs/wow-addons/sources.json), the single list of what is installed.
-The package unpacks them into one tree, and every switch copies that tree into
+Every published WoW Forever add-on is a pinned zip in
+[`sources.json`](../../../pkgs/wow-addons/sources.json), and the few written here live in
+[`local/`](../../../pkgs/wow-addons/local). The package unpacks both into one tree, and every switch copies that tree into
 `_forever_/Interface/AddOns`. `update` (and so `upgrade`) moves each one to its latest STABLE
 Forever release through the vendored-bump runner ([version-bumps](../repo/version-bumps.md)).
 
@@ -72,6 +72,18 @@ CurseForge ones (Polestar 0.4.0.1 among them) waited for a local `update`.
 Add `"<name>": { "source": "curseforge", "projectId": N, "version": "0", "url": "", "hash": "" }`
 (or `"source": "github", "repo": "owner/repo"`) to `sources.json`, run `update`, then `rebuild`.
 The project id is on the add-on's CurseForge page, under Details.
+
+## Add-ons written here
+
+`local/` holds add-ons for what no published one does, copied as they are, with the same
+duplicate-folder guard as the zips. Each is one small file on top of an installed add-on's API.
+
+- **Prat Player Icons** puts the class icon and then the race icon before each `[level:Name]` in
+  Prat chat. Prat's own LinkInfoIcons module writes the race only as text and has no race icon,
+  so it stays off. Race and sex come from `GetPlayerInfoByGUID` with the message's GUID, so the
+  icons show for anyone who speaks. The level does not: the client never sends it with a message,
+  so Prat shows it only for players it has seen (target, mouseover, group, guild, friends, `/who`).
+  Its `keep` and `keeplots` options save those levels between sessions.
 
 ## Spoken in pt-BR
 

@@ -2,9 +2,9 @@
   "questie": {
     "source": "github",
     "repo": "Questie/Questie",
-    "version": "bundle/v12.10.0+v1.1.2",
-    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.10.0%2Bv1.1.2/Questie-v12.10.0%2Bv1.1.2.zip",
-    "hash": "sha256-MjUzJABfeje0ebNpgY/e2GLtoSMfehPCIYDmtDGPhko="
+    "version": "bundle/v12.11.0+v1.1.3",
+    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.11.0%2Bv1.1.3/Questie-v12.11.0%2Bv1.1.3.zip",
+    "hash": "sha256-oH3bfkNhI95hpcNcjH6rixHj6Cm00SEXrwRjq9ZpnvU="
   },
   "dbm": {
     "source": "github",
@@ -16,23 +16,23 @@
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9683319",
-    "url": "https://edge.forgecdn.net/files/9683/319/LayerSwap-1.14.33.zip",
-    "hash": "sha256-paioCxGyhH03A1wgszsgrbBH8qv5xmWjuSqQzxhaAaM="
+    "version": "9691174",
+    "url": "https://edge.forgecdn.net/files/9691/174/LayerSwap-1.14.35.zip",
+    "hash": "sha256-hphwEyrSnT2ZKXWbwHcxfONLGvoo8v/yOmof4dzxEEU="
   },
   "leatrix-plus": {
     "source": "curseforge",
     "projectId": 94855,
-    "version": "9682649",
-    "url": "https://edge.forgecdn.net/files/9682/649/Leatrix_Plus-1.60.32-forever.zip",
-    "hash": "sha256-rv4CD7PQFdksSDfK13XFCH57Q7yHUcmZDkBfYD1jUJ8="
+    "version": "9691047",
+    "url": "https://edge.forgecdn.net/files/9691/47/Leatrix_Plus-1.60.33-forever.zip",
+    "hash": "sha256-LdcznHV+LEt1H1g1eUljoa2XBZttPSiT8N+YPoaBvW8="
   },
   "auctionator": {
     "source": "curseforge",
     "projectId": 6124,
-    "version": "9620638",
-    "url": "https://edge.forgecdn.net/files/9620/638/Auctionator-347.zip",
-    "hash": "sha256-RuSgY/LzHtBwMNiqtsmUhrYEmL19LIeMHcNJ9Sl7N3c="
+    "version": "9690303",
+    "url": "https://edge.forgecdn.net/files/9690/303/Auctionator-349.zip",
+    "hash": "sha256-2gVsJGGgut7D/zvNZLG4cKPEBY0BWspV0XEETvDElCM="
   },
   "bugsack": {
     "source": "curseforge",
@@ -100,9 +100,9 @@
   "keep-or-toss": {
     "source": "curseforge",
     "projectId": 1737994,
-    "version": "9684038",
-    "url": "https://edge.forgecdn.net/files/9684/38/KeepOrToss-2.1.1.zip",
-    "hash": "sha256-G2Lp/XIER+1FysoPmbK0ByDjk+rc4f53tz442k5PILA="
+    "version": "9691982",
+    "url": "https://edge.forgecdn.net/files/9691/982/KeepOrToss-2.2.0.zip",
+    "hash": "sha256-2qban/xv2LBrcVxFhUI1uRVHfFxbaewapji8WQVFnDA="
   },
   "social-diary": {
     "source": "curseforge",
@@ -114,9 +114,9 @@
   "happy-camper": {
     "source": "curseforge",
     "projectId": 1715557,
-    "version": "9649739",
-    "url": "https://edge.forgecdn.net/files/9649/739/HappyCamper-1.1.5.zip",
-    "hash": "sha256-xooxCve83iAylwXlTFePNL4i6yN9C/1jglFs4hb/NQE="
+    "version": "9685654",
+    "url": "https://edge.forgecdn.net/files/9685/654/HappyCamper-1.1.5.1.zip",
+    "hash": "sha256-bN+tSu1OPyjaJdiwt6nu17YZabjujDwacJ1Mvv42fcg="
   },
   "dbm-vanilla": {
     "source": "github",
@@ -215,9 +215,9 @@
   "battletext-forever": {
     "source": "curseforge",
     "projectId": 1722502,
-    "version": "9678095",
-    "url": "https://edge.forgecdn.net/files/9678/95/BattleTextForever-v1.21.6-forever.zip",
-    "hash": "sha256-taXPH2fyzPE7k1bvy8tM8rJVVCQ/M678I5CMDlY/Di4="
+    "version": "9689934",
+    "url": "https://edge.forgecdn.net/files/9689/934/BattleTextForever-v1.24.0-forever.zip",
+    "hash": "sha256-/O6IwsjaRtoVSJ198yPWE1QmOQDOO9TtlrGy6wmADtU="
   },
   "easy-experience-bar": {
     "source": "curseforge",
@@ -229,9 +229,9 @@
   "baganator": {
     "source": "curseforge",
     "projectId": 914482,
-    "version": "9659116",
-    "url": "https://edge.forgecdn.net/files/9659/116/Baganator-862.zip",
-    "hash": "sha256-Cz2+RBAcVe3l0A5CeMrkj8qEzvg4+9b4Xk2kE4v2hK0="
+    "version": "9689225",
+    "url": "https://edge.forgecdn.net/files/9689/225/Baganator-865.zip",
+    "hash": "sha256-mqXagKazFXJzQ7HQQIs2jkDp76Qly/OjsQpVjoUDZVk="
   },
   "syndicator": {
     "source": "curseforge",
@@ -279,9 +279,9 @@
   "mastercraft": {
     "source": "curseforge",
     "projectId": 1711528,
-    "version": "9678882",
-    "url": "https://edge.forgecdn.net/files/9678/882/Mastercraft-v2.0.6.zip",
-    "hash": "sha256-m+XTSvvND+wjVJsmZnJgzVRRtmDizSPEa5tUFR8ytIo="
+    "version": "9689205",
+    "url": "https://edge.forgecdn.net/files/9689/205/Mastercraft-v2.0.7.zip",
+    "hash": "sha256-a+e9BpTO2S0VPmCThmQYNKFj5VBD2PaD9znjt/SmcPs="
   },
   "polestar": {
     "source": "curseforge",

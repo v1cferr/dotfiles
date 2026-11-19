@@ -335,5 +335,12 @@
     "version": "9673963",
     "url": "https://edge.forgecdn.net/files/9673/963/TacoTip.zip",
     "hash": "sha256-34ke14Nxn9fTEPzIXhhLoQxWQNJPOQCs0UC8x116/lE="
+  },
+  "skald": {
+    "source": "curseforge",
+    "projectId": 1748824,
+    "version": "9597329",
+    "url": "https://edge.forgecdn.net/files/9597/329/Skald-v1.0.8.zip",
+    "hash": "sha256-+2depCbUaMtxWiTybfgEOO1hHpAcXptmjlEEzTr1EY4="
   }
 }

@@ -356,5 +356,12 @@
     "version": "9593611",
     "url": "https://edge.forgecdn.net/files/9593/611/ForeverAmbientMusicExtended-2.0.0.zip",
     "hash": "sha256-1Ba1SYSEePkpd9BK3q7411mCpF5FrAWgfkUWsK3DvE0="
+  },
+  "panorama-forever": {
+    "source": "curseforge",
+    "projectId": 1706544,
+    "version": "9690191",
+    "url": "https://edge.forgecdn.net/files/9690/191/Panorama-1.8.0-forever.zip",
+    "hash": "sha256-z5QniBRGIulG0a+xXaIbdIFm67hHgAUDs/xblr96Bys="
   }
 }

@@ -69,13 +69,6 @@
     "url": "https://edge.forgecdn.net/files/9533/118/ForeverLootSparkles-v2.0.0-forever.zip",
     "hash": "sha256-2iExJczEZGmloW0SSTaH44rp/yP7j4dWmUd8lwiX/ME="
   },
-  "needroll": {
-    "source": "curseforge",
-    "projectId": 1731901,
-    "version": "9679012",
-    "url": "https://edge.forgecdn.net/files/9679/12/NeedRoll-v1.8.2-forever.zip",
-    "hash": "sha256-FcmkB39bF8APwIVnglUfk+befyo4QPzYVpKtXTD6/lA="
-  },
   "glowing-bars": {
     "source": "curseforge",
     "projectId": 1754997,

@@ -21,8 +21,10 @@ unidentified vendor, ships only as a `.deb` and is not in nixpkgs.
 
 mpv is configured through its `programs.*` module, so it stays idiomatic: `hwdec = "auto-safe"`
 decodes on the GPU when that is safe, and `vo = "gpu-next"` is the modern output, with better
-HDR/tone-mapping on Wayland. VLC is the association default; mpv is left for opening by hand or
-from the CLI.
+HDR/tone-mapping on Wayland. mpv is THE player and the default for every video and audio type
+since 19/11/2026: `uosc` replaces the bare OSC with a modern GUI, `thumbfast` adds seek-bar
+thumbnails and `mpris` feeds the media keys. VLC was dropped: its 3.x UI runs through XWayland and
+its GPU decode and HDR trail mpv's `gpu-next` on the Arc B580.
 
 ### ALWAYS use shared-mime-info's CANONICAL type
 
@@ -32,12 +34,11 @@ An ALIAS does not match in the lookup and the entry dies in silence. Three cases
 | ----------------- | --------------------------- | ------------------------------------------------- |
 | `image/heic`      | `image/heif`                | .heic never reached Gwenview                      |
 | `image/x-psd`     | `image/vnd.adobe.photoshop` | Gwenview's own `.desktop` declares only the alias |
-| `video/x-msvideo` | `video/vnd.avi`             | .avi fell into mpv instead of VLC                 |
+| `video/x-msvideo` | `video/vnd.avi`             | .avi never matched the declared player            |
 
 Two more that are easy to miss: `image/vnd.microsoft.icon` (.ico) is read natively by Qt but is not
 declared in Gwenview's `.desktop`, and the AUDIO types all have to be listed explicitly, because
-otherwise `mpv.desktop` takes the association by claiming them in its own `.desktop`, against the
-intent.
+otherwise whatever `.desktop` claims them wins, so the choice is not declared.
 
 ## Office: why OnlyOffice and not LibreOffice
 

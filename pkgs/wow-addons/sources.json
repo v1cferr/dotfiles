@@ -69,13 +69,6 @@
     "url": "https://edge.forgecdn.net/files/9533/118/ForeverLootSparkles-v2.0.0-forever.zip",
     "hash": "sha256-2iExJczEZGmloW0SSTaH44rp/yP7j4dWmUd8lwiX/ME="
   },
-  "musca-auras": {
-    "source": "curseforge",
-    "projectId": 1713094,
-    "version": "9655839",
-    "url": "https://edge.forgecdn.net/files/9655/839/Musca-Auras-v1.18.2.zip",
-    "hash": "sha256-v7jQ14JWtso9kCxWLE+OGGIG8eKsM+JlirHTsW4WOGc="
-  },
   "needroll": {
     "source": "curseforge",
     "projectId": 1731901,

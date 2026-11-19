@@ -77,16 +77,14 @@ Add `"<name>": { "source": "curseforge", "projectId": N, "version": "0", "url": 
 (or `"source": "github", "repo": "owner/repo"`) to `sources.json`, run `update`, then `rebuild`.
 The project id is on the add-on's CurseForge page, under Details.
 
-A repo that ships several things takes `"tagPrefix"`: the bump lists that line's TAGS
-(`/git/matching-refs/tags/<prefix>`), highest version first, and pins the first stable release
-among them. Tags and not the releases list, because spoken-wow publishes one release per build and
-its October voice packs had already fallen past the first 100 releases.
-
 ## Spoken in pt-BR
 
-The client runs in pt-BR, and Spoken's pt-BR quest, zone and book voices exist only as GitHub
-releases of `rusty-key/spoken-wow` (CurseForge carries the English ones). No English pack is
-installed on purpose: a line with no pt-BR voice stays a subtitle instead of switching language.
+The client runs in pt-BR, so every Spoken voice pack is the "Spoken Portuguese Audio" one: quests
+(shared, Alliance and Horde, since there are characters on both), gossip, readables, places and
+bosses, about 2.7 GB. Until 18/11/2026 they came from GitHub releases of `rusty-key/spoken-wow`,
+the only pt-BR source when this started, but those stopped in October (quests at v0.0.3) while the
+CurseForge packs kept moving and added gossip and bosses. No English pack is installed on purpose:
+a line with no pt-BR voice stays a subtitle instead of switching language.
 DialogueUI is the NPC dialogue of choice because Spoken has a narrator style made for it.
 
 ## Pitfalls
@@ -95,8 +93,8 @@ DialogueUI is the NPC dialogue of choice because Spoken has a narrator style mad
   too, so a 403 there means the key, not a missing permission.
 - **`nix store prefetch-file` rejects `!`** in the name it derives from the URL
   (`!BugGrabber-v12.1.1.zip`), so the bump passes `--name`.
-- **GitHub allows 60 anonymous API calls an hour**, and a tag line costs one call per tag: adding
-  the three Spoken pt-BR lines ran it dry (403) on 06/11/2026. The bump now sends the `gh` login's
+- **GitHub allows 60 anonymous API calls an hour**: the Spoken pt-BR packs, then read tag by tag
+  from GitHub, ran it dry (403) on 06/11/2026. The bump now sends the `gh` login's
   token when there is one (`GITHUB_TOKEN` wins), which lifts the limit to 5000.
 - **Mastercraft overlaps three add-ons.** It sells grey junk, fishes and records gathering nodes.
   Angleur and GatherMate2 were dropped for it on 08/11/2026. Dejunk stays, because Mastercraft

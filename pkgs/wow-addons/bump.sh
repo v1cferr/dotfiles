@@ -64,26 +64,10 @@ gh_api() {
 }
 
 # Prints {"version","url"} of a GitHub repo's latest release: its zip asset, never release.json.
-# With a tag prefix ($2), only that release line counts: spoken-wow ships the add-on and every
-# voice pack from one repo, each under its own `<line>/vX` tags.
 gh_latest() {
-  local api="https://api.github.com/repos/$1" rel tag
-  if [ -z "$2" ]; then
-    rel=$(gh_api "$api/releases/latest")
-  else
-    # The TAGS of that line, highest version first: the releases list is paginated and busy
-    # (one release per add-on build), so an older pack line falls off its first page.
-    rel=""
-    while IFS= read -r tag; do
-      rel=$(gh_api "$api/releases/tags/$(jq -rn --arg t "$tag" '$t | @uri')") || continue
-      jq -e '(.draft | not) and (.prerelease | not)' <<<"$rel" >/dev/null && break
-      rel=""
-    done < <(gh_api "$api/git/matching-refs/tags/$2" |
-      jq -r '.[].ref | sub("^refs/tags/"; "")' | sort -rV)
-  fi
   jq -ce '{ version: .tag_name,
     url: ([.assets[] | select(.name | endswith(".zip")) | .browser_download_url] | first) }
-    | select(.url != null)' <<<"$rel"
+    | select(.url != null)' <<<"$(gh_api "https://api.github.com/repos/$1/releases/latest")"
 }
 
 new=$(<"$file")
@@ -98,7 +82,7 @@ for name in $(jq -r 'keys[]' <<<"$new"); do
       fi
       latest=$(cf_latest "$(jq -r .projectId <<<"$entry")" "$(jq -r '.channel // "stable"' <<<"$entry")")
       ;;
-    github) latest=$(gh_latest "$(jq -r .repo <<<"$entry")" "$(jq -r '.tagPrefix // ""' <<<"$entry")") ;;
+    github) latest=$(gh_latest "$(jq -r .repo <<<"$entry")") ;;
     *)
       echo "wow-addons-bump: $name has an unknown source." >&2
       exit 1

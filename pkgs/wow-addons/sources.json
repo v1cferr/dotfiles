@@ -153,29 +153,54 @@
     "url": "https://edge.forgecdn.net/files/9673/192/Spoken-3.10.0.zip",
     "hash": "sha256-Zsh4AeFdRsZTwL+I2oiheCqIzjT6HGTUoiMJv3DMKzk="
   },
-  "spoken-quests-ptbr": {
-    "source": "github",
-    "repo": "rusty-key/spoken-wow",
-    "tagPrefix": "quests-audio-ptBR/",
-    "version": "quests-audio-ptBR/v0.0.3",
-    "url": "https://github.com/rusty-key/spoken-wow/releases/download/quests-audio-ptBR/v0.0.3/SpokenQuestsAudio_ptBR-0.0.3.zip",
-    "hash": "sha256-0RtW4DuSBdS+K+1SiBa1WwVSLnV+chs7WBxLzznkICs="
+  "spoken-ptbr-quests-shared": {
+    "source": "curseforge",
+    "projectId": 1717819,
+    "version": "9665524",
+    "url": "https://edge.forgecdn.net/files/9665/524/SpokenQuestsAudioShared_ptBR-1.0.2.zip",
+    "hash": "sha256-RvsUXC+i5HWZJCyQ4tIsocXp2IQR8gtvKu/WGPnrlPo="
   },
-  "spoken-zones-ptbr": {
-    "source": "github",
-    "repo": "rusty-key/spoken-wow",
-    "tagPrefix": "zones-audio-ptBR/",
-    "version": "zones-audio-ptBR/v2.0.0",
-    "url": "https://github.com/rusty-key/spoken-wow/releases/download/zones-audio-ptBR/v2.0.0/SpokenZonesAudio_ptBR-2.0.0.zip",
-    "hash": "sha256-0ISn65YmIwwoH87M5k1n4PEPc5E4iPcJov7tRBKUI6k="
+  "spoken-ptbr-quests-alliance": {
+    "source": "curseforge",
+    "projectId": 1743722,
+    "version": "9665515",
+    "url": "https://edge.forgecdn.net/files/9665/515/SpokenQuestsAudioAlliance_ptBR-1.0.2.zip",
+    "hash": "sha256-WUxEyoY9T/sWPq8XVLRBlh+r0XYecrdhoaQ9ufuHrYM="
   },
-  "spoken-books-ptbr": {
-    "source": "github",
-    "repo": "rusty-key/spoken-wow",
-    "tagPrefix": "books-audio-ptBR/",
-    "version": "books-audio-ptBR/v2.0.0",
-    "url": "https://github.com/rusty-key/spoken-wow/releases/download/books-audio-ptBR/v2.0.0/SpokenBooksAudio_ptBR-2.0.0.zip",
-    "hash": "sha256-8+qW+dEMrKW0uzQ8/EwuveIsg9aYhuyHaol9xnmfYJ4="
+  "spoken-ptbr-quests-horde": {
+    "source": "curseforge",
+    "projectId": 1743740,
+    "version": "9665519",
+    "url": "https://edge.forgecdn.net/files/9665/519/SpokenQuestsAudioHorde_ptBR-1.0.2.zip",
+    "hash": "sha256-dwhry6Eo5KgoTSnkas6VrkctfgbAJE2p8Tq3RqgKPOY="
+  },
+  "spoken-ptbr-gossip": {
+    "source": "curseforge",
+    "projectId": 1743731,
+    "version": "9665531",
+    "url": "https://edge.forgecdn.net/files/9665/531/SpokenQuestsAudioGossip_ptBR-1.0.2.zip",
+    "hash": "sha256-5rzxlRyCIBkwJTB+ThNd7G1AF8iVED1GCoZnkiO+M3o="
+  },
+  "spoken-ptbr-readables": {
+    "source": "curseforge",
+    "projectId": 1723287,
+    "version": "9665538",
+    "url": "https://edge.forgecdn.net/files/9665/538/SpokenReadablesAudio_ptBR-2.0.9.zip",
+    "hash": "sha256-rrOFw6wbHS1PC3l3x7DAdv/Hr3tJAwc7LHpiJ456fMQ="
+  },
+  "spoken-ptbr-places": {
+    "source": "curseforge",
+    "projectId": 1713138,
+    "version": "9476622",
+    "url": "https://edge.forgecdn.net/files/9476/622/SpokenPlacesAudio_ptBR-2.0.2.zip",
+    "hash": "sha256-Cs1lqR2n+LWOW43zu/wY6FYKVuAfxpQDeHifXEyz0ck="
+  },
+  "spoken-ptbr-bosses": {
+    "source": "curseforge",
+    "projectId": 1783849,
+    "version": "9452585",
+    "url": "https://edge.forgecdn.net/files/9452/585/SpokenBossesAudio_ptBR-1.1.0.zip",
+    "hash": "sha256-I+lVF5DpbpCNd7ksGZ2CaqT5gOE3ItzNEaC3+zPsQwM="
   },
   "chat-translator": {
     "source": "curseforge",

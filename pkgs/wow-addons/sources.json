@@ -244,14 +244,6 @@
     "url": "https://edge.forgecdn.net/files/9632/417/Syndicator-291.zip",
     "hash": "sha256-fn+iDFmDjccXFvFTYmTPM7BdyaaUOQXStg1sVlHhD2k="
   },
-  "offhand": {
-    "source": "curseforge",
-    "projectId": 1696140,
-    "channel": "beta",
-    "version": "9651243",
-    "url": "https://edge.forgecdn.net/files/9651/243/Offhand-v2.1.5-beta.36.zip",
-    "hash": "sha256-HkEGaq0alJ8xqn/ASUycYz+CkCMT3RSTUC0DPtnI52E="
-  },
   "dejunk": {
     "source": "curseforge",
     "projectId": 413260,

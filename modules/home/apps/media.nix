@@ -1,11 +1,11 @@
-# MEDIA: Gwenview (KDE), PdfCraft for documents, plus mpv (uosc UI) as THE player.
+# MEDIA: Oculante for images, PdfCraft for documents, mpv (uosc UI) as THE player.
 # ALWAYS the CANONICAL mimetype, never an alias: docs/notes/apps/apps-and-mime.md
 { pkgs, ... }:
 
 let
   # The apps' .desktop files, used only in the associations below.
   app = {
-    gwenview = "org.kde.gwenview.desktop";
+    oculante = "oculante.desktop";
     pdfcraft = "ai.storyteller.pdfcraft.desktop";
     mpv = "mpv.desktop";
   };
@@ -23,9 +23,9 @@ let
 in
 {
   home.packages = with pkgs; [
-    kdePackages.gwenview # an image viewer (KDE): basic editing plus thumbnails
+    oculante # the ONE image viewer (Rust/egui on the GPU): basic editing plus compare
     pdfcraft # the ONE PDF reader and editor (Rust/egui), the vendored release binary, pkgs/pdfcraft
-    kdePackages.kimageformats # format plugins for KDE apps: AVIF/HEIF/JXL/PSD/RAW
+    kdePackages.kimageformats # Dolphin thumbnails for AVIF/HEIF/JXL/PSD/RAW
     kdePackages.qtimageformats # Qt plugins: WebP/TIFF/ICNS (it complements kimageformats)
   ];
 
@@ -62,18 +62,18 @@ in
     enable = true;
     defaultApplications = {
       # Images. ALWAYS the CANONICAL type: an ALIAS does not match and dies in silence (see notes).
-      "image/png" = app.gwenview;
-      "image/jpeg" = app.gwenview;
-      "image/gif" = app.gwenview;
-      "image/webp" = app.gwenview;
-      "image/bmp" = app.gwenview;
-      "image/tiff" = app.gwenview;
-      "image/svg+xml" = app.gwenview;
-      "image/avif" = app.gwenview;
-      "image/heif" = app.gwenview; # .heif/.heic
-      "image/jxl" = app.gwenview;
-      "image/vnd.microsoft.icon" = app.gwenview; # .ico (Qt reads it natively; the .desktop does not declare it)
-      "image/vnd.adobe.photoshop" = app.gwenview; # .psd (through kimageformats)
+      "image/png" = app.oculante;
+      "image/jpeg" = app.oculante;
+      "image/gif" = app.oculante;
+      "image/webp" = app.oculante;
+      "image/bmp" = app.oculante;
+      "image/tiff" = app.oculante;
+      "image/svg+xml" = app.oculante;
+      "image/avif" = app.oculante;
+      "image/heif" = app.oculante; # .heif/.heic (its .desktop declares only the image/heic alias)
+      "image/jxl" = app.oculante;
+      "image/vnd.microsoft.icon" = app.oculante; # .ico
+      "image/vnd.adobe.photoshop" = app.oculante; # .psd
       # Documents.
       "application/pdf" = app.pdfcraft; # .cbz has NO default since Papers left (docs/notes/apps/pdfcraft.md)
       # Video.

@@ -6,10 +6,12 @@ home-manager merges `defaultApplications` from EVERY module into a single `mimea
 these modules each declare only their own types and the result composes. `modules/home/desktop/xdg.nix`
 holds the browser plus text/code, and `modules/home/apps/curseforge.nix` holds the URL schemes.
 
-## Media: Gwenview plus PdfCraft
+## Media: Oculante plus PdfCraft
 
-Gwenview (images) because this system is already Qt/Kvantum plus Dolphin, so it comes in themed
-for free and integrates with the file manager (open-with, thumbnails).
+Oculante (images) since 19/11/2026, picked for light, fast and modern: Rust/egui drawn on the
+GPU, the same family as PdfCraft. Its closure is 347 MiB against Gwenview's 1850 MiB (Loupe 1060,
+qView 843, swayimg 213 but keyboard only). It reads AVIF/HEIF/JXL/SVG/PSD/EXR/RAW natively.
+`kimageformats` plus `qtimageformats` STAY: Dolphin needs them for the thumbnails.
 
 Documents went Okular, then Papers (GNOME's GTK4/libadwaita reader), then on 18/11/2026
 [PdfCraft](pdfcraft.md), a native Rust reader AND editor. It is the ONE reader, for PDF only: CBZ
@@ -17,7 +19,6 @@ left with Papers and has no default. No EPUB default is declared either, so Only
 (see the trap below). Readest (Tauri + Next.js) was tried as a second reader for EPUB and dropped:
 one reader on the machine, not two. JoPDF was considered and rejected: it is proprietary, from an
 unidentified vendor, ships only as a `.deb` and is not in nixpkgs.
-`kimageformats` plus `qtimageformats` give the modern formats (AVIF/HEIF/JXL/WebP/RAW/PSD).
 
 mpv is configured through its `programs.*` module, so it stays idiomatic: `hwdec = "auto-safe"`
 decodes on the GPU when that is safe, and `vo = "gpu-next"` is the modern output, with better
@@ -32,12 +33,12 @@ An ALIAS does not match in the lookup and the entry dies in silence. Three cases
 
 | Wrong (alias)     | Right (canonical)           | What broke                                        |
 | ----------------- | --------------------------- | ------------------------------------------------- |
-| `image/heic`      | `image/heif`                | .heic never reached Gwenview                      |
-| `image/x-psd`     | `image/vnd.adobe.photoshop` | Gwenview's own `.desktop` declares only the alias |
+| `image/heic`      | `image/heif`                | .heic never reached the viewer                    |
+| `image/x-psd`     | `image/vnd.adobe.photoshop` | the viewer's `.desktop` declared only the alias   |
 | `video/x-msvideo` | `video/vnd.avi`             | .avi never matched the declared player            |
 
-Two more that are easy to miss: `image/vnd.microsoft.icon` (.ico) is read natively by Qt but is not
-declared in Gwenview's `.desktop`, and the AUDIO types all have to be listed explicitly, because
+Two more that are easy to miss: `image/vnd.microsoft.icon` (.ico) is not declared by every
+viewer's `.desktop`, and the AUDIO types all have to be listed explicitly, because
 otherwise whatever `.desktop` claims them wins, so the choice is not declared.
 
 ## Office: why OnlyOffice and not LibreOffice

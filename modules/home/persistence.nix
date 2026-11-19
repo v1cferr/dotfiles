@@ -211,7 +211,7 @@ in
         ".local/share/caddy" # the local dev CA
         ".config/dconf" # the GSettings database GTK apps write to
         ".local/share/dolphin"
-        ".local/share/gwenview"
+        ".config/oculante" # viewer settings and recent files
         ".local/state/wireplumber" # default audio devices and volumes
         ".local/state/lockscreen"
         ".local/state/quickshell"
@@ -228,7 +228,6 @@ in
         ".zsh_history"
         ".google_authenticator" # the PAM TOTP secret
         ".config/dolphinrc"
-        ".config/gwenviewrc"
         ".config/arkrc"
         ".config/kdeglobals"
         ".config/pavucontrol.ini"

@@ -50,7 +50,7 @@ shared-mime-info matches Qt Linguist and not TypeScript.
 
 ### `applications.menu`: without it, KDE apps open NOTHING on a double click
 
-KF6 apps (Dolphin, Gwenview, Ark) resolve "who opens this file" through
+KF6 apps (Dolphin, Ark) resolve "who opens this file" through
 `KApplicationTrader`, which reads the ksycoca index. And `kbuildsycoca` only discovers the
 `.desktop` files by walking the XDG menu (`applications.menu`), so without that file it indexes
 ZERO applications and the double click fails in silence, even with a perfectly fine

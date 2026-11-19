@@ -78,7 +78,7 @@ in
       blender.enable = false;
       forge.enable = false; # a GNOME Shell extension
       vencord.enable = false; # Discord runs without Vencord
-      sxiv.enable = false; # an image viewer; Gwenview is the one here
+      sxiv.enable = false; # an image viewer; Oculante is the one here
       xresources.enable = false; # only old X11 apps read ~/.Xresources, and xterm was the last one
       gtk.flatpakSupport.enable = false; # no Flatpak here, so its override file would be dead
       # GTK3's client-side shadow is a transparent margin that Hyprland blurs and dims, which drew a

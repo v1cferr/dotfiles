@@ -106,6 +106,10 @@ DialogueUI is the NPC dialogue of choice because Spoken has a narrator style mad
   BlizzMove and others, but every helper there ships off, so it stays off. Its Gear Value tooltip
   (`gearValue`) is turned off too, because Pawn already scores gear. Its dungeon map cannot show
   the player: the client returns no map position inside an instance, for any add-on.
+- **TacoTip restyles the whole player tooltip** by default (class border, 3D portrait, health
+  bars, mouse anchoring), which fights PrettyTooltip. Only its gear lines stay on: GearScore,
+  average item level and talents. The look, titles and guild are PrettyTooltip's, and item scores
+  are Pawn's. Simple Item Levels covers item levels on slots and bags.
 - **`/reload` is enough.** Tested on 06/11/2026 with the game open: a switch, then `/reload`,
   picked up NEW add-on folders too, not just changed files. No client restart needed.
 - **Required dependencies are checked at build**, from the TOC the Forever client loads. Run-time

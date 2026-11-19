@@ -33,7 +33,8 @@ stdenvNoCC.mkDerivation {
   + lib.concatStrings (
     lib.mapAttrsToList (name: zip: ''
       mkdir "$TMPDIR/${name}"
-      unzip -q ${zip} -d "$TMPDIR/${name}"
+      # Exit 1 is "warnings only": Remove Questie's zip uses backslash paths, which unzip converts.
+      unzip -q ${zip} -d "$TMPDIR/${name}" || [ $? -eq 1 ]
       for dir in "$TMPDIR/${name}"/*/; do
         folder=$(basename "$dir")
         if [ -e "$out/$folder" ]; then

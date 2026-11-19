@@ -296,5 +296,19 @@
     "version": "9673220",
     "url": "https://edge.forgecdn.net/files/9673/220/OneForAll-6.2.11.zip",
     "hash": "sha256-88UNYx9sWnOGKDfhYYev0+JN+Hx2NWMMrEmqVX83RFk="
+  },
+  "simple-item-levels": {
+    "source": "curseforge",
+    "projectId": 287692,
+    "version": "9208376",
+    "url": "https://edge.forgecdn.net/files/9208/376/SimpleItemLevel-v74.1.zip",
+    "hash": "sha256-iwot7Y0XruH/RIEFKVCtzeM78sVl28V/tBwJtIiwkSg="
+  },
+  "tacotip": {
+    "source": "curseforge",
+    "projectId": 1555962,
+    "version": "9673963",
+    "url": "https://edge.forgecdn.net/files/9673/963/TacoTip.zip",
+    "hash": "sha256-34ke14Nxn9fTEPzIXhhLoQxWQNJPOQCs0UC8x116/lE="
   }
 }

@@ -16,9 +16,9 @@
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9700952",
-    "url": "https://edge.forgecdn.net/files/9700/952/LayerSwap-1.14.36.zip",
-    "hash": "sha256-EShNQbGTRHwF2uxeZJxIUWMTjUpBPUMJSvqJq4Vc4PM="
+    "version": "9702563",
+    "url": "https://edge.forgecdn.net/files/9702/563/LayerSwap-1.14.37.zip",
+    "hash": "sha256-4uz8ZizzSW8OBJRxhW7YgmhB9jJHx7U9FhRVViYK+5I="
   },
   "leatrix-plus": {
     "source": "curseforge",
@@ -135,9 +135,9 @@
   "spoken": {
     "source": "curseforge",
     "projectId": 1700375,
-    "version": "9673192",
-    "url": "https://edge.forgecdn.net/files/9673/192/Spoken-3.10.0.zip",
-    "hash": "sha256-Zsh4AeFdRsZTwL+I2oiheCqIzjT6HGTUoiMJv3DMKzk="
+    "version": "9703204",
+    "url": "https://edge.forgecdn.net/files/9703/204/Spoken-3.10.1.zip",
+    "hash": "sha256-S5nirE95u/1FFcCnwJp4wFxspWDMVYAOxxB/U8mv4AE="
   },
   "spoken-ptbr-quests-shared": {
     "source": "curseforge",

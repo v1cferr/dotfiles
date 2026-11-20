@@ -114,8 +114,10 @@ DialogueUI is the NPC dialogue of choice because Spoken has a narrator style mad
   window moving (BlizzMove), spell ranks (Auto Spell Ranks), minimap buttons
   (MinimapButtonButton), quest sparkles (Forever Loot Sparkles), camera zoom (Leatrix), loot feed
   (BattleText), quick loot, flight map, zone level and reward coin (Polestar), quest XP (Easy
-  Experience Bar), bags full (Dejunk), chat history (Prat), and the flight, transport, dungeon
-  and fog map layers (OpenMap). Its moving windows made the world map throw "Frame is not
+  Experience Bar), bags full (Dejunk), chat history (Prat), and the flight, dungeon and fog
+  map layers (OpenMap). Its ship, zeppelin and tram icons (`lmTransport`) came back the same day
+  on request, next to OpenMap's docks and dotted routes: the user reads where a boat goes from
+  them. Its moving windows made the world map throw "Frame is not
   movable", since OpenMap locks it. Its library books and zone transitions stay, as no other
   add-on draws them. Polestar's quest XP overlay, bag-space banner and item marks, and OpenMap's
   coordinate bar (Questie has one), went off for the same reason. Its Gear Value tooltip

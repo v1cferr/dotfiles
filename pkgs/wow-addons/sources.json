@@ -16,16 +16,16 @@
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9702563",
-    "url": "https://edge.forgecdn.net/files/9702/563/LayerSwap-1.14.37.zip",
-    "hash": "sha256-4uz8ZizzSW8OBJRxhW7YgmhB9jJHx7U9FhRVViYK+5I="
+    "version": "9707446",
+    "url": "https://edge.forgecdn.net/files/9707/446/LayerSwap-1.14.39.zip",
+    "hash": "sha256-5KNjn8B9x5f5HmBXjA8x0Lc/ALFzsqqhCwmxpx0TB4E="
   },
   "leatrix-plus": {
     "source": "curseforge",
     "projectId": 94855,
-    "version": "9696700",
-    "url": "https://edge.forgecdn.net/files/9696/700/Leatrix_Plus-1.60.34-forever.zip",
-    "hash": "sha256-PYq+5cmM+ndZWA/vO2WgG78VLglY1faOpKLgTK/q1nM="
+    "version": "9707913",
+    "url": "https://edge.forgecdn.net/files/9707/913/Leatrix_Plus-1.60.35-forever.zip",
+    "hash": "sha256-cFJFmYBfAc2fTIzbo4iEvRwuB2IwOQzJ1AIf/Hy9Cks="
   },
   "auctionator": {
     "source": "curseforge",
@@ -72,9 +72,9 @@
   "glowing-bars": {
     "source": "curseforge",
     "projectId": 1754997,
-    "version": "9676033",
-    "url": "https://edge.forgecdn.net/files/9676/33/GlowingBars-4.2.0.zip",
-    "hash": "sha256-dMEsWbdXA0pz+I0SNEXQM2q72ixertyAeftXlzUPOnA="
+    "version": "9706234",
+    "url": "https://edge.forgecdn.net/files/9706/234/GlowingBars-4.3.0.zip",
+    "hash": "sha256-DcqRAAgab/4HhjIJ8yBqhz0PpEdOy9BbdLaE7WXn8o4="
   },
   "prettytooltip": {
     "source": "curseforge",
@@ -219,9 +219,9 @@
   "battletext-forever": {
     "source": "curseforge",
     "projectId": 1722502,
-    "version": "9701391",
-    "url": "https://edge.forgecdn.net/files/9701/391/BattleTextForever-v1.24.4-forever.zip",
-    "hash": "sha256-5q87OSREw2DRgZQ8fRbZFymHT2YQrPiPMu6TH6YMRTQ="
+    "version": "9710318",
+    "url": "https://edge.forgecdn.net/files/9710/318/BattleTextForever-v1.25.1-forever.zip",
+    "hash": "sha256-Vsyns26i53rvJLDm6cKWYPRjDcPXX5EQUCOhOTlzSyc="
   },
   "easy-experience-bar": {
     "source": "curseforge",
@@ -233,9 +233,9 @@
   "baganator": {
     "source": "curseforge",
     "projectId": 914482,
-    "version": "9689225",
-    "url": "https://edge.forgecdn.net/files/9689/225/Baganator-865.zip",
-    "hash": "sha256-mqXagKazFXJzQ7HQQIs2jkDp76Qly/OjsQpVjoUDZVk="
+    "version": "9706044",
+    "url": "https://edge.forgecdn.net/files/9706/44/Baganator-866.zip",
+    "hash": "sha256-aRnTfZaT8W8ZPYNhahXknsZs/B36lXrVBs79yyzNvm4="
   },
   "syndicator": {
     "source": "curseforge",
@@ -261,9 +261,9 @@
   "lfg-forever": {
     "source": "curseforge",
     "projectId": 1707849,
-    "version": "9672192",
-    "url": "https://edge.forgecdn.net/files/9672/192/LFGForever.zip",
-    "hash": "sha256-049jddv/PdMEQXWIJamCZ5Vo74nok3bVrzQp2NSkeNE="
+    "version": "9705584",
+    "url": "https://edge.forgecdn.net/files/9705/584/LFGForever.zip",
+    "hash": "sha256-sT53z+eyZ433sRecpebHSGM9cJ/CXtFaUJuKgaRhmfU="
   },
   "lfg-bulletin-board": {
     "source": "curseforge",
@@ -289,9 +289,9 @@
   "oneforall": {
     "source": "curseforge",
     "projectId": 1714201,
-    "version": "9673220",
-    "url": "https://edge.forgecdn.net/files/9673/220/OneForAll-6.2.11.zip",
-    "hash": "sha256-88UNYx9sWnOGKDfhYYev0+JN+Hx2NWMMrEmqVX83RFk="
+    "version": "9704825",
+    "url": "https://edge.forgecdn.net/files/9704/825/OneForAll-6.2.12.zip",
+    "hash": "sha256-aoJEBB2c61PNVY6N0dIe3h3TpNk7G6Aaof3ky9lfspk="
   },
   "simple-item-levels": {
     "source": "curseforge",

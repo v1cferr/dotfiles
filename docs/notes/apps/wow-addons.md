@@ -108,10 +108,19 @@ DialogueUI is the NPC dialogue of choice because Spoken has a narrator style mad
   Angleur and GatherMate2 were dropped for it on 08/11/2026. Dejunk stays, because Mastercraft
   never destroys an item and has no price threshold or lists, so its own `autoJunk` is off.
 - **OneForAll is kept for its dungeon and gear data**: boss loot with drop chances, dungeon maps
-  on M, quest chains and the Gear Planner. Its Quality of Life tab repeats Leatrix, Dejunk,
-  BlizzMove and others, but every helper there ships off, so it stays off. Its Gear Value tooltip
-  (`gearValue`) is turned off too, because Pawn already scores gear. Its dungeon map cannot show
-  the player: the client returns no map position inside an instance, for any add-on.
+  on M, quest chains and the Gear Planner. Its Quality of Life helpers ship ON, most of them in
+  its code defaults rather than its SavedVariables, so reading the SV alone misses them. On
+  20/11/2026 the ones another add-on already does were turned off, each job keeping one owner:
+  window moving (BlizzMove), spell ranks (Auto Spell Ranks), minimap buttons
+  (MinimapButtonButton), quest sparkles (Forever Loot Sparkles), camera zoom (Leatrix), loot feed
+  (BattleText), quick loot, flight map, zone level and reward coin (Polestar), quest XP (Easy
+  Experience Bar), bags full (Dejunk), chat history (Prat), and the flight, transport, dungeon
+  and fog map layers (OpenMap). Its moving windows made the world map throw "Frame is not
+  movable", since OpenMap locks it. Its library books and zone transitions stay, as no other
+  add-on draws them. Polestar's quest XP overlay, bag-space banner and item marks, and OpenMap's
+  coordinate bar (Questie has one), went off for the same reason. Its Gear Value tooltip
+  (`gearValue`) is off because Pawn already scores gear. Its dungeon map cannot show the player:
+  the client returns no map position inside an instance, for any add-on.
 - **TacoTip restyles the whole player tooltip** by default (class border, 3D portrait, health
   bars, mouse anchoring), which fights PrettyTooltip. Only its gear lines stay on: GearScore,
   average item level and talents. The look, titles and guild are PrettyTooltip's, and item scores

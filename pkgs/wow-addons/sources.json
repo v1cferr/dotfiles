@@ -341,5 +341,12 @@
     "version": "9672321",
     "url": "https://edge.forgecdn.net/files/9672/321/RemoveQuestie_V1.14.zip",
     "hash": "sha256-N8K0QZmrFY3lS5ouhToYdo36zy1XeMDwlPZ7ysfQcMY="
+  },
+  "details": {
+    "source": "curseforge",
+    "projectId": 61284,
+    "version": "9521145",
+    "url": "https://edge.forgecdn.net/files/9521/145/Details-Details.20261109.15410.172.zip",
+    "hash": "sha256-UAK91cPpLdWb/6Pr38hn+YCwntYpxR2rBW+1RC+SrUE="
   }
 }

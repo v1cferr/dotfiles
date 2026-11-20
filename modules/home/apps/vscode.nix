@@ -13,6 +13,8 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     coreutils
+    git
+    gnugrep
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
     writeShellApplication
     ;
@@ -28,13 +30,15 @@ let
     commandLineArgs = "--password-store=gnome-libsecret";
   };
 
-  # vscode-extensions-dump: it rewrites extensions.txt with what IS installed, so the extensions
-  # stop being invisible to git. It MIRRORS without GOVERNING; the format's why: the notes.
+  # vscode-extensions-dump: it rewrites extensions.txt with what IS installed and commits it, so the
+  # extensions stop being invisible to git. It MIRRORS without GOVERNING; the why: the notes.
   extensionsDump = writeShellApplication {
     name = "vscode-extensions-dump";
     runtimeInputs = [
       code
       coreutils
+      git
+      gnugrep
     ];
     text = ''
       repo="''${1:?usage: vscode-extensions-dump <repo-path>}"
@@ -57,6 +61,35 @@ let
 
       printf '%s\n' "$list" > "$out"
       echo "vscode-extensions-dump: $(printf '%s\n' "$list" | wc -l) extensions -> $out"
+
+      # THE COMMIT: only this file (`--only`), so whatever else is staged stays put. Any failure
+      # warns and exits 0, the same contract as the guard above. It never pushes.
+      if git -C "$repo" diff --quiet -- "$out"; then
+        echo "vscode-extensions-dump: unchanged, nothing to commit"
+        exit 0
+      fi
+      gitdir="$(git -C "$repo" rev-parse --absolute-git-dir)"
+      if [ -d "$gitdir/rebase-merge" ] || [ -d "$gitdir/rebase-apply" ] || [ -f "$gitdir/MERGE_HEAD" ]; then
+        echo "vscode-extensions-dump: rebase/merge in progress, $out left uncommitted" >&2
+        exit 0
+      fi
+
+      diff="$(git -C "$repo" diff --no-color -U0 -- "$out" | grep -E '^[+-][^+-]' || true)"
+      added="$(printf '%s\n' "$diff" | grep '^+' | cut -c2- || true)"
+      removed="$(printf '%s\n' "$diff" | grep '^-' | cut -c2- || true)"
+      if [ -n "$added" ] && [ -z "$removed" ] && [ "$(printf '%s\n' "$added" | wc -l)" -eq 1 ]; then
+        msg="chore(vscode): mirror the ''${added#*.} extension"
+      elif [ -z "$added" ] && [ -n "$removed" ] && [ "$(printf '%s\n' "$removed" | wc -l)" -eq 1 ]; then
+        msg="chore(vscode): drop the ''${removed#*.} extension from the mirror"
+      else
+        msg="chore(vscode): refresh the extension list"
+      fi
+
+      if git -C "$repo" commit --quiet --only -m "$msg" -m "$diff" -- "$out"; then
+        echo "vscode-extensions-dump: committed '$msg'"
+      else
+        echo "vscode-extensions-dump: commit failed, $out left uncommitted" >&2
+      fi
     '';
   };
 in

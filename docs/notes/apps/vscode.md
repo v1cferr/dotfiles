@@ -83,6 +83,16 @@ Two guards in the script:
   mirroring. It warns and exits 0: the `update` that calls this should not die because the mirror
   failed, but it should not lie in silence either.
 
+The dump also COMMITS the file when it changed, so the mirror never sits as a loose modification:
+
+- `git commit --only -- extensions.txt`: that file alone, whatever else is staged (another
+  session, WIP) stays out of the commit.
+- The message comes from the diff: one added ID is `mirror the <name> extension`, one removed is
+  `drop the <name> extension from the mirror`, anything else is `refresh the extension list`, with
+  the `+id`/`-id` lines in the body.
+- It skips during a rebase or merge, and a failed commit (hook, `index.lock`) only warns, the same
+  exit-0 contract as the empty-list guard. It never pushes: that stays a human decision.
+
 ## Shell highlighting inside Nix strings
 
 nix-ide paints a `''...''` string as one flat string, so the shell inside a `writeShellApplication`

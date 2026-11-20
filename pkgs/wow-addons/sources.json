@@ -348,5 +348,12 @@
     "version": "9521145",
     "url": "https://edge.forgecdn.net/files/9521/145/Details-Details.20261109.15410.172.zip",
     "hash": "sha256-UAK91cPpLdWb/6Pr38hn+YCwntYpxR2rBW+1RC+SrUE="
+  },
+  "gtfo": {
+    "source": "curseforge",
+    "projectId": 20697,
+    "version": "9695357",
+    "url": "https://edge.forgecdn.net/files/9695/357/GTFO-6.12.4.zip",
+    "hash": "sha256-0jtgl5RNPfpdaVjfWjxhguLGKGV7GWVMUCeLqvUEwU4="
   }
 }

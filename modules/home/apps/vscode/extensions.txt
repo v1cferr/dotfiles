@@ -3,6 +3,7 @@ angular.ng-template
 antfu.file-nesting
 anthropic.claude-code
 aslamanver.vsc-export
+astro-build.astro-vscode
 bierner.markdown-mermaid
 bradgashler.htmltagwrap
 bradlc.vscode-tailwindcss

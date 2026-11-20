@@ -211,14 +211,14 @@ let
         glyph = "md-monitor_screenshot";
         title = "Screenshot: main monitor";
         group = "Screenshot";
-        text = later "flameshot-screen ${osConfig.my.monitors.primary}";
+        text = later "shell-screenshot primary";
       }
       {
         name = "screenshot-second";
         glyph = "md-monitor_screenshot";
         title = "Screenshot: second monitor";
         group = "Screenshot";
-        text = later "flameshot-screen ${osConfig.my.monitors.secondary}";
+        text = later "shell-screenshot secondary";
       }
       (sunset "night-light-toggle" "Toggle night light" "md-theme_light_dark" ''
         if systemctl --user is-active --quiet hyprsunset; then

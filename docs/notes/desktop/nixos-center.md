@@ -184,12 +184,13 @@ default (as the keybinds do) or a PNG in `~/Pictures/Screenshots`, named
 connected greys its button out.
 
 A click closes the Center and runs `shell-screenshot <target> <copy|save>` (`flameshot.nix`), which
-reuses Flameshot and `my.monitors`: it waits for the island to go back up, asking the shell how
+uses grim and `my.monitors`: it waits for the island to go back up, asking the shell how
 far it reaches (`qs ipc call bar islandReach`, 0 when shut), then shoots. Until 12/11/2026 it
 waited for the Center's own layer, `qs-center`, to leave the frame; the island's layer stays
-mapped while shut, so the layer list no longer answers that. The capture is Flameshot's, the same backend
-as `sc1`, `sc2` and `scfull`, and Flameshot's own notification is the success feedback; a failure
-(a monitor gone, Flameshot failing) is a notification too. No new daemon.
+mapped while shut, so the layer list no longer answers that. Since 20/11/2026 the capture is grim's, not Flameshot's
+(10x faster, see [flameshot.md](../apps/flameshot.md#whole-monitors-grim-not-flameshot-20112026)),
+the same backend as `sc1`, `sc2` and `scfull`; a notification is the success feedback, and a
+failure (a monitor gone, grim failing) is a notification too. No new daemon.
 
 Tested on 18/10/2026: PNGs at native resolution, 2560x1440 (main), 1080x1920 (the LG, rotated) and
 3640x1920 (the whole virtual layout); a copy left `image/png` 1080x1920 in the clipboard; and a shot

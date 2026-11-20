@@ -14,6 +14,7 @@ let
   # entry that stops being used, so the list cannot rot into a lie (rule 16).
   inherit (pkgs)
     coreutils
+    grim
     jq
     libnotify
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
@@ -136,38 +137,14 @@ let
     '';
   };
 
-  # flameshot-screen: sc1/sc2 by monitor NAME. Qt numbers the screens in wl_output order, which is
-  # Hyprland's monitor id order, so `--number` is DERIVED and not measured by hand (rule 11).
-  flameshotScreen = writeShellApplication {
-    name = "flameshot-screen";
-    runtimeInputs = [
-      flameshotCopy
-      hyprland
-      jq
-    ];
-    text = ''
-      target="''${1:?usage: flameshot-screen <monitor>}"
-
-      # the target's 0-based position among the ACTIVE monitors sorted by id, which is what
-      # `--number` counts. Absent means there is nothing to capture (a disconnected TV, say).
-      idx="$(hyprctl monitors -j | jq -r --arg t "$target" '
-        ([ .[] | { name, id } ] | sort_by(.id) | map(.name) | index($t)) // empty')"
-      if [ -z "$idx" ]; then
-        hyprctl notify -1 2000 "rgb(${p.red})" "$target is not connected" >/dev/null 2>&1 || true
-        exit 0
-      fi
-
-      flameshot-copy screen --number "$idx"
-    '';
-  };
-
-  # shell-screenshot: the NixOS Center's capture. It waits for the Center to leave the frame, then
-  # shoots one monitor or the whole layout, to the clipboard or to a dated PNG: docs/notes/desktop/nixos-center.md
+  # shell-screenshot: every WHOLE-monitor capture (sc1/sc2/scfull, Vicinae, the NixOS Center). grim
+  # straight on the output NAME (rule 11): 0.03 s to grab plus a fast PNG, where flameshot took ~4 s
+  # encoding the portal's PNG and then its own. Waits for the Center: docs/notes/desktop/nixos-center.md
   shellScreenshot = writeShellApplication {
     name = "shell-screenshot";
     runtimeInputs = [
-      fs
-      flameshotCopy
+      grim
+      wl-clipboard
       hyprland
       jq
       coreutils
@@ -185,6 +162,12 @@ let
       esac
       fail() { notify-send -a Screenshot -u normal "Screenshot failed" "$1" || true; exit 1; }
 
+      # A monitor that is not active (a disconnected TV, say) gets a notice instead of a capture.
+      if [ "$target" != all ] &&
+        ! hyprctl monitors -j | jq -e --arg t "$name" 'any(.[]; .name == $t)' >/dev/null; then
+        fail "$name is not connected"
+      fi
+
       # The Center closes before this runs, and it is the island going back up into the bar: wait
       # until the shell says it reaches nowhere (<=1 s), then one more frame, so it is never in
       # the shot. Its layer stays mapped while shut, so the layer list cannot answer this.
@@ -194,21 +177,24 @@ let
       done
       sleep 0.05
 
-      dir="$HOME/Pictures/Screenshots"
-      mkdir -p "$dir"
-      if [ "$target" = all ]; then id=all; else id="$target-$name"; fi
-      file="$dir/$(date +%Y-%m-%d_%H-%M-%S)_$id.png"
-      # copy goes through flameshot-copy (one PNG, see its comment); save writes the file.
-      shot() { if [ "$mode" = save ]; then flameshot "$@" -p "$file"; else flameshot-copy "$@"; fi; }
+      # -l 1: zlib's fastest level, 0.25 s against 1.4 s at the default for ~13% more bytes.
+      args=(-l 1)
+      if [ "$target" != all ]; then args+=(-o "$name"); fi
 
-      if [ "$target" = all ]; then
-        shot full || fail "flameshot could not capture the screens"
+      if [ "$mode" = save ]; then
+        dir="$HOME/Pictures/Screenshots"
+        mkdir -p "$dir"
+        if [ "$target" = all ]; then id=all; else id="$target-$name"; fi
+        file="$dir/$(date +%Y-%m-%d_%H-%M-%S)_$id.png"
+        grim "''${args[@]}" "$file" || fail "grim could not capture $name"
+        notify-send -a Screenshot -i camera-photo "Screenshot" "Saved to $file" || true
       else
-        # The same derivation as flameshot-screen: the position among the ACTIVE monitors by id.
-        idx="$(hyprctl monitors -j | jq -r --arg t "$name" '
-          ([ .[] | { name, id } ] | sort_by(.id) | map(.name) | index($t)) // empty')"
-        [ -n "$idx" ] || fail "$name is not connected"
-        shot screen --number "$idx" || fail "flameshot could not capture $name"
+        # One image/png, already encoded: the same reason as flameshot-copy.
+        tmp="$(mktemp --suffix=.png)"
+        trap 'rm -f "$tmp"' EXIT
+        grim "''${args[@]}" "$tmp" || fail "grim could not capture $name"
+        wl-copy --type image/png <"$tmp"
+        notify-send -a Screenshot -i camera-photo "Screenshot" "Copied to the clipboard" || true
       fi
     '';
   };
@@ -230,18 +216,17 @@ in
     flameshotCopy
     flameshotScreenshot
     flameshotPick
-    flameshotScreen
     flameshotCancel
     shellScreenshot
   ];
 
   # The screenshot aliases live next to the tool, not in zsh.nix (the eza/bat convention). They
-  # take a monitor NAME (rule 11); 1 is the MAIN panel everywhere in this repo, never a position.
+  # take a monitor ROLE (rule 11); 1 is the MAIN panel everywhere in this repo, never a position.
   programs.zsh.shellAliases = {
     screenshot = "flameshot-copy gui"; # an interactive selection (it opens the monitor picker)
-    scfull = "flameshot-copy full"; # both screens, to the clipboard
-    sc1 = "flameshot-screen ${osConfig.my.monitors.primary}"; # the main one, to the clipboard
-    sc2 = "flameshot-screen ${osConfig.my.monitors.secondary}"; # the secondary, to the clipboard
+    scfull = "shell-screenshot all"; # every screen, to the clipboard
+    sc1 = "shell-screenshot primary"; # the main one (my.monitors.primary), to the clipboard
+    sc2 = "shell-screenshot secondary"; # the secondary (my.monitors.secondary), to the clipboard
   };
 
   # Flameshot does not create the output folder reliably on its own.

@@ -78,38 +78,33 @@ ALWAYS comes back, the 60 s timeout included.
 They stay next to the tool and not in `modules/home/shell/zsh.nix`, the same convention as eza and bat,
 which live in `cli.nix`. `zsh.nix` keeps only the shell and system ones.
 
-VERIFIED on this machine's v14/Wayland: only `gui` opens the monitor picker; `full` and
-`screen --number` capture DIRECTLY, with no picker. So the Arch aliases still hold; what does not
-hold is `--region`, which v14 ignores.
+Only `screenshot` is flameshot (it is the one with an overlay). The whole-monitor aliases go
+through `shell-screenshot`, see below.
 
-| Alias        | Command                                                   |
-| ------------ | --------------------------------------------------------- |
-| `screenshot` | `flameshot-copy gui`, an interactive selection            |
-| `scfull`     | both screens, to the clipboard                            |
-| `sc1`        | the main one (`my.monitors.primary`), to the clipboard    |
-| `sc2`        | the secondary (`my.monitors.secondary`), to the clipboard |
+| Alias        | Command                                                                  |
+| ------------ | ------------------------------------------------------------------------ |
+| `screenshot` | `flameshot-copy gui`, an interactive selection                           |
+| `scfull`     | `shell-screenshot all`, every screen, to the clipboard                   |
+| `sc1`        | `shell-screenshot primary` (`my.monitors.primary`), to the clipboard     |
+| `sc2`        | `shell-screenshot secondary` (`my.monitors.secondary`), to the clipboard |
 
-The NixOS Center's Screenshot buttons run `shell-screenshot primary|secondary|all [copy|save]`, the
-same backend and the same `--number` derivation, after waiting for the Center to leave the frame;
-`save` writes a dated PNG to `~/Pictures/Screenshots`
-([nixos-center.md](../desktop/nixos-center.md#screenshots-18102026)).
+## Whole monitors: grim, not flameshot (20/11/2026)
 
-**`--number` is a Qt screen index and NOT a monitor name**, and it was a measured literal here until
-30/08/2026, guarded by nothing but a "if the layout changes, MEASURE AGAIN". It also broke with the
-TV disconnected: index 1 stops existing, so the alias pointing at it answered `Requested screen
-exceeds screen count`
-and exited 2.
+`shell-screenshot primary|secondary|all [copy|save]` is the ONE backend for every capture with no
+selection: the aliases, Vicinae's Main/Second monitor and the NixOS Center's buttons
+([nixos-center.md](../desktop/nixos-center.md#screenshots-18102026)). It calls grim straight on
+the monitor NAME from `my.monitors` (rule 11), copies a single `image/png` (the same reason as
+`flameshot-copy`) or writes a dated PNG to `~/Pictures/Screenshots`.
 
-`flameshot-screen` takes the NAME, which does come from `my.monitors` (rule 11), and DERIVES the
-index: Qt numbers the screens in the order the compositor advertises the `wl_output`s, which is
-Hyprland's monitor `id` order, so the index is the target's position among the ACTIVE monitors
-sorted by `id`. A monitor that is not connected gets a notification instead of a capture, and the
-numbers still match the screenshot submap (1 = the main one, 2 = the secondary).
+MEASURED on 20/11/2026 on the 2560x1440 panel: grabbing the frame costs 0.03 s, the rest is PNG
+encoding. `flameshot screen --raw` took ~3.7 s, since it encodes twice (the portal hands it a PNG,
+then `--raw` makes another). grim at the default zlib level took 1.36 s, and at `-l 1` 0.25 s for
+~13% more bytes, so it runs at `-l 1`.
 
-MEASURED on 30/08/2026 with a HEADLESS output standing in for the TV (`hyprctl output create
-headless HDMI-A-3`, which `monitors.lua` then places at `-1920x0` exactly like the real one):
-`--number 0` captured the LG and `--number 1` the stand-in, which is the `id` order (DP-2 = 0,
-HDMI-A-3 = 1) and the same mapping that had been measured by hand against the wallpapers.
+This also retired `flameshot-screen` and its `--number` derivation: `--number` is a Qt screen
+index and NOT a monitor name (it was a measured literal until 30/08/2026 and broke with the TV
+disconnected), while grim's `-o` takes the name itself. A monitor that is not active gets a
+notification instead of a capture.
 
 ## Two small things
 

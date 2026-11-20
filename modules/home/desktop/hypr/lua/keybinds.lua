@@ -197,9 +197,10 @@ hl.bind(mainMod .. " + XF86AudioRaiseVolume", hl.dsp.exec_cmd("brightness-osd up
 hl.bind(mainMod .. " + XF86AudioLowerVolume", hl.dsp.exec_cmd("brightness-osd down"), { locked = true, repeating = true })
 hl.bind(mainMod .. " + SHIFT + B",      hl.dsp.exec_cmd("brightness-osd reset"), { locked = true })
 
--- Screenshot (Flameshot v14). Print = the native flow; SUPER+SHIFT+S = the KEYBOARD flow, a
--- submap where 1/2 pick the monitor and Esc cancels. See docs/notes/apps/flameshot.md
-hl.bind("Print",                   hl.dsp.exec_cmd("flameshot gui"))
+-- Screenshot (Flameshot v15, copied as ONE png by flameshot-copy). Print = the native flow;
+-- SUPER+SHIFT+S = the KEYBOARD flow, a submap where 1/2 pick the monitor and Esc cancels.
+-- See docs/notes/apps/flameshot.md
+hl.bind("Print",                   hl.dsp.exec_cmd("flameshot-copy gui"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("flameshot-screenshot"))
 
 hl.define_submap("screenshot", function()

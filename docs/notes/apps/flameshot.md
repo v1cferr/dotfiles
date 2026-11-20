@@ -1,6 +1,6 @@
-# Flameshot v14: the keyboard flow, and the duplicated bar
+# Flameshot v15: the keyboard flow, the one-PNG clipboard, and the duplicated bar
 
-`modules/home/apps/flameshot.nix`. v14 from the UNSTABLE channel (through the overlay in flake/overlays.nix) plus the
+`modules/home/apps/flameshot.nix`. v15 from the UNSTABLE channel (through the overlay in flake/overlays.nix) plus the
 config and the keyboard-flow scripts. The binds (Print, SUPER+SHIFT+S, and the "screenshot" submap)
 live in `modules/home/desktop/hypr/lua/keybinds.lua`.
 
@@ -12,6 +12,27 @@ grim and no `useGrimAdapter`, there is no "grim … GNOME" warning.
 
 **NB**: the `.ini` comes from `/nix/store` (read-only), so changes through the GUI do NOT persist.
 Edit the module and rebuild. Qt QSettings does NOT accept an inline comment in the `.ini`.
+
+## The clipboard: one PNG, not 33 formats (20/11/2026)
+
+Symptom: after a screenshot, pasting into a browser took seconds and the page "hung".
+
+On Wayland, v15's copy (`saveToClipboardMime` in `src/utils/screenshotsaver.cpp`) calls
+`setImageData()` plus `x-kde-force-image-copy` through KDE's **KSystemClipboard**. That offers
+EVERY format Qt can write and encodes each one ON DEMAND, on flameshot's main thread. With
+`kimageformats` and `qtimageformats` in the profile, `wl-paste -l` listed 33 types (png, avif,
+heic, heif, jxl, jp2, exr, tiff, webp, ...). `wl-clip-persist` reads ALL of them to keep the copy
+alive, so flameshot encoded AVIF, HEIC, JXL, JP2 and EXR one after another, and a paste queued
+behind them. `useJpgForClipboard` does not help: the Wayland branch ignores it.
+
+So flameshot NEVER writes the clipboard. `flameshot-copy <args>` runs `flameshot <args> --raw`
+(a PNG on stdout) and hands it to `wl-copy --type image/png`: one type, already encoded. An
+empty output means Esc, and the clipboard keeps what it had. Every entry point goes through it:
+Print, `flameshot-screenshot`, the aliases, Vicinae and the NixOS Center's copy.
+
+The price: with `--raw` the overlay swaps its Copy and Save buttons for a single Accept (Enter
+or ✓), which copies. Saving to a file is the NixOS Center's `save`. Dropping `kimageformats`
+instead was rejected, since it is what gives Dolphin its thumbnails.
 
 ## The keyboard flow, at parity with the Arch v14
 
@@ -63,7 +84,7 @@ hold is `--region`, which v14 ignores.
 
 | Alias        | Command                                                   |
 | ------------ | --------------------------------------------------------- |
-| `screenshot` | `flameshot gui`, an interactive selection                 |
+| `screenshot` | `flameshot-copy gui`, an interactive selection            |
 | `scfull`     | both screens, to the clipboard                            |
 | `sc1`        | the main one (`my.monitors.primary`), to the clipboard    |
 | `sc2`        | the secondary (`my.monitors.secondary`), to the clipboard |

@@ -204,7 +204,7 @@ let
         glyph = "md-selection_drag";
         title = "Screenshot: select an area";
         group = "Screenshot";
-        text = later "flameshot gui";
+        text = later "flameshot-copy gui";
       }
       {
         name = "screenshot-main";

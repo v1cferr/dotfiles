@@ -1,5 +1,5 @@
-# FLAMESHOT v14 plus the keyboard-flow scripts, called by the submap in keybinds.lua.
-# The portal-only capture and what broke on the way: docs/notes/apps/flameshot.md
+# FLAMESHOT v15 plus the keyboard-flow scripts, called by the submap in keybinds.lua.
+# The portal-only capture, the one-PNG clipboard and what broke on the way: docs/notes/apps/flameshot.md
 {
   config,
   lib,
@@ -17,6 +17,7 @@ let
     jq
     libnotify
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
+    wl-clipboard
     writeShellApplication
     ;
   # hyprctl from the RUNNING compositor (unstable), never the stable 0.55 a bare pkgs.hyprland is.
@@ -24,7 +25,32 @@ let
 
   # The Quickshell package (a flake input), bound once because the path repeats below.
   qsPkg = inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default;
-  fs = unstable.flameshot; # v14
+  fs = unstable.flameshot; # v15
+
+  # flameshot-copy: the ONLY writer of the clipboard. Flameshot's own copy hands the image to
+  # KSystemClipboard, which offers ~33 formats encoded on demand; wl-clip-persist reads them all
+  # and a paste queues behind AVIF/HEIC/JXL. --raw gives one PNG, offered as one type.
+  flameshotCopy = writeShellApplication {
+    name = "flameshot-copy";
+    runtimeInputs = [
+      fs
+      wl-clipboard
+      coreutils
+      libnotify
+    ];
+    text = ''
+      tmp="$(mktemp --suffix=.png)"
+      trap 'rm -f "$tmp"' EXIT
+      rc=0
+      flameshot "$@" --raw >"$tmp" || rc=$?
+      # Empty = cancelled (Esc): the clipboard keeps what it had.
+      if [ -s "$tmp" ]; then
+        wl-copy --type image/png <"$tmp"
+        notify-send -a Screenshot -i camera-photo "Screenshot" "Copied to the clipboard" || true
+      fi
+      exit "$rc"
+    '';
+  };
 
   p = config.my.theme.palette; # SSOT: modules/home/desktop/palette.nix (rule 11, decision 0001)
   # The pen's swatches, in hue order: the palette's accents, then its text for a neutral mark.
@@ -46,7 +72,7 @@ let
     # `qs` hides the bar while the overlay exists. runtimeInputs is mandatory: writeShellApplication
     # uses a restricted PATH, not the user's.
     runtimeInputs = [
-      fs
+      flameshotCopy
       hyprland
       jq
       coreutils
@@ -58,7 +84,7 @@ let
       picker=false
       if [ "$(hyprctl monitors -j | jq 'length')" -gt 1 ]; then picker=true; fi
 
-      flameshot gui >/dev/null 2>&1 &
+      flameshot-copy gui >/dev/null 2>&1 &
       if $picker; then hyprctl dispatch 'hl.dsp.submap("screenshot")' >/dev/null 2>&1 || true; fi
 
       fs_open() { hyprctl clients -j | jq -e 'any(.[]; .title=="flameshot")' >/dev/null 2>&1; }
@@ -115,7 +141,7 @@ let
   flameshotScreen = writeShellApplication {
     name = "flameshot-screen";
     runtimeInputs = [
-      fs
+      flameshotCopy
       hyprland
       jq
     ];
@@ -131,7 +157,7 @@ let
         exit 0
       fi
 
-      flameshot screen --number "$idx" -c
+      flameshot-copy screen --number "$idx"
     '';
   };
 
@@ -141,6 +167,7 @@ let
     name = "shell-screenshot";
     runtimeInputs = [
       fs
+      flameshotCopy
       hyprland
       jq
       coreutils
@@ -171,16 +198,17 @@ let
       mkdir -p "$dir"
       if [ "$target" = all ]; then id=all; else id="$target-$name"; fi
       file="$dir/$(date +%Y-%m-%d_%H-%M-%S)_$id.png"
-      if [ "$mode" = save ]; then out=(-p "$file"); else out=(-c); fi
+      # copy goes through flameshot-copy (one PNG, see its comment); save writes the file.
+      shot() { if [ "$mode" = save ]; then flameshot "$@" -p "$file"; else flameshot-copy "$@"; fi; }
 
       if [ "$target" = all ]; then
-        flameshot full "''${out[@]}" || fail "flameshot could not capture the screens"
+        shot full || fail "flameshot could not capture the screens"
       else
         # The same derivation as flameshot-screen: the position among the ACTIVE monitors by id.
         idx="$(hyprctl monitors -j | jq -r --arg t "$name" '
           ([ .[] | { name, id } ] | sort_by(.id) | map(.name) | index($t)) // empty')"
         [ -n "$idx" ] || fail "$name is not connected"
-        flameshot screen --number "$idx" "''${out[@]}" || fail "flameshot could not capture $name"
+        shot screen --number "$idx" || fail "flameshot could not capture $name"
       fi
     '';
   };
@@ -196,9 +224,10 @@ let
   };
 in
 {
-  # v14 (unstable) plus the keyboard-flow scripts (called by the submap in keybinds.lua).
+  # v15 (unstable) plus the keyboard-flow scripts (called by the submap in keybinds.lua).
   home.packages = [
     fs
+    flameshotCopy
     flameshotScreenshot
     flameshotPick
     flameshotScreen
@@ -209,8 +238,8 @@ in
   # The screenshot aliases live next to the tool, not in zsh.nix (the eza/bat convention). They
   # take a monitor NAME (rule 11); 1 is the MAIN panel everywhere in this repo, never a position.
   programs.zsh.shellAliases = {
-    screenshot = "flameshot gui"; # an interactive selection (it opens the v14 picker)
-    scfull = "flameshot full -c"; # both screens, to the clipboard
+    screenshot = "flameshot-copy gui"; # an interactive selection (it opens the monitor picker)
+    scfull = "flameshot-copy full"; # both screens, to the clipboard
     sc1 = "flameshot-screen ${osConfig.my.monitors.primary}"; # the main one, to the clipboard
     sc2 = "flameshot-screen ${osConfig.my.monitors.secondary}"; # the secondary, to the clipboard
   };

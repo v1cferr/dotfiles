@@ -169,6 +169,10 @@ Item {
             event.accepted = true;
         }
     }
+    // The System row: the power's readings and the boot's proof, folded until asked for. It opens
+    // by itself while the boot has something short of proven to show.
+    property bool sysOpen: false
+    readonly property bool sysShown: center.sysOpen || !bootSection.good
     onShownChanged: {
         if (center.shown)
             center.takeKeys(); // every open starts from the panel, never from the last control
@@ -176,6 +180,7 @@ Item {
         if (!center.shown && (Power.state.phase === "confirm" || Power.state.phase === "error"))
             Power.cancel();
         center.expanded = ({}); // groups open folded, every time
+        center.sysOpen = false; // and so does the System row
         if (center.shown) {
             powerSection.refresh(); // the sync's state, read on open instead of polled
             bootSection.refresh(); // boot-trust's record, same rule
@@ -299,21 +304,17 @@ Item {
                 implicitHeight: Theme.hairline
                 color: Theme.colEdge
             }
-            Text {
-                text: "STATUS"
-                color: Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: Theme.fontSmall
-                font.letterSpacing: 1
-            }
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.sp2
                 Repeater {
-                    model: center.hw
+                    // By COUNT, each column reading its own entry: the snapshot behind `hw` ticks
+                    // every 2 s, and a model of objects would rebuild all five columns each time.
+                    model: center.hw.length
                     delegate: Rectangle {
                         id: hwCard
-                        required property var modelData
+                        required property int index
+                        readonly property var modelData: center.hw[hwCard.index]
                         // A card with no data behind it has no panel to open.
                         function open() {
                             if (hwCard.modelData.panel !== "")
@@ -323,7 +324,7 @@ Item {
                         Layout.preferredWidth: 0
                         implicitHeight: hwCol.implicitHeight + 2 * Theme.sp2
                         radius: Theme.radiusControl
-                        color: hwArea.containsMouse ? Theme.colHoverFill : Qt.alpha(Theme.colText, 0.04)
+                        color: hwArea.containsMouse ? Theme.colHoverFill : "transparent" // a column of text, not a box
                         Accessible.role: Accessible.Button
                         Accessible.name: hwCard.modelData.label + " " + hwCard.modelData.value + ", " + hwCard.modelData.caption
                         ColumnLayout {
@@ -382,17 +383,16 @@ Item {
                 id: powerSection
                 Layout.fillWidth: true
                 bar: center.bar
+                details: center.sysShown
+                note: bootSection.summary
+                alarm: !bootSection.good
+                onDetailsToggled: center.sysOpen = !center.sysOpen
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: Theme.hairline
-                color: Theme.colEdge
-            }
-
-            // ── Boot: what the boot chain could prove this boot (BootTrustSection.qml) ──
+            // ── Boot: what the boot chain could prove this boot (BootTrustSection.qml), behind the System row ──
             BootTrustSection {
                 id: bootSection
+                visible: center.sysShown
                 Layout.fillWidth: true
                 tips: tips
             }

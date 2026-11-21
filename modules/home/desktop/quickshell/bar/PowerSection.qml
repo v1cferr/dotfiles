@@ -185,6 +185,59 @@ ColumnLayout {
         elide: Text.ElideRight
     }
 
+    // ── System: the readings (and, under them, the boot's proof) stay folded behind one row ──
+    property bool details: false
+    property string note: "" // what else the row sums up: the boot section's one line
+    property bool alarm: false // something behind the row needs a look: it says so in color
+    signal detailsToggled
+    Rectangle {
+        id: sysRow
+        Layout.fillWidth: true
+        implicitHeight: Theme.barControl
+        radius: Theme.radiusControl
+        color: sysArea.pressed ? Theme.colPressFill : (sysArea.containsMouse ? Theme.colHoverFill : "transparent")
+        Accessible.role: Accessible.Button
+        Accessible.name: "System details, " + (power.details ? "shown" : "hidden") + ": " + sysSum.text
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: Theme.sp2
+            anchors.rightMargin: Theme.sp2
+            spacing: Theme.sp2
+            Text {
+                text: "System"
+                color: Theme.colSubtext
+                font.family: Theme.uiFont
+                font.pixelSize: Theme.fontBody
+            }
+            Text {
+                id: sysSum
+                Layout.fillWidth: true
+                text: power.cards[0].value + " available" + (power.note !== "" ? "  ·  " + power.note : "")
+                color: power.alarm ? Theme.colWarn : Theme.colDim
+                font.family: Theme.uiFont
+                font.pixelSize: Theme.fontSmall
+                elide: Text.ElideRight
+            }
+            Text {
+                text: power.details ? "expand_less" : "expand_more"
+                color: Theme.colDim
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.iconBar
+                font.variableAxes: Theme.iconAxes
+            }
+        }
+        MouseArea {
+            id: sysArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: power.detailsToggled()
+        }
+        KeyTarget {
+            onActivated: power.detailsToggled()
+        }
+    }
+
     // ── The readings: all from the bar's own 2 s snapshot, no read of their own ──
     readonly property var cards: {
         const b = power.bar;
@@ -223,18 +276,21 @@ ColumnLayout {
         ];
     }
     RowLayout {
+        visible: power.details
         Layout.fillWidth: true
         spacing: Theme.sp2
         Repeater {
-            model: power.cards
+            // By COUNT, each column reading its own entry (the same reason as the Center's status row).
+            model: power.cards.length
             delegate: Rectangle {
                 id: card
-                required property var modelData
+                required property int index
+                readonly property var modelData: power.cards[card.index]
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
                 implicitHeight: cardCol.implicitHeight + 2 * Theme.sp2
                 radius: Theme.radiusControl
-                color: Qt.alpha(Theme.colText, 0.04)
+                color: "transparent" // a column of text, not a box
                 Accessible.role: Accessible.StaticText
                 Accessible.name: card.modelData.label + " " + card.modelData.value + ", " + card.modelData.caption
                 ColumnLayout {

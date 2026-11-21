@@ -21,6 +21,9 @@ ColumnLayout {
         id: math
     }
     readonly property var cards: math.cards(boot.record)
+    // Everything proven, and the one line the System row shows for it.
+    readonly property bool good: boot.cards.length > 0 && boot.cards.every(c => c.tone === "ok")
+    readonly property string summary: boot.good ? "boot verified" : boot.cards.filter(c => c.tone !== "ok").map(c => c.label.toLowerCase() + " " + c.value.toLowerCase()).join(", ")
     function tone(t) {
         return t === "ok" ? Theme.colOk : t === "warn" ? Theme.colWarn : t === "crit" ? Theme.colCrit : Theme.colUnknown;
     }
@@ -58,7 +61,7 @@ ColumnLayout {
                 Layout.preferredWidth: 0
                 implicitHeight: col.implicitHeight + 2 * Theme.sp2
                 radius: Theme.radiusControl
-                color: hover.hovered || key.focus ? Theme.colHoverFill : Qt.alpha(Theme.colText, 0.04)
+                color: hover.hovered || key.focus ? Theme.colHoverFill : "transparent" // a column of text, not a box
                 readonly property bool showTip: hover.hovered || key.focus
                 onShowTipChanged: if (boot.tips)
                     bootCard.showTip ? boot.tips.show(bootCard, bootCard.modelData.label, bootCard.modelData.value + ": " + bootCard.modelData.caption, math.explain(bootCard.modelData.label)) : boot.tips.hide(bootCard)

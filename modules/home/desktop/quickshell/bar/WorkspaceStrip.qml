@@ -1,7 +1,8 @@
-// The ADAPTIVE WORKSPACE RAIL: one monitor's workspaces, bare on the strip, the active one under a
-// rounded highlight that slides. Each number carries its apps' icons (one per app, up to 3, 2 on the
-// standing screen, then +N; a click focuses that window); occupied reads bright, empty dim; a new
-// window is a yellow tick under the number and a request for attention a red highlight, neither pulsing.
+// The ADAPTIVE WORKSPACE RAIL: one monitor's workspaces, the active one under a highlight that slides.
+// On the clear bar a workspace IS its apps' icons (one per app, up to 3, 2 on the standing screen,
+// then +N; a click focuses that window), an empty one is a dot, and the active one sits in a glass
+// capsule; its number is one hover away. With the strip, each keeps its number, as before. A new
+// window is a yellow tick and a request for attention a red highlight, neither pulsing.
 // The rail, its model (orphans of a gone secondary) and the 0.55 dispatch trap: docs/notes/desktop/bar.md
 import Quickshell.Hyprland
 import QtQuick
@@ -24,6 +25,9 @@ Item {
     property bool placed: false // no slide in from x = 0 on the first frame
     // How many app icons a number carries before "+N": fewer on the standing screen's narrow bar.
     property int maxApps: 3
+    // The clear bar drops the numbers: the icons, or a dot, are the workspace.
+    readonly property bool numbered: !Theme.barClear
+    readonly property int dot: 6
     implicitWidth: wsRow.implicitWidth
     implicitHeight: Theme.barCell
 
@@ -34,8 +38,10 @@ Item {
         x: wsRow.x + (strip.act ? strip.act.x : 0)
         width: strip.act ? strip.act.width : 0
         height: Theme.barCell
-        radius: Theme.radiusControl
-        color: Theme.colCellOpenFill
+        radius: strip.numbered ? Theme.radiusControl : height / 2
+        color: strip.numbered ? Theme.colCellOpenFill : Theme.colBarGlass
+        border.width: strip.numbered ? 0 : Theme.hairline
+        border.color: Theme.colBarGlassEdge
         onVisibleChanged: if (visible)
             Qt.callLater(() => strip.placed = true)
         Behavior on x {
@@ -71,30 +77,40 @@ Item {
                 readonly property var shown: btn.apps.slice(0, strip.maxApps)
 
                 // The number from a template ("01" and "08" never differ), then its icons.
-                implicitWidth: Math.ceil((numBox.width + (btn.shown.length > 0 ? appRow.implicitWidth + Theme.sp1 : 0) + 2 * Theme.sp2) / 4) * 4
+                implicitWidth: Math.ceil(((strip.numbered ? numBox.width + (btn.shown.length > 0 ? appRow.implicitWidth + Theme.sp1 : 0) : (btn.shown.length > 0 ? appRow.implicitWidth : strip.dot)) + 2 * Theme.sp2) / 4) * 4
                 implicitHeight: Theme.barCell
 
                 // Asking for attention: the active highlight, in the alert color, until visited.
                 Rectangle {
                     visible: btn.urgent && !btn.active
                     anchors.fill: parent
-                    radius: Theme.radiusControl
+                    radius: strip.numbered ? Theme.radiusControl : height / 2
                     color: Qt.alpha(Theme.colCrit, 0.22)
                 }
                 Rectangle {
                     visible: area.containsMouse && !btn.active && !btn.urgent
                     anchors.fill: parent
-                    radius: Theme.radiusControl
+                    radius: strip.numbered ? Theme.radiusControl : height / 2
                     color: Theme.colCellHoverFill
                 }
                 Item {
                     id: numBox
                     x: Theme.sp2
-                    width: Math.ceil(tmNum.advanceWidth)
+                    width: strip.numbered ? Math.ceil(tmNum.advanceWidth) : 0
                     height: Theme.barCell
+                }
+                // No number and no window: a dot holds the place, lit when it is the active one.
+                Rectangle {
+                    visible: !strip.numbered && btn.shown.length === 0
+                    anchors.centerIn: parent
+                    width: strip.dot
+                    height: strip.dot
+                    radius: strip.dot / 2
+                    color: btn.active ? Theme.colAccent : (btn.urgent ? Theme.colCrit : Theme.colDim)
                 }
                 Text {
                     id: num
+                    visible: strip.numbered
                     anchors.centerIn: numBox
                     text: strip.host.wsLabel(btn.modelData)
                     color: btn.active ? Theme.colAccent : (btn.urgent ? Theme.colCrit : (btn.exists ? Theme.colText : Theme.colDim))
@@ -111,7 +127,7 @@ Item {
                 // A window opened here: an 8 px yellow tick under the number. Visiting clears it.
                 Rectangle {
                     visible: btn.activity && !btn.active && !btn.urgent
-                    x: Math.round(num.x + (num.width - 8) / 2)
+                    x: strip.numbered ? Math.round(num.x + (num.width - 8) / 2) : Math.round((btn.width - 8) / 2)
                     y: 19
                     width: 8
                     height: 2
@@ -122,7 +138,7 @@ Item {
                     id: appRow
                     z: 1 // above the button's area, so an icon's own click wins
                     visible: btn.shown.length > 0
-                    x: numBox.x + numBox.width + Theme.sp1
+                    x: strip.numbered ? numBox.x + numBox.width + Theme.sp1 : Theme.sp2
                     height: Theme.barCell
                     spacing: Theme.sp1
                     Repeater {
@@ -134,7 +150,9 @@ Item {
                             name: appIcon.modelData.cls
                             pid: appIcon.modelData.pid
                             size: 16
-                            tinted: !btn.active
+                            // Greyed where the strip says which is active; on the clear bar the capsule says it.
+                            tinted: strip.numbered && !btn.active
+                            opacity: strip.numbered || btn.active ? 1 : 0.72
                             readonly property var wins: appIcon.modelData.windows
                             // Several windows of this app here: one 4 px mark per window under the icon, up to three.
                             Row {

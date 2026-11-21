@@ -107,36 +107,45 @@ in
       }
     ];
 
-    # Turning the G1500 on makes it the default sink, as if picked in pavucontrol (SUPER+S).
-    wireplumber.extraScripts."custom/speaker-default.lua" = ''
+    # Any output that shows up (BT headset, USB DAC, the G1500 turning on) becomes the default sink,
+    # as if picked in pavucontrol (SUPER+S). HDMI is left out: it reappears whenever the monitor wakes.
+    # The first seconds after WirePlumber starts are skipped, so boot restores the last choice instead.
+    wireplumber.extraScripts."custom/hotplug-default.lua" = ''
+      local ready = false
+      Core.timeout_add (5000, function () ready = true; return false end)
+
       SimpleEventHook {
-        name = "custom/speaker-default",
+        name = "custom/hotplug-default",
         interests = {
           EventInterest {
             Constraint { "event.type", "=", "node-added" },
             Constraint { "media.class", "=", "Audio/Sink" },
-            Constraint { "node.name", "=", "${speaker}" },
+            Constraint { "device.api", "c", "alsa", "bluez5" },
           },
         },
         execute = function (event)
+          local name = event:get_properties ()["node.name"]
+          if not ready or name == nil or name:find ("hdmi") then
+            return
+          end
           local om = event:get_source ():call ("get-object-manager", "metadata")
           local metadata = om:lookup { Constraint { "metadata.name", "=", "default" } }
           if metadata then
             metadata:set (0, "default.configured.audio.sink", "Spa:String:JSON",
-                Json.Object { ["name"] = "${speaker}" }:to_string ())
+                Json.Object { ["name"] = name }:to_string ())
           end
         end
       }:register ()
     '';
-    wireplumber.extraConfig."90-speaker-default" = {
+    wireplumber.extraConfig."90-hotplug-default" = {
       "wireplumber.components" = [
         {
-          name = "custom/speaker-default.lua";
+          name = "custom/hotplug-default.lua";
           type = "script/lua";
-          provides = "custom.speaker-default";
+          provides = "custom.hotplug-default";
         }
       ];
-      "wireplumber.profiles".main."custom.speaker-default" = "required";
+      "wireplumber.profiles".main."custom.hotplug-default" = "required";
     };
   };
 

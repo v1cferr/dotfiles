@@ -69,6 +69,7 @@ local layer = function(p) return C.glass == "clear-gradient" and "window" or p e
 hg.layer("qs-bar", { preset = layer("ui") })
 hg.layer("qs-dash", { preset = layer("ui") })
 hg.layer("qs-panel", { preset = layer("panel") })
+hg.layer("qs-island", { preset = layer("panel") }) -- the open island, the NixOS Center: one sheet of glass
 
 -- Where glass never goes: the games, Picture-in-Picture and Flameshot's frozen overlay (rules.lua
 -- keeps their other rules). The tag wins over the global switch.

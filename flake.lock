@@ -77,11 +77,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1795050964,
-        "narHash": "sha256-Tbi1JXhKcmolf3ESeLDi4geC8EzbDDNbiHCnWiPBPiA=",
+        "lastModified": 1795222252,
+        "narHash": "sha256-naIx92KEkZsHm4tUZTLynC0Zw7qT3j/ECH4N4qKwE9M=",
         "owner": "nix-community",
         "repo": "browser-previews",
-        "rev": "43e1d797e4541ea61682f541cf7502c81c3ec15a",
+        "rev": "bcaf60d35303beea9088a61f5cbead58b69d0287",
         "type": "github"
       },
       "original": {
@@ -98,11 +98,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794934772,
-        "narHash": "sha256-csu6Jk0KUqiyyVXLOUmy7efn5y3aRq+ConWf0MqI29U=",
+        "lastModified": 1795223295,
+        "narHash": "sha256-SbsS1bZx97OdZ+2yd7aupAkwOk+BBCdW+DTX4T6I0BU=",
         "owner": "aaddrick",
         "repo": "claude-desktop-debian",
-        "rev": "adaec9803a00a72bde48a44dbd0f0419ee7fca3f",
+        "rev": "f7dd9c8441f0da7b50e5ba4c713134eef1bdbb0b",
         "type": "github"
       },
       "original": {
@@ -719,11 +719,11 @@
     "vicinae-extensions": {
       "flake": false,
       "locked": {
-        "lastModified": 1794927628,
-        "narHash": "sha256-JPXVn5d45Vmog/QElkKrGnNiCfavLY63x+rac8FWc+I=",
+        "lastModified": 1795217763,
+        "narHash": "sha256-XMuPu1ycx4aXiBuxwabMSAMYGhimZaEvfkPSf0GgneY=",
         "owner": "vicinaehq",
         "repo": "extensions",
-        "rev": "7f5e77930ba3a5c35bc2f21d41e539a430429de6",
+        "rev": "85282aa0fee6a3b8563db89f1874833c9e33e231",
         "type": "github"
       },
       "original": {

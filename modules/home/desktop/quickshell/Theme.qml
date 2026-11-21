@@ -87,11 +87,14 @@ Singleton {
             property bool controlCenter: true
             property bool island: true
             property bool vpn: true
+            property bool barClear: true
         }
     }
     readonly property bool controlCenterOn: shellCfg.controlCenter
     readonly property bool islandOn: shellCfg.island
     readonly property bool hasVpn: shellCfg.vpn
+    // The bar with NO strip: its items sit on the wallpaper, and only the island is a surface.
+    readonly property bool barClear: shellCfg.barClear
 
     readonly property string primaryMonitor: mon.primary
     readonly property string secondaryMonitor: mon.secondary
@@ -203,6 +206,13 @@ Singleton {
     readonly property color colIslandEdge: Qt.tint(colIsland, colEdge) // the hairline, opaque for the same reason
     // An item's width from its content, on a 4 px module, so a changing value rarely moves a neighbor.
     function barCellWidth(content) { return Math.ceil((content + 2 * theme.barPad) / 4) * 4; }
+    // On the clear bar a text carries its own 1 px shade (the text's own style, no effect), so it
+    // reads over any photo; and the two things that are surfaces there take the strip's glass.
+    readonly property int barTextStyle: barClear ? Text.Raised : Text.Normal
+    readonly property color colBarShade: aa("#000000", "8c")
+    readonly property color colBarGlass: barClear ? colSurfaceBar : colCellHoverFill
+    readonly property color colBarGlassEdge: barClear ? colEdge : "transparent"
+    readonly property color colBarQuiet: barClear ? colSubtext : colText // a status with nothing to say
     // A control's height off the bar (a panel's icon button, a calendar arrow).
     readonly property int barControl: 28
     // Where floating things stop short of the screen's edge: Hyprland's gaps_out (appearance.lua).

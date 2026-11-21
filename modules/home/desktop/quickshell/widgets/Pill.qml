@@ -79,6 +79,8 @@ Item {
             font.family: pill.symbol ? Theme.iconFont : Theme.uiFont
             font.pixelSize: pill.symbol ? Theme.iconSymbol : Theme.iconBar
             font.variableAxes: pill.symbol ? Theme.iconAxes : ({})
+            style: Theme.barTextStyle
+            styleColor: Theme.colBarShade
         }
         Text {
             visible: pill.label !== ""
@@ -90,6 +92,8 @@ Item {
             font.weight: (pill.bold) ? Theme.weightStrong : Theme.weightText
             font.features: Theme.fontTabular
             elide: Text.ElideRight
+            style: Theme.barTextStyle
+            styleColor: Theme.colBarShade
         }
         Text {
             visible: pill.sub !== ""
@@ -97,6 +101,8 @@ Item {
             color: Theme.colSubtext
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontSmall
+            style: Theme.barTextStyle
+            styleColor: Theme.colBarShade
         }
         Text {
             visible: pill.badge !== ""
@@ -104,6 +110,8 @@ Item {
             color: pill.badgeColor
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontBody
+            style: Theme.barTextStyle
+            styleColor: Theme.colBarShade
         }
     }
     MouseArea {

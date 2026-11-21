@@ -262,7 +262,9 @@ Item {
         width: Math.round(2 * capsule.span)
         height: Theme.barCell
         radius: height / 2
-        color: isle.wide ? "transparent" : Theme.colCellHoverFill
+        color: isle.wide ? "transparent" : Theme.colBarGlass
+        border.width: isle.wide ? 0 : Theme.hairline
+        border.color: Theme.colBarGlassEdge
         opacity: isle.shown ? 1 : 0
         Behavior on opacity {
             NumberAnimation {

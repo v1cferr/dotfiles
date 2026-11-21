@@ -56,18 +56,22 @@ PanelWindow {
         id: barContent
         anchors.fill: parent
 
-        // ── The surface: one frosted strip, a sheen on its top row, a hairline at its foot ──
+        // ── The surface: one frosted strip, a sheen on its top row, a hairline at its foot. The
+        // clear bar (Theme.barClear) draws none of it: its items sit on the wallpaper. ──
         Rectangle {
+            visible: !Theme.barClear
             anchors.fill: parent
             color: Theme.colSurfaceBar
         }
         Rectangle {
+            visible: !Theme.barClear
             anchors.left: parent.left
             anchors.right: parent.right
             height: Theme.hairline
             color: Theme.colSheen
         }
         Rectangle {
+            visible: !Theme.barClear
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom

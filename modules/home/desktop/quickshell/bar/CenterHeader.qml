@@ -1,5 +1,5 @@
-// The NixOS Center's HEAD: its name left of the logo and its four switches right of it (the idle
-// timeouts, the away screen, do-not-disturb, clear), on the row the island's capsule was.
+// The NixOS Center's HEAD: its name left of the logo and its three switches right of it (the idle
+// timeouts, do-not-disturb, clear), on the row the island's capsule was.
 // The island's window places it; the logo between the two halves is not its to draw.
 // docs/notes/desktop/nixos-center.md
 import QtQuick
@@ -38,19 +38,6 @@ RowLayout {
         stateText: head.bar.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"
         action: head.bar.hypridleOn ? "Click to disable" : "Click to enable"
         onClicked: head.bar.toggleIdle()
-    }
-    HeadButton {
-        // The away screen (Away.qml) covers the bar and this panel, so it only ever turns it on.
-        glyph: "󰽥"
-        tint: Theme.colSubtext
-        tips: head.tips
-        name: "Away screen"
-        stateText: "Screens and LEDs dark, the PC keeps working"
-        action: "Click to go away · Enter comes back"
-        onClicked: {
-            head.bar.closePanels();
-            Away.enter();
-        }
     }
     HeadButton {
         glyph: Notifs.dnd ? "󰂛" : "󰂚"

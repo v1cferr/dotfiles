@@ -442,7 +442,7 @@ surface, never a darker wallpaper: the photo stays as it is.
 ### The blur, and `solid`
 
 `appearance.lua` blurs exactly the shell's named layers, `qs-bar`, `qs-dash` and `qs-panel` (the
-island, `qs-island`, is opaque and takes none), with
+island's own, `qs-island`, since 21/11/2026), with
 the global `decoration.blur` settings, and `ignore_alpha = 0.5` keeps the blur off their transparent
 margins: the gaps between bento cards show the photo sharp, and only what sits
 under glass is frosted. Every other Quickshell layer keeps the default `quickshell` namespace and is

@@ -1,6 +1,15 @@
 # History: november 2026
 
-14 entries. Index in [README.md](../README.md).
+15 entries. Index in [README.md](../README.md).
+
+- [x] The NixOS Center as one island of glass (asked 21/11/2026; 21/11/2026). How and why:
+      [notes/desktop/island.md](../../notes/desktop/island.md#open).
+      • ONE SHAPE IN ONE WINDOW: the capsule itself grows into the Center; the head and the
+        wider card under it, two windows that had to be opaque, are gone.
+      • A HOVER OPENS IT, a click pins it; the summary a hover used to open is gone.
+      • GLASS, the most see-through of the shell, where the compositor blurs its layer.
+      • CLEANER: columns of text for filled cards, the system's detail behind one row.
+      • A REBUILD ROW EVERY 2 s was found by measuring the idle cost, and modeled by count.
 
 - [x] The bar with no strip (21/11/2026; asked 21/11/2026). How and why:
       [notes/desktop/bar.md](../../notes/desktop/bar.md#the-clear-bar-21112026).

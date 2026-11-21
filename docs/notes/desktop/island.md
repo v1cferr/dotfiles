@@ -58,9 +58,9 @@ shows or not, so an event never moves a workspace or an icon. The capsule is sym
 take the width of the wider one, an icon and a name left of the logo, a level and a word right of
 it, each eliding past its room.
 
-With media playing or notifications not seen yet, the capsule OPENS downward on a hover, and a
-click keeps it open ([open](#open)). On anything else a click leads to the surface that holds the
-rest, a level or a VPN to the Control Center, and the disk warning is dismissed by its click.
+A hover on the capsule OPENS the island into the NixOS Center, and a click pins it
+([open](#open)). On a level or a VPN the click leads to the Control Center instead, and the disk
+warning is dismissed by its click.
 
 It exists only on the main monitor's full bar. With no screen wide enough for it (`Island.live`),
 the OSD and the toasts do what they always did, so no event is ever sent to a capsule nobody sees.
@@ -75,11 +75,8 @@ the example):
 - With nothing else to show, the capsule holds `3 new` left of the logo and the icons right of it.
 - While media plays, the icons sit at the far end, after the title. Unseen apps are the least
   urgent thing of all (priority 9, no end), so they never hide what plays.
-- The open island lists the three newest of them as the same cards the NixOS Center uses
-  ([open](#open)).
-- Seeing them there does not mark them seen. `Mark as seen` under them does, and so does opening
-  the NixOS Center, by the row beside it. A notification that is dismissed or expires leaves the
-  list by itself.
+- Opening the island shows them in the Center's history and marks them seen, by a hover as by a
+  click ([open](#open)). A notification that is dismissed or expires leaves the list by itself.
 
 `Notifs.qml` owns the list (`unseenList`, and `unseenApps`, one entry per app, newest first); the
 count on the logo's dot is the same number.
@@ -137,77 +134,74 @@ graph runs at 512 while the wave shows, where it would idle at 1024 or more.
 
 ## Open
 
-The island has three sizes of ONE shape (12/11/2026). It was asked for in two steps the same day,
-with the Dynamic Island's three presentations and the notch apps of macOS (boring.notch,
-NotchNook) as the picture: first "the whole capsule one hover zone, opening downward", then "the
-whole NixOS Center as an island that adapts". Before, a hover on the media opened a card under the
-bar, a hover on the apps' icons another, and the logo's click a third, each a separate surface.
+Open, the island IS the NixOS Center: one shape of glass in one window, grown out of the capsule
+(21/11/2026). It was asked for in three steps. On 12/11/2026: "the whole capsule one hover zone, opening
+downward", then "the whole NixOS Center as an island that adapts", which gave a summary on a
+hover and the Center on a click, drawn as a head in the bar's window and a wider body under it.
+On 21/11/2026 the owner sent a capture of that and asked for it cleaner, more fluid, opened by a hover
+always, ONE thing with the island instead of two, and with stronger glass.
 
-| Size        | How it comes                                              | What it shows                                    | How it goes                          |
-| ----------- | --------------------------------------------------------- | ------------------------------------------------ | ------------------------------------ |
-| At rest     | always                                                    | the capsule, or the logo alone                   |                                      |
-| The summary | the pointer resting on the capsule, with media or unseen  | what plays, and the three newest unseen          | 400 ms after the pointer left it     |
-| Full        | a click on the logo or the capsule, SUPER, `notif toggle` | the NixOS Center, what plays right under its top | the logo again, a click outside, Esc |
+| State  | How it comes                                              | How it goes                          |
+| ------ | --------------------------------------------------------- | ------------------------------------ |
+| Rest   | always: the capsule, or the logo alone                    |                                      |
+| Open   | the pointer resting 200 ms on the capsule or the logo     | 400 ms after the pointer left it     |
+| Pinned | a click on the logo or the capsule, SUPER, `notif toggle` | the logo again, a click outside, Esc |
 
-- **One shape, two windows.** The head is the capsule, in the bar's window: open, it is as wide
-  as the island gets (416 px), opaque, and reaches the bar's foot with its lower corners squared.
-  The body is `bar/IslandDrop.qml`, a layer that starts where the bar ends. Both are
-  `Theme.colIsland`, opaque, because glass over two different backdrops would show where they meet.
-- **One outline** for the body (`QtQuick.Shapes`): for the summary a column as wide as the head;
-  for the Center 520 px, a SHOULDER 52 px past each side of the head, which leaves 8 px under the
-  bar and joins the head by a curve. The Center keeps its 520 px layout and no bar item moves; the
-  curve and the shoulders are inside the body's window, off the bar's items.
-- **Always mapped, empty while shut.** The body's window exists from the start, zero tall and
-  taking no pointer (its mask is the body), so opening is the island's own motion from its first
-  frame: no layer to map, no fade of the compositor's over it. It is shown one turn of the event
-  loop after it is made, never at once: on 12/11/2026 the first hot reload after it went live
-  crashed the shell in `QWindow::setScreen` (Quickshell 0.3.2 restarted itself, and the
-  notification history in memory was lost). A stand-in window of ten lines, visible from its
-  first instant, did the same on every reload in the harness; shown a turn late, six reloads in a
-  row passed, one of them with the Center open.
-- **Full opens with nothing in the capsule too**: the head grows out of the logo and the body
-  comes down. From the summary it grows in place, taller and out at the shoulders.
-- **The keyboard only at full size.** The summary never takes it from the window under it.
-- **The hover.** The pointer resting on the capsule for `Theme.hoverIntent` opens the summary; the
-  zone is the capsule's width from the screen's top edge to the bar's foot, so a pointer thrown at
-  the top of the screen lands on it. A pinned panel is never taken down by a hover, and the summary
-  opens only on media playing or notifications not seen.
-- **Every strip has the head.** The island rests only on the main monitor, but the other
-  monitor's logo opens the Center there in the same shape, the head drawn while it is open.
-- **Who decides.** Full is the bar's coordinator's `center` pin, as the Center always was
-  ([nixos-center.md](nixos-center.md#how-it-opens-and-closes)); `Island.qml` follows it (`full`)
-  and owns the rest (`open`, the two hovers, `where`). `qs ipc call bar island open` and `close`
-  hold the summary with no pointer, and `bar islandReach` says how far the body reaches, in px.
+- **One window.** `bar/IslandDrop.qml` starts at the top of the screen and draws the whole shape:
+  a rounded rectangle that is the capsule at one end of its motion (same place, same width, the
+  capsule's own corners) and the Center at the other, 520 px wide. While any of it is out, the
+  bar's capsule and logo step aside and this window draws the logo on the same pixels. Two
+  windows had made it opaque (glass over two backdrops shows where they meet) and had left a
+  shoulder where the widths differed; one window has neither.
+- **The bar gets a hole.** While the island is out, the bar window's input mask leaves out the
+  stretch it covers (`BarStrip.qml`), so the pointer reaches the island whichever of the two
+  windows the compositor stacks on top.
+- **Always mapped, empty while shut.** Zero tall and taking no pointer, so opening is the island's
+  own motion from its first frame: no layer to map, no fade of the compositor's over it. It is
+  shown one turn of the event loop after it is made, never at once: on 12/11/2026 the first hot
+  reload after it went live crashed the shell in `QWindow::setScreen` (Quickshell 0.3.2 restarted
+  itself, and the notification history in memory was lost). A stand-in window of ten lines,
+  visible from its first instant, did the same on every reload in the harness.
+- **A hover opens it, a click pins it.** The zone is the capsule from the screen's top edge to the
+  bar's foot, and the logo, so it opens with nothing in the capsule too. Open by a hover it is the
+  Center just the same (what it shows counts as seen) but never takes the keyboard; pinned is the
+  bar's coordinator's `center` pin ([nixos-center.md](nixos-center.md#how-it-opens-and-closes)).
+  Dismissed with the pointer still on it, it does not open again until the pointer has been away.
+  A pinned panel is never taken down by a hover.
+- **Glass.** `Theme.colSurfaceIsland`: 60% of the palette's bg, the most see-through surface of
+  the shell, over the compositor's blur and the HyprGlass preset its layer `qs-island` gets
+  (`hypr/lua`). HyprGlass takes a surface only from half opaque up, which is the floor.
+  `my.shell.island.glass.enable = false` makes it opaque, and so does a shell whose generation has
+  not written the flag yet: see-through over an unblurred desktop is not readable (the harness,
+  which has no blur, showed exactly that over the standing monitor's band).
+- **On the other monitor** a click on its logo pins the Center there, in the same shape. The
+  island rests, and opens on a hover, only on the main monitor.
+- `Island.qml` owns the state (`open`, `full`, the three hovers, `where`, `headHalf`);
+  `qs ipc call bar island open` and `close` stand in for a hover, and `bar islandReach` says how
+  far it reaches under its head, in px.
 
-| Part                 | Motion                                                                   |
-| -------------------- | ------------------------------------------------------------------------ |
-| The head widening    | the capsule's spring, held at the island's width (no overshoot there)    |
-| The body coming down | the same spring on its height; what it holds is revealed, not squeezed   |
-| A long way down      | past 400 px the spring is damped at 0.45 instead of 0.37: it settles     |
-| The shoulders        | the spring on their reach, out with the Center and back with it          |
-| What it holds        | two beats 80 ms apart; the summary and the Center trade places by a fade |
-| Shutting             | an ease-out over `motionHover`; the head narrows when the body is gone   |
+| Part          | Motion                                                                          |
+| ------------- | ------------------------------------------------------------------------------- |
+| The width     | the island's spring, from the capsule's width to 520 px, never past the window  |
+| The height    | the same spring, damped at 0.45 past 400 px of travel: the Center settles       |
+| What it holds | two beats 80 ms apart: its head, then the Center; revealed, never squeezed      |
+| Shutting      | an ease-out over `motionHover`, back to the capsule's width, which then returns |
 
-**Measured on 12/11/2026** in the harness, every state driven over IPC:
+**Measured on 21/11/2026** in the harness, every state driven over IPC:
 
-- The summary's spring: the body passed its 269 px by 9.7 px (3.6%) and was within half a pixel
-  of rest after 352 to 374 ms; shutting took 112 ms over 8 frames.
-- The Center's: with the island's own damping its 953 px were passed by 38.9 px, more than the
-  slack under it. Three dampings were traced: 0.70 took 922 ms to rest, 0.55 took 655, and 0.45
-  passed by 0.9 px and rested in 425 ms, halfway down at 88 ms and nine tenths at 185. 0.45 it is.
-- The seam: on the rows where the two windows meet (y 33 and 34) the fill is the same color and
-  the outline runs from x 1072 to 1487 on each. The body's hairline is drawn by the outline and
-  comes out one or two levels off the head's (46,50,73 against 47,52,74), and one row lighter
-  where the curve to the shoulder begins.
-- Symmetry about the logo (x 1280): head 208 px each side in every size; the summary's body 208;
-  the Center's 260, and 256 on the row through its shoulders' corners. On the second monitor
-  (center 540): head 202 and body 258 each side, counting the fill alone.
-- Opening the Center from the second monitor's logo left the main monitor's capsule as it was.
-- Cost, with the machine loaded that evening (load average 25), two 12 s windows each: 20.75% to
-  21.42% of a core on the tree before, 19.42% to 20.33% on this one with the island never opened,
-  21.58% to 21.83% after the Center was opened once and shut. Earlier the same day, quiet, the
-  summary alone: 6.80% to 7.47% shut against 7.27% to 7.67% before, and 10.73% to 11.47% open on
-  what plays.
+- The spring: 744 px down, passed by 0.7 px, within half a pixel of rest after 368 to 386 ms, half
+  way at 64 to 82 ms and nine tenths at 161 to 178; shutting took 78 to 112 ms over 8 frames.
+- Symmetry about the logo: the open shape 260 px each side of x 1280, on the capsule's row and
+  300 px down; the resting capsule 147; on the second monitor (center 540) 260 and 260.
+- The logo: in its 20 px box, no pixel changed by more than 24 levels between the island shut and
+  open (the glass behind it differs; an edge that moved would differ by far more).
+- Hot reloads: two each with the island shut, open by a hover and pinned, and one from the tree
+  that was live to this one: no crash.
+- Idle cost, three 12 s windows on a quiet machine: 4.83% to 5.75% of a core with the island
+  never opened, against 4.25% to 4.58% on the tree before. After one opening and shutting it was
+  6.75% to 6.92%: the Center, once made, kept rebuilding its status columns at every 2 s tick of
+  the bar's snapshot, shown or not (it did before this change too). The columns are modeled by
+  count now; a game started before that could be measured again.
 
 ## The media card
 
@@ -324,8 +318,7 @@ click on it or in what it opens. How the spring LOOKS was never seen by a
 person: only its numbers were measured. Of the wave: how it looks moving, and what it costs live with a game open. Of the media panel: the seek by press and drag, the three keys,
 the volume and the way to the window on a real player (the stand-in's do nothing, and nothing in
 the harness may change a volume). Of the open island: the hover itself (no pointer can be held still in the harness, so the rest
-that opens the summary and the leaving that shuts it were never seen), every click, the click
-outside that shuts the Center (the grab is Hyprland's), the keys inside the Center in its new
-window (the harness has nothing to type with), `my.theme.motion = "off"`, how the opening LOOKS,
-whether Hyprland stacks the two windows as sway did, and a screenshot taken from the Center with
-the new wait.
+that opens it and the leaving that shuts it were never seen), every click, the click outside that
+shuts it pinned (the grab is Hyprland's), its keys (the harness has nothing to type with), the
+blur and HyprGlass on its layer and so how readable the glass is, what its always mapped layer
+costs the GPU while shut, `my.theme.motion = "off"`, and how the opening LOOKS.

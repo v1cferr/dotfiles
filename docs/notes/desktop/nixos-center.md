@@ -10,15 +10,15 @@ the band's bell and the power menu are gone; their functions are all here.
 
 ## What is in it
 
-| Part          | Holds                                                                                                   |
-| ------------- | ------------------------------------------------------------------------------------------------------- |
-| Header        | the title, then four icons with a name: idle timeouts, the away screen, do-not-disturb, clear all       |
-| Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen)        |
-| Status        | the weather, CPU and GPU temperature, RAM, disk: five cards (11/11/2026)                                |
-| Power         | the Balanced/Gaming/Eco profile, what its last apply did, and five memory and GPU readings (18/10/2026) |
-| Boot          | Secure Boot, the loader and the integrity check, as `boot-trust` proved them (22/10/2026)               |
-| Screenshots   | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3)                  |
-| Session       | the six session actions, their commands exactly the old power menu's                                    |
+| Part          | Holds                                                                                                            |
+| ------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Head          | on the capsule's row, around the logo: the title, then idle timeouts, the away screen, do-not-disturb, clear all |
+| Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen)                 |
+| Status        | the weather, CPU and GPU temperature, RAM, disk: five columns of text (11/11/2026)                               |
+| Power         | the Balanced/Gaming/Eco profile and what its last apply did (18/10/2026)                                         |
+| System        | one row, folded: five memory and GPU readings, and what `boot-trust` proved of the boot (22/10/2026)             |
+| Screenshots   | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3)                           |
+| Session       | the six session actions, their commands exactly the old power menu's                                             |
 
 The history scrolls by itself, so however long it grows, the three sections below it stay in reach.
 
@@ -96,10 +96,18 @@ with?", so the cards stay readable without the boot notes.
 
 It is the `center` pin in the bar's coordinator
 ([bar.md](bar.md#contextual-expansion-one-panel-at-a-time-17102026)), so it follows the same rules as
-every bar panel, with two differences: it opens on a CLICK only, never on hover, and since
-12/11/2026 it has no window of its own. The island's body draws it (`bar/IslandDrop.qml`), holds
-its keys and closes it on a click outside; the card itself (`bar/CenterCard.qml`) owns no surface.
-A hover on the island opens its summary, which is not the Center.
+every bar panel, with two differences. It has no window of its own: the island's window draws it
+(`bar/IslandDrop.qml`), holds its keys and closes it on a click outside, and the card itself
+(`bar/CenterCard.qml`) owns no surface. And since 21/11/2026 a HOVER on the island or the logo opens it
+too, without the pin: open that way it shows the same things and takes no keyboard, and it shuts
+when the pointer leaves ([island.md](island.md#open)). The rules below are the pin's.
+
+**Cleaner, 21/11/2026** (asked for with a capture of the Center as it was): the head moved up to the
+capsule's row; the status values, the readings and the boot's proof lost their filled boxes and
+are columns of text; and the five readings and the boot section fold behind one `System` row
+that sums them in a line (`6.5 GB available · boot verified`). The row opens by itself, and in
+the warning color, while the boot has something short of proven. Every action, key and tip is
+as it was.
 
 - **Where:** hung from the logo of the bar that was clicked, as one shape with it: 520 px wide or
   the screen's width less the windows' outer gap on each side, flush under the bar. Measured on

@@ -17,7 +17,7 @@ local bluetooth      = "blueman-manager"  -- SUPER+B
 hl.bind(mainMod .. " + Q",         hl.dsp.exec_cmd(launcherApps))                 -- launcher (Vicinae)
 -- SUPER alone, on RELEASE and only as a click (no mouse drag in between): the Windows-key menu.
 hl.bind(mainMod .. " + SUPER_L",   hl.dsp.exec_cmd("qs ipc call notif toggle"), { release = true, click = true })  -- the NixOS Center
-hl.bind(mainMod .. " + A",         hl.dsp.exec_cmd("qs ipc call bar toggle control")) -- Control Center
+hl.bind(mainMod .. " + X",         hl.dsp.exec_cmd("qs ipc call bar toggle control")) -- Control Center (A went to the tape)
 hl.bind(mainMod .. " + RETURN",    hl.dsp.exec_cmd(terminal))                     -- terminal
 hl.bind(mainMod .. " + BACKSPACE", hl.dsp.exec_cmd(terminalWithAi))               -- terminal with AI (Claude Code)
 hl.bind(mainMod .. " + E",         hl.dsp.exec_cmd(fileManager))                  -- files (Dolphin)
@@ -79,6 +79,10 @@ hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
 hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
+-- WASD on the left hand: A/D walk the tape, W climbs a stack (S stays the mixer; down = arrow).
+hl.bind(mainMod .. " + A",     hl.dsp.focus({ direction = "left" }))   -- focus the window on the left
+hl.bind(mainMod .. " + D",     hl.dsp.focus({ direction = "right" }))  -- focus the window on the right
+hl.bind(mainMod .. " + W",     hl.dsp.focus({ direction = "up" }))     -- focus the window above, in a stack
 
 -- The scrolling layout's tape (global; see appearance.lua). NO GUARD, because ALL workspaces
 -- are scrolling: if any goes back to dwindle, read docs/notes/desktop/keybinds.md FIRST.
@@ -86,6 +90,8 @@ hl.bind(mainMod .. " + comma",          hl.dsp.layout("move -col"))       -- tap
 hl.bind(mainMod .. " + period",         hl.dsp.layout("move +col"))       -- tape right, 1 column
 -- The MX Master's thumbwheel = SUPER plus the horizontal wheel; logiops no longer diverts it,
 -- and the 300ms scroll_event_delay stopped mattering for a COLUMN jump. See the notes.
+hl.bind(mainMod .. " + CTRL + A",       hl.dsp.layout("move -col"))       -- tape left, focus unchanged
+hl.bind(mainMod .. " + CTRL + D",       hl.dsp.layout("move +col"))       -- tape right, focus unchanged
 hl.bind(mainMod .. " + mouse_left",     hl.dsp.layout("move -col"))       -- thumbwheel left
 hl.bind(mainMod .. " + mouse_right",    hl.dsp.layout("move +col"))       -- thumbwheel right
 -- The VERTICAL wheel moves along the tape too (it used to switch workspaces, never used).
@@ -96,6 +102,8 @@ hl.bind(mainMod .. " + mouse_up",       hl.dsp.layout("move -col"))       -- whe
 -- window out of a stack, expel (SUPER+O) first.
 hl.bind(mainMod .. " + SHIFT + comma",  hl.dsp.layout("swapcol l"))       -- swap with the column on the left
 hl.bind(mainMod .. " + SHIFT + period", hl.dsp.layout("swapcol r"))       -- swap with the column on the right
+hl.bind(mainMod .. " + SHIFT + A",      hl.dsp.layout("swapcol l"))       -- swap with the column on the left (WASD)
+hl.bind(mainMod .. " + SHIFT + D",      hl.dsp.layout("swapcol r"))       -- swap with the column on the right (WASD)
 hl.bind(mainMod .. " + ALT + comma",    hl.dsp.layout("colresize -conf")) -- cycle the width down, ONLY the active column
 hl.bind(mainMod .. " + ALT + period",   hl.dsp.layout("colresize +conf")) -- cycle the width up, ONLY the active column
 -- View modes: they change the WHOLE tape (ALT+,/. above is only the active column).
@@ -106,6 +114,9 @@ hl.bind(mainMod .. " + CTRL + comma",   hl.dsp.layout("colresize all 0.5")) -- e
 -- Stacking and unstacking windows inside the column.
 hl.bind(mainMod .. " + I",              hl.dsp.layout("consume"))         -- pull the window into the previous column
 hl.bind(mainMod .. " + O",              hl.dsp.layout("expel"))           -- expel the window into a column of its own
+-- The same pair on WASD: ALT+A stacks the window under the left column, ALT+D puts it back beside.
+hl.bind(mainMod .. " + ALT + A",        hl.dsp.layout("consume"))         -- stack into the column on the left
+hl.bind(mainMod .. " + ALT + D",        hl.dsp.layout("expel"))           -- unstack: side by side again
 -- `fit active` and NOT `fit_into_view`: 0.55.4 answers "no such layoutmsg". Every layout
 -- message requires a FOCUSED window.
 hl.bind(mainMod .. " + G",              hl.dsp.layout("fit active"))      -- recenter the active column

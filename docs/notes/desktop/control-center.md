@@ -1,6 +1,6 @@
 # The Control Center: the everyday switches, in one panel
 
-`modules/home/desktop/quickshell/control/`, opened from the bar's right side or with SUPER+A. One
+`modules/home/desktop/quickshell/control/`, opened from the bar's right side or with SUPER+X. One
 panel for what changes during a day: the network, Bluetooth, the VPN, do-not-disturb, the playing
 track and the sound. Before 12/11/2026 each of these was its own item on the bar with its own
 popover, or had no control at all (the volume was a scroll and a mute, Bluetooth a key that opened

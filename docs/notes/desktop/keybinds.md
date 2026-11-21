@@ -111,6 +111,24 @@ raising a Lua error. The guard (the version in git, commit 7f74ae8) filtered by
 lambda the dispatch is `hl.dispatch(d)`, never `d()` ("dispatcher objects cannot be called
 directly").
 
+### WASD on the tape
+
+The left hand drives the tape without leaving the home row (since 21/11/2026; SUPER+A used to be the
+Control Center, now SUPER+X):
+
+| Bind              | Message / dispatcher       | What it does                                     |
+| ----------------- | -------------------------- | ------------------------------------------------ |
+| SUPER+A / D       | `focus` left / right       | focus the neighbor; `follow_focus` scrolls to it |
+| SUPER+W           | `focus` up                 | the window above inside a stack                  |
+| SUPER+SHIFT+A / D | `swapcol l` / `swapcol r`  | the same as SHIFT+`,`/`.`                        |
+| SUPER+CTRL+A / D  | `move -col` / `move +col`  | the same as SUPER+`,`/`.`, focus unchanged       |
+| SUPER+ALT+A       | `consume`                  | STACK the window under the column on its left    |
+| SUPER+ALT+D       | `expel`                    | unstack it, side by side again                   |
+
+S stays the audio mixer, so "down in a stack" is the arrow. ALT+A/D are the directional twins of
+SUPER+I/O (PaperWM's slurp/barf keys, which stay). "One window full height on the left, two stacked
+on the right" is `[A | B/C]`: with three half-width columns, focus C and SUPER+ALT+A.
+
 ### The mouse on the tape
 
 The MX Master's thumbwheel is SUPER plus the horizontal wheel. logiops does NOT divert the wheel

@@ -16,7 +16,7 @@ OSD can never disagree.
 | Network, Bluetooth, VPN, Focus          | The notification history                                    |
 | Now playing                             | Status cards: weather, temperatures, memory, disk           |
 | The volume, the outputs, the microphone | The power profile and the memory behind it                  |
-|                                         | Boot trust, screenshots, the session, idle, the away screen |
+|                                         | Boot trust, screenshots, the session, idle                  |
 
 Do-not-disturb is in both, since it belongs to both subjects, and has one owner (`Notifs.qml`). A
 row at the foot of the Control Center opens the NixOS Center.

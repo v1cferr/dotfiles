@@ -10,15 +10,15 @@ the band's bell and the power menu are gone; their functions are all here.
 
 ## What is in it
 
-| Part          | Holds                                                                                                            |
-| ------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Head          | on the capsule's row, around the logo: the title, then idle timeouts, the away screen, do-not-disturb, clear all |
-| Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen)                 |
-| Status        | the weather, CPU and GPU temperature, RAM, disk: five columns of text (11/11/2026)                               |
-| Power         | the Balanced/Gaming/Eco profile and what its last apply did (18/10/2026)                                         |
-| System        | one row, folded: five memory and GPU readings, and what `boot-trust` proved of the boot (22/10/2026)             |
-| Screenshots   | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3)                           |
-| Session       | the six session actions, their commands exactly the old power menu's                                             |
+| Part          | Holds                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| Head          | on the capsule's row, around the logo: the title, then idle timeouts, do-not-disturb, clear all      |
+| Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen)     |
+| Status        | the weather, CPU and GPU temperature, RAM, disk: five columns of text (11/11/2026)                   |
+| Power         | the Balanced/Gaming/Eco profile and what its last apply did (18/10/2026)                             |
+| System        | one row, folded: five memory and GPU readings, and what `boot-trust` proved of the boot (22/10/2026) |
+| Screenshots   | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3)               |
+| Session       | the six session actions, their commands exactly the old power menu's                                 |
 
 The history scrolls by itself, so however long it grows, the three sections below it stay in reach.
 

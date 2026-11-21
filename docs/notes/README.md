@@ -78,6 +78,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | [gpu](hardware/gpu.md)                                             | the Arc B580 on `xe`, and why the driver stack must NOT go unstable                                |
 | [gpu-rgb](hardware/gpu-rgb.md)                                     | the Steel Legend's LED, the bus everyone assumed wrong, and when to delete the patches             |
+| [peripheral-rgb](hardware/peripheral-rgb.md)                       | the keyboard's and the mouse's LEDs: why their look is declared and never saved from the device    |
 | [fans](hardware/fans.md)                                           | the Arc's fan that was supposed to be uncontrollable, the PCODE path, and the firmware red herring |
 | [monitors](hardware/monitors.md)                                   | the connector SSOT, and why it lives on the system side                                            |
 | [fonts](hardware/fonts.md)                                         | the UI font SSOT, and the fallback coverage                                                        |
@@ -121,7 +122,6 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [dash](desktop/dash.md)                         | the glance band on the standing monitor: vitals, month, CI pages                        |
 | [glance-feed](desktop/glance-feed.md)           | the SQLite network cache: fetch only what changed, paint from disk at boot              |
 | [lockscreen](desktop/lockscreen.md)             | the QML lock (Quickshell), hyprlock as its fallback, hypridle, and the hardware lessons |
-| [away](desktop/away.md)                         | a black screen and dark LEDs while an agent works, and why not DDC or DPMS              |
 | [vault](desktop/vault.md)                       | sensitive apps hide on session lock and ask for the password again after unlock         |
 | [weather](desktop/weather.md)                   | one source for the bar and the lock, and the icon-by-regex trap                         |
 | [theme](desktop/theme.md)                       | dark mode, Kvantum, the Win11 icons, the palette SSOT                                   |

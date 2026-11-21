@@ -153,7 +153,7 @@ or log in again.
 The LG offers 1920x1080 at 60 Hz (`hyprctl monitors`), and a lower refresh lowers the GPU's work
 for that output. It is NOT automated, because the repo's history with this panel is DisplayPort
 link loss, a panel DDC cannot wake, and black screens under Sunshine (see
-[monitors](monitors.md) and [away](../desktop/away.md)), and because Hyprland 0.55 killed `hyprctl
+[monitors](monitors.md) and [backlight](../desktop/backlight.md)), and because Hyprland 0.55 killed `hyprctl
 keyword`, so a runtime mode change needs `hyprctl eval` on `hl.monitor`, untested here. The
 experiment, by hand, with nothing streaming:
 
@@ -211,7 +211,7 @@ readings belong to this log, taken while nobody is at the keyboard.
 
 ## RGB
 
-Not part of any profile. The LEDs are already driven by OpenRGB profiles and the away mode, and
+Not part of any profile. The LEDs are already driven by OpenRGB profiles and their own switch (`rgb-lights`), and
 the gain is too small to justify a second writer of their state.
 
 ## Rejected

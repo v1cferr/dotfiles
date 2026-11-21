@@ -1,5 +1,5 @@
 # The keyboard's and the mouse's LEDs through OpenRGB: the look is declared here, applied at boot,
-# and `rgb-lights on|off` is the switch the away screen flips. Why: docs/notes/desktop/away.md
+# and `rgb-lights on|off` is the switch (two entries in Vicinae). Why: docs/notes/hardware/peripheral-rgb.md
 {
   config,
   lib,

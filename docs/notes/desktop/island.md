@@ -272,8 +272,8 @@ pair stands out of the spread.
 | The media item on the bar      | what plays rests in the capsule; the controls are in the Control Center             |
 
 A notification is never shown twice: `Notifs.qml` sends each one either to `popups` (the toasts) or
-through `arrived` (the island). Do-not-disturb, the away screen's hold and an open NixOS Center
-silence both the same way, and a critical one still pierces all three as a toast.
+through `arrived` (the island). Do-not-disturb and an open NixOS Center
+silence both the same way, and a critical one still pierces both as a toast.
 
 ## Turning it off
 

@@ -86,6 +86,7 @@ export const navigation: NavItem[] = [
     items: [
       { title: "GPU", doc: "notes/hardware/gpu.md" },
       { title: "GPU RGB", doc: "notes/hardware/gpu-rgb.md" },
+      { title: "Peripheral RGB", doc: "notes/hardware/peripheral-rgb.md" },
       { title: "Fans", doc: "notes/hardware/fans.md" },
       { title: "Monitors", doc: "notes/hardware/monitors.md" },
       { title: "Fonts", doc: "notes/hardware/fonts.md" },
@@ -132,7 +133,6 @@ export const navigation: NavItem[] = [
       { title: "Glance band", doc: "notes/desktop/dash.md" },
       { title: "Glance feed", doc: "notes/desktop/glance-feed.md" },
       { title: "Lockscreen", doc: "notes/desktop/lockscreen.md" },
-      { title: "Away screen", doc: "notes/desktop/away.md" },
       { title: "App vault", doc: "notes/desktop/vault.md" },
       { title: "Weather", doc: "notes/desktop/weather.md" },
       { title: "Theme", doc: "notes/desktop/theme.md" },

@@ -19,7 +19,7 @@ in
   ];
 
   # The keyboard (a Redragon Magic Wand Pro, which OpenRGB sees as EVision) and the mouse as they
-  # ship, and dark for the away screen. The EVision has no `Off`, so black Static is its dark.
+  # ship, and their dark for `rgb-lights off`. The EVision has no `Off`, so black Static is its dark.
   my.rgb.peripherals = {
     "EVision Keyboard 0C45:5004" = {
       on.mode = "Spectrum Cycle";

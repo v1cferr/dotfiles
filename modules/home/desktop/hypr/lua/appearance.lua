@@ -39,10 +39,10 @@ hl.config({
       vibrancy = 0.2,
     },
   },
-  -- The tape: 1 window per screen. The ONLY value away from the default; the other 6 scrolling
-  -- settings already are what we want. The dwindle block left with the layout.
+  -- The tape, niri-style: half-width columns (a lone one still fills the screen through
+  -- fullscreen_on_one_column), so 2 windows sit side by side and only the 3rd scrolls.
   scrolling = {
-    column_width = 1.0,
+    column_width = 0.5,
   },
   misc = {
     force_default_wallpaper = 0,  -- without the default anime wallpaper

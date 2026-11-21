@@ -90,6 +90,12 @@ a virtual keyboard (`keyboard-passthrough` in `hyprctl devices`) does go through
 
 ## The scrolling layout's tape
 
+New columns open at HALF width (`column_width = 0.5`, niri's default). `fullscreen_on_one_column`
+(on by default) still stretches a lone column to the whole screen, so 1 window fills it, 2 sit
+side by side, and only the 3rd starts scrolling. Until 21/11/2026 it was `1.0`, which made EVERY
+new window a full-screen column: any second window ran off to the right, and side by side always
+took a manual resize. SUPER+CTRL+`.` brings back the old 1-per-screen view on demand.
+
 `move` scrolls the VIEW without touching the focus; with `follow_mouse=1` passing the mouse over
 the column that came in is enough for it to receive the keyboard. The arrows still hold, because
 `follow_focus` (the default) already brings the focused column into view.
@@ -112,8 +118,8 @@ anymore (see [`mouse.md`](../hardware/mouse.md)): it goes back to emitting nativ
 scrolling inside the apps works normally, and the tape only moves with SUPER held.
 
 The `binds:scroll_event_delay` ceiling (300 ms, ~3 firings/s) stopped being a problem: it was fatal
-for smooth PIXEL scrolling, but for a COLUMN jump 3/s is plenty, all the more with
-`column_width=1.0`, where one column is already the whole screen.
+for smooth PIXEL scrolling, but for a COLUMN jump 3/s is plenty, since a column is half the
+screen or more.
 
 The VERTICAL wheel moves along the tape too. It used to switch workspaces, which was never used,
 since a workspace is always keyboard (SUPER+1-8 or TAB). With no SUPER the wheel behaves normally

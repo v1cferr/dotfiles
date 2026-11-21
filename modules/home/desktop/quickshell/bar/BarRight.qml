@@ -17,7 +17,10 @@ RowLayout {
     readonly property bool trayHere: !right.bar.compact || !right.host.wideUp
     readonly property int trayW: right.trayHere && tray.count > 0 ? tray.stableWidth + Theme.barGap : 0
     // The clock's width from today's date and a template time: tabular digits, so no minute moves it.
-    readonly property int clockW: Theme.barCellWidth(Math.ceil(tmClock.advanceWidth))
+    // On the clear bar the time is the strong part and the date the quiet one, a step apart.
+    readonly property int clockW: Theme.barCellWidth(Math.ceil(tmClock.advanceWidth) + (Theme.barClear ? Theme.sp2 + Math.ceil(tmTime.advanceWidth) : 0))
+    // And the clock stands a breath away from the status left of it.
+    readonly property int clockGap: Theme.barClear ? Theme.sp2 : 0
     // It folds once, when the row would cross the logo: the network's numbers and the VPN's name go.
     // Icons and alerts never fold, and the tray's width comes from its item count alone.
     readonly property int squeeze: right.bar.compact || right.measure(0) <= right.room ? 0 : 1
@@ -35,7 +38,15 @@ RowLayout {
         font.family: Theme.uiFont
         font.pixelSize: Theme.fontBody
         font.features: Theme.fontTabular
-        text: right.host.dateStr + "  00:00"
+        text: Theme.barClear ? right.host.dateStr : right.host.dateStr + "  00:00"
+    }
+    TextMetrics {
+        id: tmTime
+        font.family: Theme.uiFont
+        font.pixelSize: Theme.fontBody
+        font.weight: Theme.weightStrong
+        font.features: Theme.fontTabular
+        text: "00:00"
     }
     TextMetrics {
         id: tmNet
@@ -59,7 +70,7 @@ RowLayout {
     // The row's width at a fold level, from implicit widths and text metrics that do not depend on
     // the level: so the level never feeds back into itself.
     function measure(level) {
-        let w = right.clockW;
+        let w = right.clockW + right.clockGap;
         let n = 1;
         const extra = [[Theme.controlCenterOn, controlPill], [right.volHere, volPill], [!right.host.hypridleOn, idlePill], [right.cpuPegged, cpuPill], [diskPill.shown, diskPill], [bell.active && !right.lean, bell]];
         for (const e of extra)
@@ -211,7 +222,7 @@ RowLayout {
         visible: !right.bar.compact && Theme.controlCenterOn
         // Do Not Disturb shows HERE while it is on, since the bell left the strip.
         icon: Notifs.dnd ? "do_not_disturb_on" : "tune"
-        accent: Notifs.dnd ? Theme.colAlert : Theme.colText
+        accent: Notifs.dnd ? Theme.colAlert : Theme.colBarQuiet
         selected: right.host.pinned === "control"
         onHoveredChanged: right.host.hoverHint("control", controlPill, right.barContent, right.bar, hovered)
         onClicked: right.host.togglePanel("control", controlPill, right.barContent, right.bar)
@@ -223,8 +234,13 @@ RowLayout {
         id: clockPill
         visible: !right.bar.compact
         Layout.preferredWidth: right.clockW
-        label: right.host.dateStr + "  " + right.host.barTimeStr
-        labelColor: Theme.colText
+        Layout.leftMargin: right.clockGap
+        label: Theme.barClear ? right.host.dateStr : right.host.dateStr + "  " + right.host.barTimeStr
+        labelColor: Theme.colBarQuiet
+        badge: Theme.barClear ? right.host.barTimeStr : ""
+        badgeColor: Theme.colText
+        badgeStrong: true
+        gap: Theme.sp2
         selected: right.host.pinned === "cal" || right.host.pinned === "weather"
         onHoveredChanged: right.host.hoverPanel("cal", clockPill, right.barContent, right.bar, hovered)
         onClicked: right.host.togglePanel("cal", clockPill, right.barContent, right.bar)

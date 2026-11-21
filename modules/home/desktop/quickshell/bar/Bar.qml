@@ -99,7 +99,7 @@ Scope {
     }
     function updateClock() {
         const d = sysClock.date;
-        root.dateStr = root.dowAbbr[d.getDay()] + " " + Qt.formatDateTime(d, "dd/MM");
+        root.dateStr = root.dowAbbr[d.getDay()] + " " + (Theme.barClear ? d.getDate() + " " + root.monAbbr[d.getMonth()] : Qt.formatDateTime(d, "dd/MM"));
         root.timeStr = Qt.formatDateTime(d, "HH:mm:ss");
         root.barTimeStr = Qt.formatDateTime(d, "HH:mm"); // the same string all minute: no change signal
         const dk = Qt.formatDate(d, "yyyy-MM-dd");

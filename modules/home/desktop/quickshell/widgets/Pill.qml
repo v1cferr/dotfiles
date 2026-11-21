@@ -20,6 +20,8 @@ Item {
     // A second state in its OWN color, last in the row (the VPN pill's Tor), so it never borrows the accent.
     property string badge: ""
     property color badgeColor: Theme.colDim
+    property bool badgeStrong: false // the badge is the main reading (the clock's time)
+    property int gap: Theme.sp1 // between the row's parts
     property int maxWidth: 0
     // Pinned: its panel is open by a click, so the control stays lit while the pointer is elsewhere.
     property bool selected: false
@@ -59,7 +61,7 @@ Item {
         // Never left of the padding: a clipped label (elided) starts at the pad.
         x: Math.round(Math.max(Theme.barPad, (pill.width - prow.implicitWidth) / 2))
         width: Math.min(prow.implicitWidth, pill.width - 2 * Theme.barPad)
-        spacing: Theme.sp1
+        spacing: pill.gap
         opacity: pill.off ? 0.55 : 1
         Image {
             id: img
@@ -110,6 +112,8 @@ Item {
             color: pill.badgeColor
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontBody
+            font.weight: pill.badgeStrong ? Theme.weightStrong : Theme.weightText
+            font.features: Theme.fontTabular
             style: Theme.barTextStyle
             styleColor: Theme.colBarShade
         }

@@ -48,6 +48,17 @@ this machine's 16 GiB of RAM, which is the REDUCED hiberfile Windows allocates f
 without full hibernation, so the feature is most likely still enabled and the mount can start
 failing after any Windows session.
 
+## A dirty flag Linux left behind is cleared at boot
+
+The refusal also fired for causes on the LINUX side: on 20/11/2026 the shutdown could not unmount
+the busy volume (Wine still held the game), and on 21/11 the previous boot ended with no shutdown
+at all. Both times the volume was only dirty, nothing was hibernated, and `ntfsfix -d` by hand was
+the whole fix. `windows-disk-clear-dirty` (in the host's `hardware.nix`) now runs before the mount
+and does that, but only after `ntfs-3g.probe --readwrite` rules out the cases above: a hibernated
+Windows (14) or an inconsistent NTFS (12, 13) stay dirty, the mount still fails, and the fix stays
+on the Windows side (`chkdsk`). A clean volume is not written at all. This is not `force`: ntfs3
+still never mounts a volume it considers dirty.
+
 ## The other mount options
 
 - `uid=1000,gid=100`: NTFS has no unix owner, so ownership is assigned at mount time or everything

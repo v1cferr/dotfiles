@@ -117,6 +117,41 @@ in
     ];
   };
 
+  # Before the mount: a Linux crash or a busy unmount at shutdown leaves the dirty flag set, and
+  # ntfs3 then refuses the volume (20/11 and 21/11/2026). ntfs-3g.probe tells that case apart from
+  # the dangerous ones: a hibernated Windows (14) or an inconsistent NTFS (12, 13) are left alone, so
+  # the mount still fails loudly and the fix stays on the Windows side. Only a dirty volume that is
+  # otherwise mountable gets `ntfsfix -d`. Still no `force`: docs/notes/boot-and-storage/games-disk.md
+  systemd.services.windows-disk-clear-dirty =
+    let
+      dev = "/dev/disk/by-uuid/26486763486730AB";
+      unit = "dev-disk-by\\x2duuid-26486763486730AB.device";
+    in
+    {
+      description = "Clear the Windows disk's dirty flag unless Windows is hibernated";
+      wantedBy = [ "mnt-windows.mount" ];
+      before = [ "mnt-windows.mount" ];
+      after = [ unit ];
+      bindsTo = [ unit ];
+      unitConfig.DefaultDependencies = false;
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+      path = [ pkgs.ntfs3g ];
+      script = ''
+        # (a clean volume is not written at all)
+        ntfsinfo -m ${dev} | grep -q 'Volume Flags:.*DIRTY' || exit 0
+        rc=0
+        ntfs-3g.probe --readwrite ${dev} || rc=$?
+        case "$rc" in
+          0 | 15) ntfsfix -d ${dev} ;;
+          14) echo "Windows is hibernated: leaving the volume dirty; boot Windows and shut it down fully" ;;
+          *) echo "ntfs-3g.probe answered $rc: leaving the volume for chkdsk" ;;
+        esac
+      '';
+    };
+
   # The btrfs POLICY (scrub, alarms, reclaim, TRIM) lives in modules/nixos/hardware/btrfs.nix: it is
   # guarded by "is the root btrfs?", not by the host. Only the LAYOUT is host-specific.
 

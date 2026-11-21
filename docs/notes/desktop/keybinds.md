@@ -129,6 +129,12 @@ S stays the audio mixer, so "down in a stack" is the arrow. ALT+A/D are the dire
 SUPER+I/O (PaperWM's slurp/barf keys, which stay). "One window full height on the left, two stacked
 on the right" is `[A | B/C]`: with three half-width columns, focus C and SUPER+ALT+A.
 
+SUPER+T does that for any number of windows: every tiled window right of the 2nd column is
+consumed into it, left to right, then `colresize all 0.5` plus `fit all`, and the focus returns
+to where it was. Columns are told apart by the windows' x on screen (`at`), since the Lua API
+exposes no column ids. `promote` exists in the 0.57.2 binary but is undocumented, so the preset
+does not lean on it.
+
 ### The mouse on the tape
 
 The MX Master's thumbwheel is SUPER plus the horizontal wheel. logiops does NOT divert the wheel

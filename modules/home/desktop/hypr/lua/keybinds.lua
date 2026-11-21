@@ -132,6 +132,14 @@ local function at_of(w)
   return a.x or a[1] or 0, a.y or a[2] or 0
 end
 
+-- Tape order: left to right, then top to bottom inside a stack.
+local function by_position(a, b)
+  local ax, ay = at_of(a)
+  local bx, by = at_of(b)
+  if ax ~= bx then return ax < bx end
+  return ay < by
+end
+
 -- SUPER+N goes to workspace N; pressed again while already there, it focuses that workspace's next
 -- window, left to right on the tape, wrapping.
 local function workspace_or_next(i)
@@ -145,12 +153,7 @@ local function workspace_or_next(i)
       if w.mapped and not w.hidden and w.workspace and w.workspace.id == i then list[#list + 1] = w end
     end
     if #list < 2 then return end
-    table.sort(list, function(a, b)
-      local ax, ay = at_of(a)
-      local bx, by = at_of(b)
-      if ax ~= bx then return ax < bx end
-      return ay < by
-    end)
+    table.sort(list, by_position)
     local active = hl.get_active_window()
     local nxt = list[1]
     for k, w in ipairs(list) do
@@ -186,6 +189,35 @@ local expelCol, fitAll = hl.dsp.layout("expel"), hl.dsp.layout("fit all")
 hl.bind(mainMod .. " + mouse:274", function()                                     -- middle click: unstack plus show everything
   hl.dispatch(expelCol)
   return hl.dispatch(fitAll)
+end)
+
+-- SUPER+T: "one full height on the left, the rest stacked on the right" ([A | B/C/...]) in one
+-- key. Every tiled window right of the 2nd column is consumed into it, left to right; then both
+-- columns go to 50% and the view is refit. Columns are told apart by their x on screen.
+local consumeCol, halfAll = hl.dsp.layout("consume"), hl.dsp.layout("colresize all 0.5")
+hl.bind(mainMod .. " + T", function()                                             -- tile: left full, right stacked
+  local ws, active = hl.get_active_workspace(), hl.get_active_window()
+  if not (ws and active) then return end
+  local wins, seen, cols = {}, {}, {}
+  for _, w in ipairs(hl.get_windows()) do
+    if w.mapped and not w.hidden and not w.floating and w.workspace and w.workspace.id == ws.id then
+      local x = at_of(w)
+      wins[#wins + 1] = w
+      if not seen[x] then seen[x] = true; cols[#cols + 1] = x end
+    end
+  end
+  if #cols < 2 then return end
+  table.sort(cols)
+  table.sort(wins, by_position)
+  for _, w in ipairs(wins) do
+    if at_of(w) > cols[2] then
+      hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+      hl.dispatch(consumeCol)
+    end
+  end
+  hl.dispatch(halfAll)
+  hl.dispatch(fitAll)
+  return hl.dispatch(hl.dsp.focus({ window = "address:" .. active.address }))
 end)
 
 -- Media / volume / brightness keys.

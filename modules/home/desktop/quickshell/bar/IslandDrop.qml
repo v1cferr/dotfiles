@@ -1,18 +1,14 @@
-// The island GROWN DOWNWARD: the body of the one shape whose head is the capsule in the bar. It
-// starts where the bar ends and comes down on the island's spring, in two sizes: the SUMMARY (as
-// wide as the head: what plays, what was not seen yet) and FULL (the NixOS Center, wider than the
-// head by a shoulder on each side). Island.qml decides which; this draws it and holds the keys.
-// docs/notes/desktop/island.md#open
+// The island OPEN: the NixOS Center as one shape of glass, in one window. It starts as the capsule
+// that rests around the logo (same place, same width, same corners) and grows on the island's
+// spring to the Center's width and down to its foot. While any of it is out, the bar's own capsule
+// and logo step aside and this window draws the logo on the very same pixels. Island.qml decides
+// when; this draws it and holds the keys. docs/notes/desktop/island.md#open
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Shapes
 import "root:/"
-import "root:/control"
-import "root:/media"
-import "root:/notifications"
 import "root:/widgets"
 
 PanelWindow {
@@ -21,7 +17,7 @@ PanelWindow {
 
     // Always mapped, and empty while shut: opening is then the island's own motion from its first
     // frame, with no layer to map and no fade of the compositor's over it. Shut, it takes no
-    // pointer (the mask is the body, zero tall) and draws nothing.
+    // pointer (the mask is the shape, nothing) and draws nothing.
     // Shown one turn of the event loop after it is made, never at once: a window already visible
     // when a hot reload hands it the old one's surface crashed the shell in QWindow::setScreen
     // (12/11/2026, Quickshell 0.3.2; a stand-in window of ten lines did the same).
@@ -29,8 +25,8 @@ PanelWindow {
     Component.onCompleted: Qt.callLater(() => drop.up = true)
     visible: drop.up
     screen: drop.home
-    WlrLayershell.namespace: "qs-island"
-    // The keyboard only for the Center: the summary must never take it from the window under it.
+    WlrLayershell.namespace: "qs-island" // the compositor's glass and blur match it (hypr/lua)
+    // The keyboard only while pinned: opened by a hover it must never take it from the window under it.
     WlrLayershell.keyboardFocus: Island.full ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     anchors {
         top: true
@@ -38,85 +34,101 @@ PanelWindow {
     }
     exclusionMode: ExclusionMode.Ignore
     margins {
-        top: Theme.barTop + Theme.barHeight
+        top: Theme.barTop
         left: drop.screen ? Math.floor(drop.screen.width / 2) - drop.wide / 2 : 0
     }
-    // As wide as the Center; the summary uses the middle of it. Even, like the head, so the two
-    // share a center on a whole pixel.
-    readonly property int wide: Math.max(2 * Theme.islandHalf, Math.min(520, (drop.screen ? drop.screen.width : 1920) - 2 * Theme.screenInset))
-    readonly property int shoulder: (drop.wide - 2 * Theme.islandHalf) / 2
+    // The Center's width, never more than the screen leaves. Even, so its middle is the logo's.
+    readonly property int wide: Math.max(2 * Theme.islandHalf, Math.min(2 * Theme.islandOpenHalf, Math.floor(((drop.screen ? drop.screen.width : 1920) - 2 * Theme.screenInset) / 2) * 2))
     implicitWidth: drop.wide
     // Room for the spring to pass its size on the way down.
-    implicitHeight: Math.max(drop.fullTall, drop.summaryTall) + Theme.sp6
+    implicitHeight: drop.headBottom + drop.bodyTall + Theme.sp6
     color: "transparent"
     mask: Region {
-        item: hit
+        item: shape.visible ? shape : nothing
+    }
+    Item {
+        id: nothing
     }
 
-    // Where it hangs: the main monitor, or the screen whose logo opened the Center. It moves only
-    // while shut, so a Center closing on one screen never flashes a head on the other.
+    // Where it hangs: the main monitor, or the screen whose logo pinned it. It moves only while
+    // shut, so closing on one screen never flashes a head on the other.
     // Kept as a NAME and looked up, so nothing here holds a screen object across a hot reload.
     property string homeName: ""
     readonly property var home: (drop.homeName !== "" && Quickshell.screens.find(x => x.name === drop.homeName)) || Theme.screenPrimary
     function rehome() {
         if (Island.full)
             drop.homeName = drop.bar.popScreen ? drop.bar.popScreen.name : "";
-        else if (body.reach <= 0)
+        else if (!Island.wide)
             drop.homeName = "";
     }
     Connections {
         target: Island
         function onFullChanged() {
             drop.rehome();
-            if (Island.full) {
-                drop.everFull = true;
+            if (Island.full)
                 keys.forceActiveFocus();
-            }
+        }
+        function onWideChanged() {
+            drop.rehome();
+        }
+        // The Center is made the first time the island opens, and kept.
+        function onOpenChanged() {
+            if (Island.open)
+                drop.everOpen = true;
         }
     }
+    property bool everOpen: false
     Binding {
         target: Island
         property: "where"
         value: drop.screen ? drop.screen.name : ""
     }
 
-    readonly property int most: 3
-    // Newest first.
-    readonly property var unseen: Notifs.unseenList.slice(-drop.most).reverse()
-    readonly property int summaryTall: Math.ceil(summary.implicitHeight) + Theme.sp3 + Theme.sp4
-    readonly property int fullTall: center.item ? Math.ceil(center.item.implicitHeight) + Theme.sp3 + Theme.sp4 : 0
-    readonly property real want: !Island.open ? 0 : (Island.full ? drop.fullTall : drop.summaryTall)
-    readonly property real wantFlare: Island.full ? drop.shoulder : 0
+    // ── The geometry: the capsule's own row, then what comes down under it ──
+    readonly property int headTop: Theme.barCellY
+    readonly property int headBottom: Theme.barCellY + Theme.barCell
+    readonly property int pad: Theme.sp4
+    // The Center begins a step under the bar's foot, and ends a pad above the shape's.
+    readonly property int bodyTop: Theme.barHeight + Theme.sp1 - drop.headBottom
+    readonly property int bodyTall: center.item ? drop.bodyTop + Math.ceil(center.item.implicitHeight) + drop.pad : 0
+    readonly property real wantReach: Island.open ? drop.bodyTall : 0
+    readonly property real wantHalf: Island.open ? drop.wide / 2 : Math.max(Theme.barCenterWidth / 2, Island.headHalf)
 
-    // Down and out on the spring, back on a short ease: faster out than in.
-    function move(anim, back, target, to) {
-        anim.stop();
-        back.stop();
-        if (Theme.motionReduced) {
-            body[target] = to;
-        } else if (to > body[target] || to > 0) {
-            // A long way down passes its size by the same share, which is many more pixels: past
-            // `longWay` the spring is damped harder, so the Center settles instead of bouncing.
-            anim.damping = Math.abs(to - body[target]) > drop.longWay ? drop.longDamping : Theme.islandDamping;
-            anim.to = to;
-            anim.restart();
-        } else {
-            back.to = to;
-            back.restart();
-        }
-    }
+    // Out and down on the spring, back on a short ease: faster out than in.
+    // A long way down passes its size by the same share, which is many more pixels: past
+    // `longWay` the spring is damped harder, so the Center settles instead of bouncing.
     readonly property int longWay: 400
     readonly property real longDamping: 0.45
-    onWantChanged: drop.move(fall, rise, "reach", drop.want)
-    onWantFlareChanged: drop.move(spread, gather, "flare", drop.wantFlare)
+    function move(pull, ease, what, to, opening) {
+        pull.stop();
+        ease.stop();
+        if (Theme.motionReduced) {
+            shape[what] = to;
+        } else if (opening) {
+            pull.damping = Math.abs(to - shape[what]) > drop.longWay ? drop.longDamping : Theme.islandDamping;
+            pull.to = to;
+            pull.restart();
+        } else {
+            ease.to = to;
+            ease.restart();
+        }
+    }
+    onWantReachChanged: drop.move(fall, rise, "reach", drop.wantReach, Island.open)
+    // The half follows the capsule while shut (nothing is drawn then), and moves only to open or shut.
+    onWantHalfChanged: {
+        if (Island.wide)
+            drop.move(spread, gather, "half", drop.wantHalf, Island.open);
+        else
+            shape.half = drop.wantHalf;
+    }
     component Pull: SpringAnimation {
-        target: body
+        target: shape
         spring: Theme.islandSpring
         damping: Theme.islandDamping
         epsilon: 0.25
     }
     component Ease: NumberAnimation {
-        target: body
+        target: shape
         duration: Theme.motionHover
         easing.type: Easing.OutCubic
     }
@@ -127,23 +139,22 @@ PanelWindow {
     Ease {
         id: rise
         property: "reach"
-        onFinished: drop.rehome()
     }
     Pull {
         id: spread
-        property: "flare"
+        property: "half"
     }
     Ease {
         id: gather
-        property: "flare"
+        property: "half"
     }
     Binding {
         target: Island
         property: "dropReach"
-        value: Math.max(0, body.reach)
+        value: Math.max(0, shape.reach)
     }
 
-    // What it holds enters in two beats as it opens: what plays, then what waits.
+    // What it holds enters in two beats as it opens: its head, then the Center.
     property real beat0: 1
     property real beat1: 1
     Connections {
@@ -178,8 +189,8 @@ PanelWindow {
         }
     }
 
-    // The Center closes on a click anywhere else; every bar is in the grab, so a click on another
-    // item switches panels and the logo's own click still reaches it.
+    // Pinned, it closes on a click anywhere else; every bar is in the grab, so a click on another
+    // item switches panels and a logo's own click still reaches it.
     HyprlandFocusGrab {
         active: Island.full
         windows: [drop].concat(Object.values(drop.bar.bars))
@@ -187,237 +198,105 @@ PanelWindow {
             drop.bar.closePanels()
     }
 
-    // The body's box: what takes the pointer, and what the hover is read on.
-    Item {
-        id: hit
-        x: drop.shoulder - Math.round(Math.max(0, Math.min(drop.shoulder, body.flare)))
-        width: drop.wide - 2 * x
-        height: body.tall
+    // ONE surface of glass: a rounded rectangle that is the capsule at one end of its motion and
+    // the Center at the other. Its corners are the capsule's all the way.
+    GlassSurface {
+        id: shape
+        property real half: Theme.barCenterWidth / 2 // from the logo's middle to each side
+        property real reach: 0 // how far it comes down under the capsule's row
+        visible: Island.wide
+        level: "island"
+        radius: Theme.barCell / 2
+        // Never wider than its window: the spring's overshoot is spent on the way, not past the edge.
+        readonly property real span: Math.min(drop.wide / 2, shape.half)
+        x: Math.round(drop.wide / 2 - shape.span)
+        y: drop.headTop
+        width: Math.round(2 * shape.span)
+        height: Theme.barCell + Math.max(0, Math.round(shape.reach))
+        clip: true
+
         HoverHandler {
             onHoveredChanged: Island.dropHover = hovered
         }
-    }
-
-    Item {
-        id: body
-        property real reach: 0 // how far down it comes
-        property real flare: 0 // how far each shoulder reaches past the head
-        readonly property int tall: Math.max(0, Math.round(body.reach))
-        anchors.fill: parent
-
-        // ONE outline, begun and ended at the head's two sides on the window's top edge, which is
-        // left open: there the body meets the head in a straight line. With no flare it is a
-        // column as wide as the head; with it, a shoulder leaves each side a little under the bar
-        // and joins the head by a curve. Every edge sits on a half pixel, so the hairline is sharp.
-        Shape {
-            id: outline
-            visible: body.tall > 0
-            anchors.fill: parent
-            preferredRendererType: Shape.CurveRenderer
-            readonly property real h: body.tall - 0.5
-            readonly property real f: Math.max(0, Math.min(drop.shoulder, body.flare))
-            // The head's sides, and the body's.
-            readonly property real hl: drop.shoulder + 0.5
-            readonly property real hr: drop.wide - drop.shoulder - 0.5
-            readonly property real l: outline.hl - outline.f
-            readonly property real r: outline.hr + outline.f
-            // The shoulder's drop under the bar, the curve that joins it to the head, its own
-            // corner and the foot's: each no larger than the room there is for it.
-            readonly property real s: Math.min(Theme.sp2, outline.f / 2, outline.h / 3)
-            readonly property real corner: Math.min(Theme.radiusSurface, outline.f / 2, Math.max(0, (outline.h - outline.s) / 2))
-            readonly property real foot: Math.min(Theme.radiusSurface, Math.max(0, (outline.h - outline.s) / 2))
-            ShapePath {
-                fillColor: Theme.colIsland
-                strokeColor: Theme.colIslandEdge
-                strokeWidth: Theme.hairline
-                capStyle: ShapePath.FlatCap
-                joinStyle: ShapePath.RoundJoin
-                startX: outline.hl
-                startY: 0
-                PathArc {
-                    x: outline.hl - outline.s
-                    y: outline.s
-                    radiusX: outline.s
-                    radiusY: outline.s
-                    direction: PathArc.Clockwise
-                }
-                PathLine {
-                    x: outline.l + outline.corner
-                    y: outline.s
-                }
-                PathArc {
-                    x: outline.l
-                    y: outline.s + outline.corner
-                    radiusX: outline.corner
-                    radiusY: outline.corner
-                    direction: PathArc.Counterclockwise
-                }
-                PathLine {
-                    x: outline.l
-                    y: outline.h - outline.foot
-                }
-                PathArc {
-                    x: outline.l + outline.foot
-                    y: outline.h
-                    radiusX: outline.foot
-                    radiusY: outline.foot
-                    direction: PathArc.Counterclockwise
-                }
-                PathLine {
-                    x: outline.r - outline.foot
-                    y: outline.h
-                }
-                PathArc {
-                    x: outline.r
-                    y: outline.h - outline.foot
-                    radiusX: outline.foot
-                    radiusY: outline.foot
-                    direction: PathArc.Counterclockwise
-                }
-                PathLine {
-                    x: outline.r
-                    y: outline.s + outline.corner
-                }
-                PathArc {
-                    x: outline.r - outline.corner
-                    y: outline.s
-                    radiusX: outline.corner
-                    radiusY: outline.corner
-                    direction: PathArc.Counterclockwise
-                }
-                PathLine {
-                    x: outline.hr + outline.s
-                    y: outline.s
-                }
-                PathArc {
-                    x: outline.hr
-                    y: 0
-                    radiusX: outline.s
-                    radiusY: outline.s
-                    direction: PathArc.Clockwise
+        // The keys, while it is pinned: the Center first, then Escape closes.
+        Item {
+            id: keys
+            focus: true
+            Keys.onPressed: event => {
+                if (center.item)
+                    center.item.keyPressed(event);
+                if (!event.accepted && event.key === Qt.Key_Escape) {
+                    drop.bar.closePanels();
+                    event.accepted = true;
                 }
             }
         }
 
-        // What it holds is revealed by the body coming down, never squeezed: each has its full
-        // size from the start, and the two trade places by a fade.
+        // What it holds keeps its full size and its place in the WINDOW while the shape grows over
+        // it: revealed, never squeezed, and the logo never moves.
         Item {
             id: holds
-            width: parent.width
-            height: body.tall
-            clip: true
+            x: -shape.x
+            y: -shape.y
+            width: drop.wide
+            height: drop.implicitHeight
 
-            // The keys, while the Center has the keyboard: the Center first, then Escape closes.
-            Item {
-                id: keys
-                focus: true
-                Keys.onPressed: event => {
-                    if (center.item)
-                        center.item.keyPressed(event);
-                    if (!event.accepted && event.key === Qt.Key_Escape) {
-                        drop.bar.closePanels();
-                        event.accepted = true;
-                    }
+            // ── The head, on the capsule's row: the Center's name, the logo, its switches ──
+            CenterHeader {
+                x: drop.pad
+                y: drop.headTop
+                width: drop.wide - 2 * drop.pad
+                height: Theme.barCell
+                opacity: drop.beat0
+                bar: drop.bar
+                tips: tips
+            }
+            // The logo, on the pixels the bar's own stands on: a click pins the island, or closes it.
+            Image {
+                readonly property string logo: Quickshell.iconPath("nix-snowflake", true)
+                x: (drop.wide - Theme.barLogo) / 2
+                y: (Theme.barHeight - Theme.barLogo) / 2
+                width: Theme.barLogo
+                height: Theme.barLogo
+                source: logo
+                sourceSize.width: Theme.barLogo * 2
+                sourceSize.height: Theme.barLogo * 2
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                MouseArea {
+                    anchors.fill: parent
+                    anchors.margins: -(Theme.barCenterWidth - Theme.barLogo) / 2
+                    cursorShape: Qt.PointingHandCursor
+                    Accessible.role: Accessible.Button
+                    Accessible.name: Island.full ? "Close the NixOS Center" : "Keep the NixOS Center open"
+                    onClicked: Island.full ? drop.bar.closePanels() : Notifs.toggleCenter()
                 }
             }
 
-            // ── The summary: what plays, then what was not seen yet ──
-            ColumnLayout {
-                id: summary
-                x: drop.shoulder + Theme.sp4
-                y: Theme.sp3
-                width: 2 * Theme.islandHalf - 2 * Theme.sp4
-                spacing: Theme.sp3
-                visible: opacity > 0
-                opacity: Island.full ? 0 : 1
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: Theme.motionFast
-                    }
-                }
-
-                MediaCard {
-                    Layout.fillWidth: true
-                    visible: Island.hasMedia
-                    opacity: drop.beat0
-                    active: Island.open && !Island.full && Island.hasMedia
-                    wave: Audio.waveOpen && !Island.full
-                    onRevealed: Island.shut()
-                }
-                Hairline {
-                    visible: Island.hasMedia && Island.hasUnseen
-                    opacity: drop.beat1
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    visible: Island.hasUnseen
-                    opacity: drop.beat1
-                    spacing: Theme.sp2
-
-                    Text {
-                        Layout.leftMargin: Theme.sp1
-                        text: Notifs.unseen + (Notifs.unseen === 1 ? " NEW NOTIFICATION" : " NEW NOTIFICATIONS")
-                        color: Theme.colDim
-                        font.family: Theme.uiFont
-                        font.pixelSize: Theme.fontMicro
-                        font.letterSpacing: 1
-                    }
-                    Repeater {
-                        model: drop.unseen
-                        NotifCard {
-                            required property var modelData
-                            Layout.fillWidth: true
-                            notif: modelData
-                            isPopup: false
-                        }
-                    }
-                    Text {
-                        visible: Notifs.unseenList.length > drop.most
-                        Layout.leftMargin: Theme.sp1
-                        text: "and " + (Notifs.unseenList.length - drop.most) + " older, in the NixOS Center"
-                        color: Theme.colDim
-                        font.family: Theme.uiFont
-                        font.pixelSize: Theme.fontSmall
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.sp2
-                        PageLink {
-                            label: "Mark as seen"
-                            mark: "done_all"
-                            onClicked: Notifs.markSeen()
-                        }
-                        PageLink {
-                            label: "NixOS Center"
-                            onClicked: Notifs.toggleCenter()
-                        }
-                    }
-                }
-            }
-
-            // ── Full: the NixOS Center, made the first time it is asked for ──
+            // ── The NixOS Center, made the first time the island opens ──
             Loader {
                 id: center
-                x: Theme.sp4
-                y: Theme.sp3
-                width: drop.wide - 2 * Theme.sp4
-                active: drop.everFull
-                visible: opacity > 0
-                opacity: Island.full ? drop.beat0 : 0
-                Behavior on opacity {
-                    enabled: !Island.full
-                    NumberAnimation {
-                        duration: Theme.motionFast
-                    }
-                }
+                x: drop.pad
+                y: drop.headBottom + drop.bodyTop
+                width: drop.wide - 2 * drop.pad
+                active: drop.everOpen
+                opacity: drop.beat1
                 sourceComponent: CenterCard {
                     bar: drop.bar
                     screen: drop.screen
-                    shown: Island.full
+                    shown: Island.open
                     onKeysWanted: keys.forceActiveFocus()
                 }
             }
+            // The tips of the head's switches, over the Center.
+            GlassTip {
+                id: tips
+                x: drop.pad
+                y: drop.headBottom
+                width: drop.wide - 2 * drop.pad
+                height: Math.max(0, shape.height - Theme.barCell)
+                anchors.fill: undefined
+            }
         }
     }
-    property bool everFull: false
 }

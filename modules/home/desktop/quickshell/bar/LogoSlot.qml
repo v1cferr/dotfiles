@@ -12,11 +12,18 @@ Item {
     property var barWindow: null
 
     readonly property bool open: slot.host.pinned === "center" && slot.host.popBar === slot.barWindow
+    // The open island draws the logo itself, on this very pixel, in its own window: the one here
+    // steps aside so the two never show at once.
+    readonly property bool here: !!slot.barWindow && !!slot.barWindow.screen && slot.barWindow.screen.name === Island.where
+    readonly property bool away: Island.wide && slot.here
+    // The island rests, and so opens on a hover, only on the main monitor's full bar.
+    property bool resting: false
     width: Theme.barCenterWidth
     height: Theme.barHeight
 
     // The same highlight as every item: nothing at rest, neutral on hover, the accent while open.
     Rectangle {
+        visible: !slot.away
         y: Theme.barCellY
         width: parent.width
         height: Theme.barCell
@@ -34,7 +41,7 @@ Item {
     readonly property string logo: Quickshell.iconPath("nix-snowflake", true)
     Image {
         id: logo
-        visible: slot.logo !== ""
+        visible: slot.logo !== "" && !slot.away
         x: (slot.width - Theme.barLogo) / 2
         y: (slot.height - Theme.barLogo) / 2
         width: Theme.barLogo
@@ -46,7 +53,7 @@ Item {
         smooth: true
     }
     Text {
-        visible: !logo.visible
+        visible: slot.logo === "" && !slot.away
         anchors.centerIn: parent
         text: ""
         color: Theme.colSapphire
@@ -57,7 +64,7 @@ Item {
     // Unseen notifications: a 6 px dot at a FIXED spot, on the logo's upper right corner. Red when one
     // of them is critical. History alone never lights it.
     Rectangle {
-        visible: Notifs.unseen > 0
+        visible: Notifs.unseen > 0 && !slot.away
         x: slot.width / 2 + Theme.barLogo / 2 - 2
         y: Theme.barCellY + 1
         width: 6
@@ -73,6 +80,8 @@ Item {
         cursorShape: Qt.PointingHandCursor
         Accessible.role: Accessible.Button
         Accessible.name: "NixOS Center: notifications and the session" + (Notifs.unseen > 0 ? ", " + Notifs.unseen + " unseen" : "")
+        // A pinned panel owns the bar: a hover does not open the island over it.
+        onContainsMouseChanged: Island.logoHover = slot.resting && containsMouse && (slot.host.pinned === "" || slot.host.pinned === "center")
         onClicked: slot.host.togglePanel("center", slot, slot.barContent, slot.barWindow)
     }
 }

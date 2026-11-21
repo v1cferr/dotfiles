@@ -213,64 +213,6 @@ Item {
             visible: !center.asking
             spacing: Theme.sp3
 
-            // ── Header: the title, then the idle timeouts, the away screen, do-not-disturb and clear ──
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.sp2
-                Text {
-                    Layout.fillWidth: true
-                    text: "NixOS Center"
-                    color: Theme.colSubtext
-                    font.family: Theme.uiFont
-                    font.pixelSize: Theme.fontLabel
-                    font.letterSpacing: 1
-                }
-                IconButton {
-                    // hypridle: on is the normal state. Off shows on the bar too, so it is never forgotten.
-                    glyph: center.bar.hypridleIcon
-                    tint: center.bar.hypridleOn ? Theme.colSubtext : Theme.colWarn
-                    active: !center.bar.hypridleOn
-                    tips: tips
-                    name: "Idle timeouts"
-                    stateText: center.bar.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"
-                    action: center.bar.hypridleOn ? "Click to disable" : "Click to enable"
-                    onClicked: center.bar.toggleIdle()
-                }
-                IconButton {
-                    // The away screen (Away.qml) covers the bar and this panel, so it only ever turns it on.
-                    glyph: "󰽥"
-                    tint: Theme.colSubtext
-                    tips: tips
-                    name: "Away screen"
-                    stateText: "Screens and LEDs dark, the PC keeps working"
-                    action: "Click to go away · Enter comes back"
-                    onClicked: {
-                        center.bar.closePanels();
-                        Away.enter();
-                    }
-                }
-                IconButton {
-                    glyph: Notifs.dnd ? "󰂛" : "󰂚"
-                    tint: Notifs.dnd ? Theme.colAlert : Theme.colSubtext
-                    active: Notifs.dnd
-                    tips: tips
-                    name: "Do Not Disturb"
-                    stateText: Notifs.dnd ? "Enabled: toasts are held, critical ones still show" : "Disabled"
-                    action: Notifs.dnd ? "Click to disable" : "Click to enable"
-                    onClicked: Notifs.toggleDnd()
-                }
-                IconButton {
-                    glyph: "󰎟"
-                    tint: Theme.colSubtext
-                    enabled: Notifs.count > 0
-                    tips: tips
-                    name: "Clear notifications"
-                    stateText: Notifs.count > 0 ? Notifs.count + " in the history" : "Nothing to clear"
-                    action: Notifs.count > 0 ? "Click to clear them all" : ""
-                    onClicked: Notifs.clearAll()
-                }
-            }
-
             // ── What plays, when something does (media/MediaCard.qml) ──
             MediaCard {
                 Layout.fillWidth: true

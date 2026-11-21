@@ -55,42 +55,52 @@ Singleton {
         }
     }
 
-    // ===== Open: the capsule grown downward (bar/IslandDrop.qml) =====
-    // Three sizes of one shape. At rest it is the capsule. A pointer that rests on it opens the
-    // SUMMARY (what plays, what was not seen yet), which stays while the pointer is on either
-    // part. A click on the logo or the capsule, or SUPER, opens it FULL: the NixOS Center.
-    property bool capsuleHover: false
-    property bool dropHover: false
+    // ===== Open: the island IS the NixOS Center (bar/IslandDrop.qml) =====
+    // Two ways in, one shape. A pointer that rests on the capsule or the logo opens it, and it
+    // stays while the pointer is on it; a click, SUPER or the IPC PINS it, which is the bar's
+    // coordinator's `center` pin and the only way it takes the keyboard.
+    property bool capsuleHover: false // on the resting capsule, in the bar's window
+    property bool logoHover: false    // on the logo, in the bar's window
+    property bool dropHover: false    // on the open island, in its own window
+    readonly property bool hovered: root.capsuleHover || root.logoHover || root.dropHover
     property bool rested: false // the hover held long enough, and has not been away long enough
-    property bool forced: false // the summary held open with no pointer: a check over IPC
-    // The NixOS Center is open: the bar's coordinator decides (its `center` pin), this follows.
-    property bool full: false
-    // The screen whose logo it hangs from: the main one, or the one whose logo opened the Center.
+    property bool forced: false // held open with no pointer: a check over IPC
+    property bool full: false   // pinned: the coordinator decides, this follows
+    // The screen whose logo it hangs from: the main one, or the one whose logo pinned it.
     property string where: ""
+    // How wide the resting capsule is, half of it, on that screen: where the opening starts from.
+    property real headHalf: 0
     readonly property bool hasMedia: Media.playing && Media.title !== ""
-    readonly property bool hasUnseen: Notifs.unseenList.length > 0
-    readonly property bool canOpen: root.current !== null && ["media", "unseen", "notification"].indexOf(root.current.kind) >= 0 && (root.hasMedia || root.hasUnseen)
-    readonly property bool open: root.full || (root.canOpen && (root.rested || root.forced))
-    // How far what came down reaches, in px: the capsule squares its foot against it, and stays
-    // wide until it is all the way back up.
+    readonly property bool open: root.full || root.rested || root.forced
+    // How far it reaches under its head, in px, and whether any of it is still out.
     property real dropReach: 0
     readonly property bool wide: root.open || root.dropReach > 0
+    // Dismissed with the pointer still on it (the logo's click, Escape): it does not open again
+    // until the pointer has been away for a moment.
+    property bool spent: false
     function shut() {
         root.rested = false;
         root.forced = false;
+        if (root.hovered)
+            root.spent = true;
     }
+    onFullChanged: if (!root.full)
+        root.shut()
     Timer {
         interval: Theme.hoverIntent
-        running: root.capsuleHover && !root.rested
+        running: (root.capsuleHover || root.logoHover) && !root.rested && !root.spent && !root.full
         onTriggered: root.rested = true
     }
     Timer {
         interval: 400
-        running: root.rested && !root.capsuleHover && !root.dropHover
-        onTriggered: root.rested = false
+        running: (root.rested || root.spent) && !root.hovered
+        onTriggered: {
+            root.rested = false;
+            root.spent = false;
+        }
     }
-    // What is shown holds while the pointer is on either part, or while the Center is open.
-    readonly property bool held: root.capsuleHover || root.dropHover || root.full
+    // What the capsule shows holds while the pointer is on the island, or while it is open.
+    readonly property bool held: root.hovered || root.open
     onHeldChanged: root.freeze(root.held)
     Binding {
         target: Audio

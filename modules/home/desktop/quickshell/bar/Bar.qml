@@ -50,8 +50,7 @@ Scope {
         function panel(key: string): void {
             root.openForTest(key);
         }
-        // The island's summary, as a hover that rested would open it: `open` only does something
-        // while it has what to show. The full island is the Center: `panel center`.
+        // The island open as a hover that rested opens it, with no pointer; pinned is `panel center`.
         function island(state: string): void {
             if (state === "open")
                 Island.forced = true;
@@ -1645,10 +1644,11 @@ Scope {
             root.hideMedia();
         }
     }
+    // Open by a hover it is the Center just the same: what it shows is seen, and no toast competes.
     Binding {
         target: Notifs
         property: "centerOpen"
-        value: root.pinned === "center"
+        value: root.pinned === "center" || Island.open
     }
     // The Center is the island at its full size: the coordinator's pin is the truth, it follows.
     Binding {

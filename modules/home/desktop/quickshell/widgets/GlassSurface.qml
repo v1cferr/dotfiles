@@ -5,12 +5,12 @@ import "root:/"
 
 Rectangle {
     id: glass
-    property string level: "card" // "bar" | "card" | "pop", the three opacities in Theme
+    property string level: "card" // "bar" | "card" | "pop" | "island", the opacities in Theme
 
     radius: Theme.radiusSurface
     // Top to foot: the same color in the perceptible profile, a faint bg-to-surface ease in clear-gradient.
-    readonly property color shadeTop: glass.level === "bar" ? Theme.colSurfaceBar : (glass.level === "pop" ? Theme.colSurfacePop : Theme.colSurfaceCard)
-    readonly property color shadeFoot: glass.level === "bar" ? Theme.colSurfaceBarFoot : (glass.level === "pop" ? Theme.colSurfacePop : Theme.colSurfaceCardFoot)
+    readonly property color shadeTop: glass.level === "bar" ? Theme.colSurfaceBar : (glass.level === "pop" ? Theme.colSurfacePop : (glass.level === "island" ? Theme.colSurfaceIsland : Theme.colSurfaceCard))
+    readonly property color shadeFoot: glass.level === "bar" ? Theme.colSurfaceBarFoot : (glass.level === "pop" ? Theme.colSurfacePop : (glass.level === "island" ? Theme.colSurfaceIsland : Theme.colSurfaceCardFoot))
     gradient: Gradient {
         GradientStop {
             position: 0

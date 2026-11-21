@@ -88,6 +88,7 @@ Singleton {
             property bool island: true
             property bool vpn: true
             property bool barClear: true
+            property bool islandGlass: false
         }
     }
     readonly property bool controlCenterOn: shellCfg.controlCenter
@@ -200,10 +201,13 @@ Singleton {
     // The island's reach on each side of the screen's center. The sides stop there whether it is
     // showing or not, so an event never moves them. docs/notes/desktop/island.md
     readonly property int islandHalf: 208
-    // The open island's fill: opaque, since two windows draw it (the bar's and the one under it)
-    // and glass over two different backdrops would show where they meet.
-    readonly property color colIsland: colBgSolid
-    readonly property color colIslandEdge: Qt.tint(colIsland, colEdge) // the hairline, opaque for the same reason
+    // The open island, the NixOS Center: half of its width, and its glass, the most see-through of
+    // the shell's. HyprGlass only takes a surface at least half opaque, which is the floor here.
+    // It is glass only where the compositor blurs its layer, which the same Nix generation that
+    // writes this flag sets up (hypr/lua); until then, or with the flag off, it is opaque: 60% of
+    // the palette's bg over an unblurred desktop is not readable.
+    readonly property int islandOpenHalf: 260
+    readonly property color colSurfaceIsland: shellCfg.islandGlass ? theme.glassBg("99") : colBgSolid
     // An item's width from its content, on a 4 px module, so a changing value rarely moves a neighbor.
     function barCellWidth(content) { return Math.ceil((content + 2 * theme.barPad) / 4) * 4; }
     // On the clear bar a text carries its own 1 px shade (the text's own style, no effect), so it

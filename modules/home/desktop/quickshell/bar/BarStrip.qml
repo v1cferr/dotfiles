@@ -47,11 +47,28 @@ PanelWindow {
     readonly property int controlCenterX: bar.compact ? bar.centerX : bar.clockCenterX - right.clockW / 2 - Theme.barGap - Theme.barCellWidth(Theme.iconSymbol) / 2
     readonly property int clockCenterX: bar.compact ? bar.centerX : bar.width - bar.edge - right.clockW / 2
 
+    // While the island is out from this strip's logo, its own window takes the pointer over the
+    // stretch of bar it covers, whichever of the two windows the compositor stacks on top.
+    readonly property bool islandOut: Island.wide && !!bar.screen && bar.screen.name === Island.where
+    mask: Region {
+        item: barContent
+        Region {
+            item: islandHole
+            intersection: Intersection.Subtract
+        }
+    }
+
     Component.onCompleted: bar.host.registerBar(bar)
     Component.onDestruction: bar.host.unregisterBar(bar)
 
     // A full-width Item used as the coordinate reference for the popovers (mapToItem
     // into a real Item is reliable; mapToItem(null) is not).
+    Item {
+        id: islandHole
+        x: bar.centerX - Theme.islandOpenHalf
+        width: 2 * Theme.islandOpenHalf
+        height: bar.islandOut ? Theme.barHeight : 0
+    }
     Item {
         id: barContent
         anchors.fill: parent
@@ -110,6 +127,7 @@ PanelWindow {
         }
         LogoSlot {
             x: bar.slotX
+            resting: bar.islandHere
             host: bar.host
             barContent: barContent
             barWindow: bar

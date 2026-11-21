@@ -39,10 +39,10 @@ hl.config({
       vibrancy = 0.2,
     },
   },
-  -- The tape, niri-style: half-width columns (a lone one still fills the screen through
-  -- fullscreen_on_one_column), so 2 windows sit side by side and only the 3rd scrolls.
+  -- The tape: every NEW window opens at 100%, by preference. Sharing the screen is asked for
+  -- (stack/unstack binds, middle click, SUPER+T), and tape.lua then splits it evenly.
   scrolling = {
-    column_width = 0.5,
+    column_width = 1.0,
   },
   misc = {
     force_default_wallpaper = 0,  -- without the default anime wallpaper

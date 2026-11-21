@@ -1,6 +1,7 @@
--- The tape's auto-fill: up to MAX_SHARED columns split the screen evenly (2 = halves, 3 = thirds),
+-- The tape's refit: up to MAX_SHARED columns split the screen evenly (2 = halves, 3 = thirds),
 -- so a workspace never shows wallpaper beside its windows; past that it scrolls at half width.
--- keybinds.lua dofiles this ONCE (it is not in hyprland.lua's list) and reuses `fit_soon`.
+-- ON REQUEST only: the stack/unstack binds call `fit_soon`; opening or closing a window never
+-- does, since new windows open at 100% by preference. keybinds.lua dofiles this.
 local MAX_SHARED = 3
 local fitAll = hl.dsp.layout("fit all")
 
@@ -32,13 +33,9 @@ local function fit_now()
   hl.dispatch(fitAll)
 end
 
--- Deferred: the events fire before the layout has placed (or dropped) the window.
+-- Deferred: the layout settles the stack/unstack a beat after the dispatch returns.
 local function fit_soon()
   hl.timer(fit_now, { timeout = 60, type = "oneshot" })
-end
-
-for _, event in ipairs({ "window.open", "window.destroy", "window.move_to_workspace" }) do
-  hl.on(event, fit_soon)
 end
 
 return { fit_soon = fit_soon }

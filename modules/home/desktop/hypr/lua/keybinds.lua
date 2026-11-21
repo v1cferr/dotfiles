@@ -5,9 +5,9 @@ if not ok_M or type(M) ~= "table" then M = { primary = "DP-1", secondary = "DP-2
 
 local mainMod = "SUPER"
 
--- The tape's auto-fill (tape.lua): loaded here, once, so the binds below can ask for a refit.
+-- The tape's refit (tape.lua): the binds below that stack or unstack ask for it.
 local tape = dofile(os.getenv("HOME") .. "/.config/hypr/lua/tape.lua")
--- A layout message, then the auto-fill: stacking or unstacking changes how many columns share.
+-- A layout message, then the refit: stacking or unstacking changes how many columns share.
 local function then_fit(msg)
   local d = hl.dsp.layout(msg)
   return function()
@@ -35,11 +35,7 @@ hl.bind(mainMod .. " + E",         hl.dsp.exec_cmd(fileManager))                
 hl.bind(mainMod .. " + S",         hl.dsp.exec_cmd(sound))                        -- audio mixer
 hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd(bluetooth))                    -- bluetooth
 hl.bind(mainMod .. " + C",         hl.dsp.window.close())                         -- close the window
-local floatToggle = hl.dsp.window.float({ action = "toggle" })
-hl.bind(mainMod .. " + V", function()                                             -- float (the tape refits around it)
-  hl.dispatch(floatToggle)
-  tape.fit_soon()
-end)
+hl.bind(mainMod .. " + V",         hl.dsp.window.float({ action = "toggle" }))    -- float
 hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))  -- fullscreen
 hl.bind(mainMod .. " + P",         hl.dsp.window.pseudo())                        -- pseudo (a dwindle thing; a no-op on scrolling, but it answers ok and raises no toast)
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("hyprctl reload"))             -- reload the config
@@ -200,12 +196,12 @@ hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 -- "Arrange side by side", in one click. On scrolling EVERY sideways move STACKS (hardcoded in
--- CScrollingAlgorithm), so this UNDOES instead: expel, then the auto-fill splits the screen.
+-- CScrollingAlgorithm), so this UNDOES instead: expel, then the refit splits the screen.
 hl.bind(mainMod .. " + mouse:274", then_fit("expel"))                             -- middle click: unstack plus refit
 
 -- SUPER+T: "one full height on the left, the rest stacked on the right" ([A | B/C/...]) in one
 -- key. Every tiled window right of the 2nd column is consumed into it, left to right; then the
--- auto-fill halves the screen. Columns are told apart by their x on screen.
+-- refit halves the screen. Columns are told apart by their x on screen.
 local consumeCol = hl.dsp.layout("consume")
 hl.bind(mainMod .. " + T", function()                                             -- tile: left full, right stacked
   local ws, active = hl.get_active_workspace(), hl.get_active_window()

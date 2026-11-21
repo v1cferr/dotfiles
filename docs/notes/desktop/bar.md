@@ -9,9 +9,53 @@ Tor, audio (Pipewire), the notification state, the tray and the clock, and on th
 the operational alerts. The CPU, the disk and a stopped hypridle show only while they need a look;
 the weather, the temperatures and the rest of the telemetry are one hover or one click away.
 
+## The clear bar (21/11/2026)
+
+The bar has NO strip: its window draws no surface, and its items sit on the wallpaper. The owner
+asked for a more modern bar, with the transparent menu bar of macOS Tahoe as the picture, and
+named four things that bothered him: the workspaces, the tray's icons, the flat background, and
+the right side where everything had one weight. Three candidates were rendered over his own
+photos next to the bar of that day, and he chose by eye: no veil behind the items, and the
+workspaces as capsules.
+
+| Part            | On the clear bar                                                                                                                              |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| The surface     | none: `BarStrip.qml` draws the strip, its sheen and its foot only with the flag off                                                           |
+| A text, a glyph | its own 1 px shade (`Text.Raised`, `Theme.colBarShade`): the text's style, no effect on the GPU                                               |
+| The island      | the one surface left: its resting capsule takes the strip's glass (`colBarGlass`) and a hairline                                              |
+| The workspaces  | each is its apps' icons, an empty one a dot, the active one in a glass capsule ([the rail](#the-workspace-rail-18102026-bare-since-11112026)) |
+| The tray        | one tone at rest, an icon's own colors under the pointer ([the tray](#the-tray))                                                              |
+| The clock       | the time strong, the date quiet, a breath from the status icons ([the clock](#the-clock))                                                     |
+
+Nothing else moved: the logo's slot, the regions' room, every panel and hint, the IPC, the
+standing monitor's bar (which takes the same clear form).
+
+**Measured on 21/11/2026** in the harness (a second Quickshell in a headless sway, the workspaces,
+the tray and the player stood in for, the owner's photos behind):
+
+- The text against what is behind it (WCAG contrast, the lightest 2% of a box over its median):
+  8.4:1 for the date, 11.4:1 for the time and 9.7:1 for the app's name over that day's wallpaper;
+  9.1:1, 12.5:1 and 9.2:1 over the photo of the pool whose top strip is the lightest. The strip
+  gave 9.7:1 to 9.9:1. A dark veil behind the items was one of the candidates and added 0.1 to
+  0.3: the pool holds dark photos only, so it was left out.
+- The island's capsule: 147 px each side of x 1280. The logo's slot and the geometry are not
+  touched by this change, and the logo was not measured again.
+- Idle cost, three 12 s windows each: 5.92% to 7.00% of a core, against 6.25% to 7.25% on the
+  tree before.
+- Three hot reloads in a row, no crash.
+
+`my.shell.bar.clear.enable = false` (`quickshell/flags.nix`) puts the strip back, with everything
+below as it was: against the tree before, 12 of 57 800 pixels differed, each by one level in one
+channel.
+
+Not verified: a real pointer on any of it (the tray's colors coming back, the hints, the clicks),
+the tray with the owner's real apps (the harness had four stand-ins), and how it reads over each
+photo of the pool day to day.
+
 ## The continuous strip (11/11/2026)
 
-The bar is ONE frosted strip, 34 px tall, flush with the top of each monitor, and its items sit bare
+What the bar is with `my.shell.bar.clear.enable = false`, and what it was until 21/11/2026. The
+bar is ONE frosted strip, 34 px tall, flush with the top of each monitor, and its items sit bare
 on it: a glyph and a label, no cell around them. The official logo stands alone on the exact center.
 It replaced the mirrored slanted cells of 04/11/2026 (one parallelogram per module), which read as a
 row of segments; the owner asked for a quieter, continuous menu bar that keeps every capability.
@@ -271,7 +315,13 @@ calls the function. The same trap is documented in `shell.qml`, in the vpn `IpcH
 
 ## The workspace rail (18/10/2026, bare since 11/11/2026)
 
-`WorkspaceStrip.qml`, the ADAPTIVE WORKSPACE RAIL: each monitor's workspaces as two-digit numbers
+`WorkspaceStrip.qml`, the ADAPTIVE WORKSPACE RAIL. On the clear bar (21/11/2026) a workspace has
+no number: it IS the icons of its apps (one per app, up to three, then `+N`), an empty one is a
+6 px dot, and the highlight that slides to the active one is a capsule of the strip's glass with a
+hairline; an inactive workspace's icons keep their colors at 72%. The number is one hover away, in
+the hint. The tick of a new window sits under the workspace's middle, and the red highlight of a
+request is the same capsule. The rest of this section is the numbered rail, drawn with the strip:
+each monitor's workspaces as two-digit numbers
 (`01` to `04` on the ASUS, `05` to `08` on the LG), bare on the strip, every number one width
 measured from `00`, the active one under one rounded highlight that slides (24 px tall, the
 control's 8 px radius).
@@ -370,6 +420,11 @@ panel with `2 failing pipelines`, `CI updated now`, GitHub healthy and the FAI G
 pipelines with their ages, and both actions.
 
 ## The clock
+
+On the clear bar (21/11/2026) the time is the strong part (`Theme.weightStrong`, `text`) and the
+date the quiet one (`colSubtext`, the month by name): `sáb 21 nov  16:51`, 8 px apart, and the
+item stands 8 px further from the status icons than they stand from each other. With the strip it
+is the one string below.
 
 The date and the time are ONE item on the main monitor's right edge, after the tray (11/11/2026;
 from 18/10/2026 they sat in two cells on each side of the logo): `qua 11/11  20:00`, in `text`, its
@@ -794,6 +849,11 @@ the secondary comes back.
 thing is a binding and needs no event of its own.
 
 ## The tray
+
+On the clear bar (21/11/2026) every icon rests in ONE tone: drawn without saturation, lifted a
+little and pulled 35% toward the text's color (a `MultiEffect` per icon, still while nothing
+changes), so five apps' brand colors do not outshout the status beside them. The pointer on an
+icon gives it its own colors back.
 
 A StatusNotifier tray (`TrayStrip.qml`), pinned to the main monitor's right edge. It populates when `qs` is the
 watcher, with Waybar gone. Left click activates, middle is `secondaryActivate`, scroll scrolls, and

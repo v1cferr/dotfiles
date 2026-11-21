@@ -1,6 +1,16 @@
 # History: november 2026
 
-13 entries. Index in [README.md](../README.md).
+14 entries. Index in [README.md](../README.md).
+
+- [x] The bar with no strip (21/11/2026; asked 21/11/2026). How and why:
+      [notes/desktop/bar.md](../../notes/desktop/bar.md#the-clear-bar-21112026).
+      • NO SURFACE: the items sit on the wallpaper, each text with its own 1 px shade; the
+        island's capsule is the one glass left.
+      • A WORKSPACE IS ITS APPS' ICONS, the active one in a glass capsule, an empty one a dot.
+      • THE TRAY IN ONE TONE, its colors back under the pointer; THE TIME STRONG, the date quiet.
+      • CHOSEN BY EYE among three candidates rendered over the owner's photos; the text stands
+        8.4:1 to 12.5:1 against them, so the veil that was a candidate stayed out.
+      • A FLAG, `my.shell.bar.clear.enable`, puts the strip back.
 
 - [x] The island around the logo (12/11/2026; asked 11/11/2026). How and why:
       [notes/desktop/island.md](../../notes/desktop/island.md).

@@ -5,6 +5,17 @@ if not ok_M or type(M) ~= "table" then M = { primary = "DP-1", secondary = "DP-2
 
 local mainMod = "SUPER"
 
+-- The tape's auto-fill (tape.lua): loaded here, once, so the binds below can ask for a refit.
+local tape = dofile(os.getenv("HOME") .. "/.config/hypr/lua/tape.lua")
+-- A layout message, then the auto-fill: stacking or unstacking changes how many columns share.
+local function then_fit(msg)
+  local d = hl.dsp.layout(msg)
+  return function()
+    hl.dispatch(d)
+    tape.fit_soon()
+  end
+end
+
 -- The programs the binds below call (tools adapted to NixOS).
 local terminal       = "kitty"            -- SUPER+RETURN
 local terminalWithAi = "kitty claude"     -- SUPER+BACKSPACE (Claude Code in the terminal)
@@ -24,7 +35,11 @@ hl.bind(mainMod .. " + E",         hl.dsp.exec_cmd(fileManager))                
 hl.bind(mainMod .. " + S",         hl.dsp.exec_cmd(sound))                        -- audio mixer
 hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd(bluetooth))                    -- bluetooth
 hl.bind(mainMod .. " + C",         hl.dsp.window.close())                         -- close the window
-hl.bind(mainMod .. " + V",         hl.dsp.window.float({ action = "toggle" }))    -- float
+local floatToggle = hl.dsp.window.float({ action = "toggle" })
+hl.bind(mainMod .. " + V", function()                                             -- float (the tape refits around it)
+  hl.dispatch(floatToggle)
+  tape.fit_soon()
+end)
 hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))  -- fullscreen
 hl.bind(mainMod .. " + P",         hl.dsp.window.pseudo())                        -- pseudo (a dwindle thing; a no-op on scrolling, but it answers ok and raises no toast)
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("hyprctl reload"))             -- reload the config
@@ -112,11 +127,11 @@ hl.bind(mainMod .. " + CTRL + G",       hl.dsp.layout("fit all"))           -- S
 hl.bind(mainMod .. " + CTRL + period",  hl.dsp.layout("colresize all 1.0")) -- FOCUS: everything at 100% (1 window per screen)
 hl.bind(mainMod .. " + CTRL + comma",   hl.dsp.layout("colresize all 0.5")) -- everything at 50% (2 side by side, fixed)
 -- Stacking and unstacking windows inside the column.
-hl.bind(mainMod .. " + I",              hl.dsp.layout("consume"))         -- pull the window into the previous column
-hl.bind(mainMod .. " + O",              hl.dsp.layout("expel"))           -- expel the window into a column of its own
+hl.bind(mainMod .. " + I",              then_fit("consume"))              -- pull the window into the previous column
+hl.bind(mainMod .. " + O",              then_fit("expel"))                -- expel the window into a column of its own
 -- The same pair on WASD: ALT+A stacks the window under the left column, ALT+D puts it back beside.
-hl.bind(mainMod .. " + ALT + A",        hl.dsp.layout("consume"))         -- stack into the column on the left
-hl.bind(mainMod .. " + ALT + D",        hl.dsp.layout("expel"))           -- unstack: side by side again
+hl.bind(mainMod .. " + ALT + A",        then_fit("consume"))              -- stack into the column on the left
+hl.bind(mainMod .. " + ALT + D",        then_fit("expel"))                -- unstack: side by side again
 -- `fit active` and NOT `fit_into_view`: 0.55.4 answers "no such layoutmsg". Every layout
 -- message requires a FOCUSED window.
 hl.bind(mainMod .. " + G",              hl.dsp.layout("fit active"))      -- recenter the active column
@@ -184,17 +199,13 @@ hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 -- "Arrange side by side", in one click. On scrolling EVERY sideways move STACKS (hardcoded in
--- CScrollingAlgorithm), so this UNDOES instead: expel plus fit all. Why a lambda: the notes.
-local expelCol, fitAll = hl.dsp.layout("expel"), hl.dsp.layout("fit all")
-hl.bind(mainMod .. " + mouse:274", function()                                     -- middle click: unstack plus show everything
-  hl.dispatch(expelCol)
-  return hl.dispatch(fitAll)
-end)
+-- CScrollingAlgorithm), so this UNDOES instead: expel, then the auto-fill splits the screen.
+hl.bind(mainMod .. " + mouse:274", then_fit("expel"))                             -- middle click: unstack plus refit
 
 -- SUPER+T: "one full height on the left, the rest stacked on the right" ([A | B/C/...]) in one
--- key. Every tiled window right of the 2nd column is consumed into it, left to right; then both
--- columns go to 50% and the view is refit. Columns are told apart by their x on screen.
-local consumeCol, halfAll = hl.dsp.layout("consume"), hl.dsp.layout("colresize all 0.5")
+-- key. Every tiled window right of the 2nd column is consumed into it, left to right; then the
+-- auto-fill halves the screen. Columns are told apart by their x on screen.
+local consumeCol = hl.dsp.layout("consume")
 hl.bind(mainMod .. " + T", function()                                             -- tile: left full, right stacked
   local ws, active = hl.get_active_workspace(), hl.get_active_window()
   if not (ws and active) then return end
@@ -215,9 +226,8 @@ hl.bind(mainMod .. " + T", function()                                           
       hl.dispatch(consumeCol)
     end
   end
-  hl.dispatch(halfAll)
-  hl.dispatch(fitAll)
-  return hl.dispatch(hl.dsp.focus({ window = "address:" .. active.address }))
+  hl.dispatch(hl.dsp.focus({ window = "address:" .. active.address }))
+  tape.fit_soon()
 end)
 
 -- Media / volume / brightness keys.

@@ -96,6 +96,32 @@ side by side, and only the 3rd starts scrolling. Until 21/11/2026 it was `1.0`, 
 new window a full-screen column: any second window ran off to the right, and side by side always
 took a manual resize. SUPER+CTRL+`.` brings back the old 1-per-screen view on demand.
 
+### The auto-fill (`lua/tape.lua`)
+
+Half width alone still left wallpaper beside the windows: `fit all` fits the columns but never
+GROWS them, so two 1/3 columns sat in the middle of the screen. `tape.lua` refits the active
+workspace after `window.open`, `window.destroy` and `window.move_to_workspace`, and after every
+bind that stacks, unstacks or floats (SUPER+I/O, ALT+A/D, V, middle click, T):
+
+| Columns | Width each  | Result                              |
+| ------- | ----------- | ----------------------------------- |
+| 1       | (untouched) | `fullscreen_on_one_column` fills it |
+| 2       | 0.5         | halves                              |
+| 3       | 0.333       | thirds                              |
+| 4+      | 0.5         | two per screen, the tape scrolls    |
+
+The ceiling is `MAX_SHARED` at the top of the file. The cost: a manual SUPER+ALT+`,`/`.` width
+lasts until the next refit, since the refit is `colresize all`.
+
+- **Deferred 60 ms** with `hl.timer(fn, { timeout = 60, type = "oneshot" })`, because the events
+  fire before the layout placed (or dropped) the window, and the count would be off by one.
+- **There is no `window.float` event** in 0.57.2 (`hl.on` lists the known ones on a bad name), so
+  SUPER+V refits by hand.
+- **Only the active workspace**: layout messages act on the FOCUSED window, so a window closing on
+  the other monitor refits nothing until something happens there.
+- `keybinds.lua` dofiles it ONCE and it is NOT in `hyprland.lua`'s list, or every hook would be
+  registered twice.
+
 `move` scrolls the VIEW without touching the focus; with `follow_mouse=1` passing the mouse over
 the column that came in is enough for it to receive the keyboard. The arrows still hold, because
 `follow_focus` (the default) already brings the focused column into view.
@@ -130,8 +156,8 @@ SUPER+I/O (PaperWM's slurp/barf keys, which stay). "One window full height on th
 on the right" is `[A | B/C]`: with three half-width columns, focus C and SUPER+ALT+A.
 
 SUPER+T does that for any number of windows: every tiled window right of the 2nd column is
-consumed into it, left to right, then `colresize all 0.5` plus `fit all`, and the focus returns
-to where it was. Columns are told apart by the windows' x on screen (`at`), since the Lua API
+consumed into it, left to right, the focus returns to where it was, and the auto-fill halves the
+screen. Columns are told apart by the windows' x on screen (`at`), since the Lua API
 exposes no column ids. `promote` exists in the 0.57.2 binary but is undocumented, so the preset
 does not lean on it.
 
@@ -178,10 +204,8 @@ SUPER+middle click. It exists because on scrolling EVERY way of moving a window 
 is hardcoded in `CScrollingAlgorithm`. There is no horizontal drop.
 
 So instead of fighting the drag, the bind UNDOES and normalizes: `expel` takes the window out of
-any stack, into a column of its own, and `fit all` shows the whole tape on the screen.
-
-It needs a lambda plus `hl.dispatch` because a bind accepts only ONE dispatcher, and here there are
-two in order.
+any stack, into a column of its own, and the auto-fill above splits the screen between the columns
+(until 21/11/2026 it was `fit all`, which left the columns narrow with wallpaper on both sides).
 
 The mouse RESIZE (SUPER+right drag) is what puts one window beside another with the mouse:
 scrolling implements a real resize-drag (the left border keeps the right one still by adjusting the

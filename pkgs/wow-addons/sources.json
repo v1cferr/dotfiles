@@ -16,16 +16,16 @@
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9707446",
-    "url": "https://edge.forgecdn.net/files/9707/446/LayerSwap-1.14.39.zip",
-    "hash": "sha256-5KNjn8B9x5f5HmBXjA8x0Lc/ALFzsqqhCwmxpx0TB4E="
+    "version": "9730186",
+    "url": "https://edge.forgecdn.net/files/9730/186/LayerSwap-1.14.42.zip",
+    "hash": "sha256-tcX2dC7+PMhKjPO2GHx44BB6KgliBlPyLYePcINhMbA="
   },
   "leatrix-plus": {
     "source": "curseforge",
     "projectId": 94855,
-    "version": "9707913",
-    "url": "https://edge.forgecdn.net/files/9707/913/Leatrix_Plus-1.60.35-forever.zip",
-    "hash": "sha256-cFJFmYBfAc2fTIzbo4iEvRwuB2IwOQzJ1AIf/Hy9Cks="
+    "version": "9720351",
+    "url": "https://edge.forgecdn.net/files/9720/351/Leatrix_Plus-1.60.36-forever.zip",
+    "hash": "sha256-iBL2IpGx911Q5zsiUN9YuUHGnYWLqQmpamWZ1LA6apA="
   },
   "auctionator": {
     "source": "curseforge",
@@ -51,16 +51,16 @@
   "pawn": {
     "source": "curseforge",
     "projectId": 4646,
-    "version": "9669292",
-    "url": "https://edge.forgecdn.net/files/9669/292/Pawn-2.14.4-Forever.zip",
-    "hash": "sha256-ngQ/6RfeKU8ytX+Anpxt+3v2mF+fh48/+/8n+YTl7jI="
+    "version": "9724374",
+    "url": "https://edge.forgecdn.net/files/9724/374/Pawn-2.14.7-Forever.zip",
+    "hash": "sha256-TietR+A1rCl6Oc66JW4WQnPyYFrBsYiqHEtaL2V3vgs="
   },
   "openmap": {
     "source": "curseforge",
     "projectId": 1735937,
-    "version": "9657589",
-    "url": "https://edge.forgecdn.net/files/9657/589/OpenMap-v0.8.10-forever.zip",
-    "hash": "sha256-t1Zr3AmKWhJ+RxCOx3GrnX1ysBl8jAA5foXo0uvlvx8="
+    "version": "9722247",
+    "url": "https://edge.forgecdn.net/files/9722/247/OpenMap-v0.8.11-forever.zip",
+    "hash": "sha256-71YcMCahQCTauawCr8T9AqDqf45tKY1qaPwjwZ1XtTs="
   },
   "forever-loot-sparkles": {
     "source": "curseforge",
@@ -86,16 +86,16 @@
   "keep-or-toss": {
     "source": "curseforge",
     "projectId": 1737994,
-    "version": "9691982",
-    "url": "https://edge.forgecdn.net/files/9691/982/KeepOrToss-2.2.0.zip",
-    "hash": "sha256-2qban/xv2LBrcVxFhUI1uRVHfFxbaewapji8WQVFnDA="
+    "version": "9718247",
+    "url": "https://edge.forgecdn.net/files/9718/247/KeepOrToss-2.3.0.zip",
+    "hash": "sha256-6IJkAvN3cpkID1t6Zpq3JH65sDyoiMW9hcWnJnSGVtM="
   },
   "social-diary": {
     "source": "curseforge",
     "projectId": 1733454,
-    "version": "9714242",
-    "url": "https://edge.forgecdn.net/files/9714/242/social_diary-v4.2.2.zip",
-    "hash": "sha256-Bg4JXEIBdLz64f/OQtPdnDOkDVVT62vtd9rv33da9Z4="
+    "version": "9732302",
+    "url": "https://edge.forgecdn.net/files/9732/302/social_diary-v4.2.3.zip",
+    "hash": "sha256-OONSj4eQKFsKhDZpZhAXNeBgNNm6PBWcsXtEmno9Wd0="
   },
   "happy-camper": {
     "source": "curseforge",
@@ -219,9 +219,9 @@
   "battletext-forever": {
     "source": "curseforge",
     "projectId": 1722502,
-    "version": "9711442",
-    "url": "https://edge.forgecdn.net/files/9711/442/BattleTextForever-v1.26.1-forever.zip",
-    "hash": "sha256-Glg9niQ0tAGDHEVeZ8pHGI/ZlckX7Dm7fVoB4/4p+f8="
+    "version": "9729452",
+    "url": "https://edge.forgecdn.net/files/9729/452/BattleTextForever-v1.29.0-forever.zip",
+    "hash": "sha256-sfVRBUEf3HcNORQXgjbdYzpqOh6UevQadlT/FjUTwQw="
   },
   "easy-experience-bar": {
     "source": "curseforge",
@@ -233,16 +233,16 @@
   "baganator": {
     "source": "curseforge",
     "projectId": 914482,
-    "version": "9706044",
-    "url": "https://edge.forgecdn.net/files/9706/44/Baganator-866.zip",
-    "hash": "sha256-aRnTfZaT8W8ZPYNhahXknsZs/B36lXrVBs79yyzNvm4="
+    "version": "9718266",
+    "url": "https://edge.forgecdn.net/files/9718/266/Baganator-867.zip",
+    "hash": "sha256-hlIVXOSr4Rn9zAJB+le5U1R35H36BbAvpo1W7H1Mdek="
   },
   "syndicator": {
     "source": "curseforge",
     "projectId": 988370,
-    "version": "9632417",
-    "url": "https://edge.forgecdn.net/files/9632/417/Syndicator-291.zip",
-    "hash": "sha256-fn+iDFmDjccXFvFTYmTPM7BdyaaUOQXStg1sVlHhD2k="
+    "version": "9718258",
+    "url": "https://edge.forgecdn.net/files/9718/258/Syndicator-292.zip",
+    "hash": "sha256-YY/Qa8MjZ6zt3aCwajQAp+nAmaf/06RG0D23J9CGlcs="
   },
   "dejunk": {
     "source": "curseforge",
@@ -254,16 +254,16 @@
   "wim": {
     "source": "curseforge",
     "projectId": 7474,
-    "version": "9635490",
-    "url": "https://edge.forgecdn.net/files/9635/490/WIM-3.19.7.zip",
-    "hash": "sha256-YmwWuH26OlmbTqYvtJACqT0BnvKuuz1fKzqxEVKhEp8="
+    "version": "9721125",
+    "url": "https://edge.forgecdn.net/files/9721/125/WIM-3.19.8.zip",
+    "hash": "sha256-ssnRPJ8sj9G8VTDtt2kEsrBI7YthO7WyhMJnT5XCLMg="
   },
   "lfg-forever": {
     "source": "curseforge",
     "projectId": 1707849,
-    "version": "9705584",
-    "url": "https://edge.forgecdn.net/files/9705/584/LFGForever.zip",
-    "hash": "sha256-sT53z+eyZ433sRecpebHSGM9cJ/CXtFaUJuKgaRhmfU="
+    "version": "9729242",
+    "url": "https://edge.forgecdn.net/files/9729/242/LFGForever.zip",
+    "hash": "sha256-MR7HZ/zVnkyKRBfp5goFxXTTJ1xlM7V+yZj8Cee9xIM="
   },
   "lfg-bulletin-board": {
     "source": "curseforge",
@@ -275,9 +275,9 @@
   "mastercraft": {
     "source": "curseforge",
     "projectId": 1711528,
-    "version": "9689205",
-    "url": "https://edge.forgecdn.net/files/9689/205/Mastercraft-v2.0.7.zip",
-    "hash": "sha256-a+e9BpTO2S0VPmCThmQYNKFj5VBD2PaD9znjt/SmcPs="
+    "version": "9723747",
+    "url": "https://edge.forgecdn.net/files/9723/747/Mastercraft-v2.0.8.zip",
+    "hash": "sha256-mVY8614i7CKiCTfppQM76j7o5VPcUXQID9avplb6iHY="
   },
   "polestar": {
     "source": "curseforge",
@@ -310,9 +310,9 @@
   "skald": {
     "source": "curseforge",
     "projectId": 1748824,
-    "version": "9597329",
-    "url": "https://edge.forgecdn.net/files/9597/329/Skald-v1.0.8.zip",
-    "hash": "sha256-+2depCbUaMtxWiTybfgEOO1hHpAcXptmjlEEzTr1EY4="
+    "version": "9722465",
+    "url": "https://edge.forgecdn.net/files/9722/465/Skald-v1.1.0.zip",
+    "hash": "sha256-B6i2yEjbz99oHXVeB4pwK6TqClvQWmkL+wu90jWisaE="
   },
   "forever-immersion": {
     "source": "curseforge",
@@ -324,16 +324,16 @@
   "fame": {
     "source": "curseforge",
     "projectId": 1728351,
-    "version": "9593611",
-    "url": "https://edge.forgecdn.net/files/9593/611/ForeverAmbientMusicExtended-2.0.0.zip",
-    "hash": "sha256-1Ba1SYSEePkpd9BK3q7411mCpF5FrAWgfkUWsK3DvE0="
+    "version": "9730561",
+    "url": "https://edge.forgecdn.net/files/9730/561/ForeverAmbientMusicExtended-2.1.0.zip",
+    "hash": "sha256-GgXPxu6GwZ5qAvHz0CDOHAyRhdHCgbHmT6bS5h+TINU="
   },
   "panorama-forever": {
     "source": "curseforge",
     "projectId": 1706544,
-    "version": "9690191",
-    "url": "https://edge.forgecdn.net/files/9690/191/Panorama-1.8.0-forever.zip",
-    "hash": "sha256-z5QniBRGIulG0a+xXaIbdIFm67hHgAUDs/xblr96Bys="
+    "version": "9724299",
+    "url": "https://edge.forgecdn.net/files/9724/299/Panorama-1.8.2-forever.zip",
+    "hash": "sha256-ge5acX58BUJrftN+6wAdvuqREXAJsLDAE6xVvIur0hY="
   },
   "remove-questie": {
     "source": "curseforge",

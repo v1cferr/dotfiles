@@ -144,14 +144,17 @@ Control Center, now SUPER+X):
 
 | Bind              | Message / dispatcher       | What it does                                     |
 | ----------------- | -------------------------- | ------------------------------------------------ |
-| SUPER+A / D       | `focus` left / right       | focus the neighbor; `follow_focus` scrolls to it |
+| SUPER+A / D       | `focus l` / `focus r`      | the neighbor column, never the other monitor     |
 | SUPER+W           | `focus` up                 | the window above inside a stack                  |
 | SUPER+SHIFT+A / D | `swapcol l` / `swapcol r`  | the same as SHIFT+`,`/`.`                        |
 | SUPER+CTRL+A / D  | `move -col` / `move +col`  | the same as SUPER+`,`/`.`, focus unchanged       |
 | SUPER+ALT+A       | `consume`                  | STACK the window under the column on its left    |
 | SUPER+ALT+D       | `expel`                    | unstack it, side by side again                   |
 
-S stays the audio mixer, so "down in a stack" is the arrow. ALT+A/D are the directional twins of
+A/D are the LAYOUT message, not `hl.dsp.focus({ direction })`: the dispatcher crosses to the
+other monitor at the tape's edge, the message stays on the workspace and wraps (`wrap_focus`,
+on by default). The arrows keep crossing monitors on purpose. S stays the audio mixer, so "down
+in a stack" is the arrow. ALT+A/D are the directional twins of
 SUPER+I/O (PaperWM's slurp/barf keys, which stay). "One window full height on the left, two stacked
 on the right" is `[A | B/C]`: with three half-width columns, focus C and SUPER+ALT+A.
 

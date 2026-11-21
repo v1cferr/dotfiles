@@ -94,9 +94,10 @@ hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
 hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
--- WASD on the left hand: A/D walk the tape, W climbs a stack (S stays the mixer; down = arrow).
-hl.bind(mainMod .. " + A",     hl.dsp.focus({ direction = "left" }))   -- focus the window on the left
-hl.bind(mainMod .. " + D",     hl.dsp.focus({ direction = "right" }))  -- focus the window on the right
+-- WASD on the left hand: A/D walk THIS workspace's tape and wrap at its ends (a layout message,
+-- so never onto the other monitor, unlike the arrows); W climbs a stack (S stays the mixer).
+hl.bind(mainMod .. " + A",     hl.dsp.layout("focus l"))               -- focus the column on the left (this workspace)
+hl.bind(mainMod .. " + D",     hl.dsp.layout("focus r"))               -- focus the column on the right (this workspace)
 hl.bind(mainMod .. " + W",     hl.dsp.focus({ direction = "up" }))     -- focus the window above, in a stack
 
 -- The scrolling layout's tape (global; see appearance.lua). NO GUARD, because ALL workspaces

@@ -334,6 +334,7 @@ Item {
             FadeIn {
                 id: mainIn
                 target: mainView
+                slide: -16 // back from a page: it comes from the left
             }
 
             // ── The day: the date, the weather, the next date the calendar holds ──
@@ -861,6 +862,7 @@ Item {
             FadeIn {
                 id: pageIn
                 target: pageView
+                slide: 16 // a page is pushed in from the right
             }
 
             NetworkPage {

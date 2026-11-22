@@ -3,8 +3,9 @@
 `modules/home/desktop/quickshell/bar/CenterCard.qml`, with the service in `Notifs.qml`, the toasts
 in `notifications/` and its pages in `control/`. It is the ISLAND at its full size
 ([island.md](island.md#open)): the same shape that rests around the logo, grown down. A hover on
-the logo or the capsule opens it, a click or SUPER pins it, and the item on the bar's right and
-SUPER+X pin it too.
+the logo or the capsule opens it, and a click, SUPER or SUPER+X pins it. The logo is its one door:
+the item it kept on the bar's right for a few hours of 22/11/2026 opened the same panel from
+farther away, and the owner had it removed.
 
 It was reformulated on 22/11/2026, asked for as cleaner, more intuitive and more informative. Until
 then it was seven sections of one weight in a column 867 px tall (what plays, the notifications,

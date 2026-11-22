@@ -157,23 +157,6 @@ RowLayout {
         barWindow: right.bar
     }
     Pill {
-        // The NixOS Center's door on this side; a scroll on it is the volume, so sound needs no item.
-        id: centerPill
-        visible: !right.bar.compact
-        // Do Not Disturb shows HERE while it is on: the strip has no bell.
-        icon: Notifs.dnd ? "do_not_disturb_on" : "tune"
-        accent: Notifs.dnd ? Theme.colAlert : Theme.colBarQuiet
-        selected: right.host.pinned === "center"
-        onHoveredChanged: right.host.hoverHint("center", centerPill, right.barContent, right.bar, hovered)
-        // The Center hangs from the logo whoever asks for it, so it opens through the service's own toggle.
-        onClicked: {
-            right.host.hideHint();
-            Notifs.toggleCenter();
-        }
-        onScrolledUp: Audio.changeVolume(0.05)
-        onScrolledDown: Audio.changeVolume(-0.05)
-    }
-    Pill {
         // Hover or click: the calendar. Right click: the weather, which left the bar for this.
         id: clockPill
         visible: !right.bar.compact

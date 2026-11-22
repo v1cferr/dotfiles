@@ -62,15 +62,16 @@ Item {
     }
 
     // Unseen notifications: a 6 px dot at a FIXED spot, on the logo's upper right corner. Red when one
-    // of them is critical. History alone never lights it.
+    // of them is critical. History alone never lights it. Do-not-disturb lights it too, in its own
+    // color: the strip has no other place that says it is on.
     Rectangle {
-        visible: Notifs.unseen > 0 && !slot.away
+        visible: (Notifs.unseen > 0 || Notifs.dnd) && !slot.away
         x: slot.width / 2 + Theme.barLogo / 2 - 2
         y: Theme.barCellY + 1
         width: 6
         height: 6
         radius: 3
-        color: Notifs.unseenCritical ? Theme.colRed : Theme.colAccent
+        color: Notifs.unseenCritical ? Theme.colRed : (Notifs.dnd ? Theme.colAlert : Theme.colAccent)
     }
 
     MouseArea {

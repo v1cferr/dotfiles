@@ -1035,12 +1035,6 @@ Scope {
                 lines: [root.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"],
                 action: root.hypridleOn ? "Click to disable" : "Click to enable"
             };
-        if (key === "center")
-            return {
-                title: "NixOS Center",
-                lines: ["The switches, the levels and the notifications", Notifs.dnd ? "Do Not Disturb: toasts are held, critical ones still show" : ""].filter(l => l !== ""),
-                action: "Click to open · scroll for the volume"
-            };
         if (key === "disk")
             return {
                 title: "Disk " + root.diskPct + "% used",

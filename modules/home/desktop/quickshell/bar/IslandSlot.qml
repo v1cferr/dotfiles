@@ -204,13 +204,18 @@ Item {
 
     // Half the logo's slot, then the wider side, then the padding: the same on both sides.
     readonly property int inner: Theme.barCenterWidth / 2
-    // While media rests there, the wave takes what each side's words leave, at its OUTER end, on both
-    // sides and mirrored (the bass by the logo): the sides are as wide as the wider one, so the other
-    // had a bare stretch, on the right whenever the artist outran the title (22/11/2026). Each side
-    // keeps at least three bars, so the wave is always on both.
+    // While media rests there, ONE wave takes the gap the symmetry leaves: both sides are as wide as
+    // the wider one, so the shorter side's words leave room, and the wave fills it at that side's
+    // outer end, the bass by the logo. With the two sides about even it goes left at its least, four
+    // bars, and the other side keeps that little as breathing room. (22/11/2026: one on each side
+    // left three idle dots on the long side, and the owner asked for one.)
     readonly property bool waving: Audio.waveIsland && Audio.bands.length > 0 && isle.last !== null && isle.last.kind === "media" && !isle.wheeling
-    readonly property int waveMin: isle.waving ? 3 * wave.bar + 2 * wave.gap + Theme.sp2 : 0
-    readonly property int side: Math.min(Theme.islandHalf - isle.inner - Theme.sp3, Math.ceil(Math.max(leftRow.implicitWidth, rightRow.implicitWidth) + isle.waveMin))
+    readonly property int waveMin: isle.waving ? 4 * wave.bar + 3 * wave.gap + Theme.sp2 : 0
+    readonly property real leftWords: leftRow.implicitWidth
+    readonly property real rightWords: rightRow.implicitWidth
+    readonly property bool gapRight: isle.rightWords < isle.leftWords // the gap is on the right
+    readonly property int cap: Theme.islandHalf - isle.inner - Theme.sp3
+    readonly property int side: Math.min(isle.cap, Math.ceil(Math.max(isle.leftWords, isle.rightWords, Math.min(isle.leftWords, isle.rightWords) + isle.waveMin)))
     // Open, it is as wide as it gets: what comes down under it has that width.
     readonly property int half: isle.shown ? isle.inner + isle.side + Theme.sp3 : isle.inner
 
@@ -324,7 +329,7 @@ Item {
 
         Wave {
             id: wave
-            visible: isle.waving
+            visible: isle.waving && !isle.gapRight
             x: Math.round(capsule.width / 2 - isle.inner - isle.side)
             width: Math.max(0, isle.side - leftRow.width - Theme.sp2)
             height: Theme.barLogo - Theme.sp1
@@ -334,7 +339,7 @@ Item {
         }
         Wave {
             id: waveRight
-            visible: isle.waving
+            visible: isle.waving && isle.gapRight
             bassLeft: true
             x: Math.round(rightRow.x + rightRow.width + Theme.sp2)
             width: Math.max(0, isle.side - rightRow.width - Theme.sp2)
@@ -346,7 +351,7 @@ Item {
         RowLayout {
             id: leftRow
             x: Math.round(capsule.width / 2 - isle.inner - leftRow.width)
-            width: Math.min(leftRow.implicitWidth, isle.side - isle.waveMin)
+            width: Math.min(leftRow.implicitWidth, isle.side - (isle.gapRight ? 0 : isle.waveMin))
             height: parent.height
             spacing: Theme.sp1
             // The cover while media plays; the event's icon otherwise, and when a cover fails to load.
@@ -402,7 +407,7 @@ Item {
         RowLayout {
             id: rightRow
             x: Math.round(capsule.width / 2 + isle.inner)
-            width: Math.min(rightRow.implicitWidth, isle.side - isle.waveMin)
+            width: Math.min(rightRow.implicitWidth, isle.side - (isle.gapRight ? isle.waveMin : 0))
             height: parent.height
             spacing: Theme.sp2
             Rectangle {

@@ -166,4 +166,40 @@ TestCase {
         s = m.drop(s, "critical:disk", 30);
         compare(s.current, null);
     }
+    function test_a_background_state_stands_aside_of_what_plays() {
+        let s = m.push(m.idle, ev("media"), 0);
+        s = m.push(s, ev("vpn", "fai", 0), 100);
+        compare(s.current.kind, "media", "the music keeps the capsule");
+        compare(m.asides(s).length, 1);
+        compare(m.asides(s)[0].key, "vpn:fai");
+        s = m.push(s, ev("vpn", "fai"), 3000);
+        compare(s.current.key, "vpn:fai", "its result is a moment, and interrupts");
+        compare(m.asides(s).length, 0, "and no longer waits under the same key");
+        s = m.tick(s, 7000);
+        compare(s.current.kind, "media");
+        compare(s.queue.length, 0);
+    }
+    function test_what_plays_takes_the_capsule_from_a_background_state() {
+        let s = m.push(m.idle, ev("capture", "mic"), 0);
+        compare(s.current.kind, "capture", "alone, it is what the capsule shows");
+        s = m.push(s, ev("media"), 100);
+        compare(s.current.kind, "media");
+        compare(m.asides(s)[0].key, "capture:mic");
+        s = m.drop(s, "media:", 200);
+        compare(s.current.key, "capture:mic", "and has it back when the music stops");
+    }
+    function test_two_stand_aside_the_more_urgent_kind_first() {
+        let s = m.push(m.idle, ev("media"), 0);
+        s = m.push(s, ev("capture", "mic"), 100);
+        s = m.push(s, ev("capture", "screen"), 200);
+        s = m.push(s, ev("task", "rebuild", 0), 300);
+        const a = m.asides(s);
+        compare(a.length, 2);
+        compare(a[0].key, "task:rebuild");
+        compare(a[1].key, "capture:mic");
+        s = m.push(s, ev("notification"), 400);
+        compare(s.current.kind, "notification");
+        s = m.tick(s, 5400);
+        compare(s.current.kind, "media", "a moment over, the music is back before the background");
+    }
 }

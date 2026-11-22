@@ -28,6 +28,8 @@ Singleton {
     property var state: math.idle
     readonly property var current: root.live ? root.state.current : null
     readonly property int seq: root.state.seq
+    // What goes on in the background while something else has the capsule: icons at its far end.
+    readonly property var asides: root.live ? math.asides(root.state) : []
 
     IslandMath {
         id: math

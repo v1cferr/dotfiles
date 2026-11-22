@@ -19,8 +19,10 @@ QtObject {
             brightness: 3,
             dpi: 3,
             vpn: 4,
+            task: 4,
             notification: 5,
             bluetooth: 6,
+            capture: 7,
             media: 8,
             unseen: 9
         })
@@ -32,21 +34,34 @@ QtObject {
             brightness: 1500,
             dpi: 1500,
             vpn: 4000,
+            task: 6000,
             notification: 5000,
             bluetooth: 3000,
+            capture: 0,
             media: 0,
             unseen: 0
         })
+    // Something going on in the BACKGROUND (a VPN connecting, a task running, a capture): while it
+    // has no end it ranks under what plays, so the music keeps the capsule and it stands aside.
+    // Its result is a moment like any other, at its kind's own priority.
+    readonly property var background: ({
+            vpn: true,
+            task: true,
+            capture: true
+        })
+    readonly property real asidePrio: 8.5 // under the media, over the apps that wait
+    readonly property int asideMax: 2
     readonly property int queueMax: 3
     readonly property int resumeFloor: 1000 // an interrupted event comes back only with this much left
 
     // `id` tells two events of one kind apart (two VPNs); events with one key update in place.
     function event(kind, data, ttl, id) {
+        const t = ttl === undefined ? (life[kind] || 0) : ttl;
         return {
             kind: kind,
             key: kind + ":" + (id || ""),
-            prio: prio[kind] || 9,
-            ttl: ttl === undefined ? (life[kind] || 0) : ttl,
+            prio: t === 0 && background[kind] ? asidePrio : (prio[kind] || 9),
+            ttl: t,
             data: data || {},
             resumed: false,
             until: 0,
@@ -75,8 +90,21 @@ QtObject {
                 worst = i;
         return q.filter((e, i) => i !== worst);
     }
-    function push(s, ev, now) {
-        const c = s.current;
+    // What stands aside of what is shown: the background states that wait, the most urgent of
+    // their kinds first.
+    function asides(s) {
+        // The oldest among equals, said outright: this engine's sort does not keep their order.
+        return s.queue.map((e, i) => ({
+                    e: e,
+                    i: i
+                })).filter(x => x.e.ttl === 0 && background[x.e.kind]).sort((a, b) => (prio[a.e.kind] - prio[b.e.kind]) || (a.i - b.i)).slice(0, asideMax).map(x => x.e);
+    }
+    function push(s0, ev, now) {
+        const c = s0.current;
+        // One per key, wherever it is: what arrives replaces what waited under the same key.
+        const s = c && c.key === ev.key ? s0 : Object.assign({}, s0, {
+            queue: s0.queue.filter(e => e.key !== ev.key)
+        });
         if (!c)
             return shown(s, ev, s.queue, now);
         // The same thing again (the volume still moving, a VPN reaching its result): in place.
@@ -84,6 +112,7 @@ QtObject {
             return Object.assign({}, s, {
                 current: Object.assign({}, c, {
                     data: ev.data,
+                    prio: ev.prio,
                     ttl: ev.ttl,
                     until: ev.ttl > 0 ? now + ev.ttl : 0,
                     left: ev.ttl

@@ -50,7 +50,7 @@ Item {
             art: "",
             app: "", // an app's own icon in the icon's place: whose notification this is
             appIcon: "", // the icon that notification brought, when no entry answers for the app
-            badges: false // the apps with unseen notifications, at the far end of a resting capsule
+            badges: false // what rests at the far end: what goes on in the background, the apps that wait
         };
         if (!e)
             return none;
@@ -88,7 +88,8 @@ Item {
                 icon: d.state === "connected" ? "shield_lock" : "shield",
                 left: d.name,
                 right: isle.vpnWords[d.state] || "",
-                tone: d.state === "error" ? Theme.colCrit : Theme.colText
+                tone: d.state === "error" ? Theme.colCrit : Theme.colText,
+                badges: e.ttl === 0
             });
         case "notification":
             return Object.assign(none, {
@@ -361,6 +362,25 @@ Item {
                 opacity: isle.beat2
                 transform: Translate {
                     x: -(1 - isle.beat2) * isle.slide
+                }
+            }
+            // What goes on in the background while this has the capsule (Island.asides): its icon.
+            Row {
+                visible: isle.v.badges && Island.asides.length > 0
+                opacity: isle.beat2
+                spacing: Theme.sp1
+                Repeater {
+                    model: isle.v.badges ? Island.asides.length : 0
+                    Text {
+                        required property int index
+                        readonly property var aside: isle.view(Island.asides[index] || null)
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: aside.icon
+                        color: aside.tone
+                        font.family: Theme.iconFont
+                        font.pixelSize: Theme.iconBar
+                        font.variableAxes: Theme.iconAxes
+                    }
                 }
             }
             // Apps with notifications not seen yet: their icons rest here, up to three.

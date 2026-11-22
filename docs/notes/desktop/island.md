@@ -14,15 +14,16 @@ connecting showed nowhere at all.
 
 Lower is more urgent. A level the user is setting beats a result, which beats news.
 
-| Priority | Event                                     | Stays                | Comes from                                    |
-| -------- | ----------------------------------------- | -------------------- | --------------------------------------------- |
-| 1        | The root filesystem about to fill         | until it is answered | the bar's `df` (95% used or under 5 GiB free) |
-| 3        | Volume, mute, microphone, brightness, DPI | 1.5 s                | `osd/Osd.qml`, which keeps its anti-flash arm |
-| 4        | A VPN connecting, then its result         | while it tries; 4 s  | the bar's VPN phases                          |
-| 5        | A plain notification                      | 5 s                  | `Notifs.qml`                                  |
-| 6        | A Bluetooth device connected or gone      | 3 s                  | `Quickshell.Bluetooth`                        |
-| 8        | Media playing: the cover, artist, title   | while it plays       | `Media.qml`                                   |
-| 9        | Apps with notifications not seen yet      | until they are seen  | `Notifs.qml`                                  |
+| Priority | Event                                               | Stays                | Comes from                                    |
+| -------- | --------------------------------------------------- | -------------------- | --------------------------------------------- |
+| 1        | The root filesystem about to fill                   | until it is answered | the bar's `df` (95% used or under 5 GiB free) |
+| 3        | Volume, mute, microphone, brightness, DPI           | 1.5 s                | `osd/Osd.qml`, which keeps its anti-flash arm |
+| 4        | A VPN's result; a task's (15 s when it failed)      | 4 s; 6 s             | the bar's VPN phases; `island task` over IPC  |
+| 5        | A plain notification                                | 5 s                  | `Notifs.qml`                                  |
+| 6        | A Bluetooth device connected or gone                | 3 s                  | `Quickshell.Bluetooth`                        |
+| 8        | Media playing: the cover, artist, title             | while it plays       | `Media.qml`                                   |
+| 8.5      | The background: a VPN connecting, a task, a capture | while it lasts       | the same sources, and `Privacy.qml`           |
+| 9        | Apps with notifications not seen yet                | until they are seen  | `Notifs.qml`                                  |
 
 Priority 2 is not an event: it is the pointer. While it rests on the capsule the clock stops and
 only a priority 1 event may take the place.
@@ -43,6 +44,13 @@ They are `IslandMath.qml`, pure functions tested by `tests/tst_island.qml`:
   something plays, updated in place by a new track, gone on a pause. Everything else takes its place
   and it comes back, by the rule above for an event with no end. Until 12/11/2026 a new track was a
   four-second moment and what played was nowhere on the bar.
+- **The background stands aside** (22/11/2026). A VPN connecting, a task running and a capture have
+  no end and are not what the user is looking at: they rank under the media and over the apps that
+  wait. Alone, one holds the capsule; while something plays, the music keeps it and they are icons
+  at its far end, two at most, the more urgent kind first (`IslandMath.asides`). Until then a VPN
+  connecting took the capsule from the music for as long as it tried. The RESULT is a moment at
+  its kind's own priority, so it still interrupts, and what arrives replaces what waited under
+  the same key wherever it waited.
 - **The pointer freezes it.** Leaving gives back what was left, never less than a second.
 - **One timer, set for the next deadline.** Nothing polls; with nothing shown, nothing runs.
 
@@ -64,6 +72,21 @@ warning is dismissed by its click.
 
 It exists only on the main monitor's full bar. With no screen wide enough for it (`Island.live`),
 the OSD and the toasts do what they always did, so no event is ever sent to a capsule nobody sees.
+
+**Under a fullscreen window** nobody sees it either (22/11/2026): the bar's layer is below one, and
+until then a volume key or a plain notification in a game went to a capsule under the game.
+`Island.covered` is the main monitor's active workspace holding a fullscreen window (the
+workspace says so for a maximized one too, which covers nothing, so the window itself settles
+it); `live` is false while it holds, and the OSD and the toasts rise to the overlay layer for
+that time, since they sat under the game as well.
+
+**On what plays, the pointer acts without opening** (22/11/2026): the wheel over the capsule is
+the volume of what plays, 5% a notch (the player's own stream when it is known, else the
+output's), and the middle button pauses it. The capsule says the level itself while the wheel
+turns, since the pointer on it holds what the island shows. A click on a NOTIFICATION goes where
+its card's arrow does: its default action, else its app's window (`Windows.find`), else the
+Center as before. Each of them keeps the island shut until the pointer has been away
+(`Island.hush`), or the Center would open under the wheel 200 ms later.
 
 ## The apps that wait
 
@@ -87,6 +110,35 @@ or image data, in that order, and never a chat message's picture, which is a con
 app. The first version looked at the entry alone, and on 12/11/2026 Sunshine and Zen rested in the
 capsule as the neutral glyph while the list right under it drew their icons: the card read the
 notification, the capsule did not. Both read one rule now.
+
+## Capture
+
+`Privacy.qml`, 22/11/2026. A phone and a laptop say when the microphone or the screen is in use;
+here it showed nowhere. Each is a background state in the warning color, there for as long as it
+lasts and never on a clock:
+
+| What           | How it is known                                             | The capsule, alone             |
+| -------------- | ----------------------------------------------------------- | ------------------------------ |
+| The microphone | a Pipewire stream that records, and not from an output      | the app, `Microphone in use`   |
+| The screen     | the compositor's `screencast` event                         | `The screen`, `Being captured` |
+| A stream out   | a Pipewire stream recording an OUTPUT, from an app named so | Sunshine, `Streaming`          |
+
+Not somebody listening, and left out: the shell's own wave (cava records the output), a mixer's
+level meters, and a filter's own links. A stream that exists counts, running or not: an app that
+keeps its microphone stream open while muted shows for all that time.
+
+## A task in a terminal
+
+`qs ipc call island task <id> <name> start|ok|fail <seconds>` (22/11/2026). Running, it is a
+background state with its seconds counting, on a 1 s timer that runs only while the capsule shows
+it. Ended, it is a moment: `Done · 3 min 12 s` for 6 s, or `Failed · 1 min 2 s` for 15 s in the
+alarm's color, and a click dismisses either. The CALLER counts the seconds and hands them over,
+so a shell the task itself restarted still says how long it took.
+
+`rebuild` is the first to call it (`modules/home/shell/zsh.nix`): before `nh`, and after it with
+the result. With no shell to tell, over SSH, the call fails quietly and the rebuild is the same.
+It says nothing of the phase: reading `nh`'s output to tell a build from a switch would take its
+terminal away from it.
 
 ## The wave
 
@@ -174,11 +226,13 @@ always, ONE thing with the island instead of two, and with stronger glass.
   `my.shell.island.glass.enable = false` makes it opaque, and so does a shell whose generation has
   not written the flag yet: see-through over an unblurred desktop is not readable (the harness,
   which has no blur, showed exactly that over the standing monitor's band).
-- **On the other monitor** a click on its logo pins the Center there, in the same shape. The
-  island rests, and opens on a hover, only on the main monitor.
+- **On the other monitor** its logo opens the Center there in the same shape, by a hover as by a
+  click (the hover since 22/11/2026). The pointer resting on that logo calls the island over
+  (`Island.aim`) while it is shut, and it goes back once shut with the pointer off the logo. It
+  starts there from the logo's own slot: the capsule rests only on the main monitor.
 - `Island.qml` owns the state (`open`, `full`, the three hovers, `where`, `headHalf`);
-  `qs ipc call bar island open` and `close` stand in for a hover, and `bar islandReach` says how
-  far it reaches under its head, in px.
+  `qs ipc call bar island open` and `close` stand in for a hover, `bar islandAim <screen>` for
+  the logo it rests on, and `bar islandReach` says how far it reaches under its head, in px.
 
 | Part          | Motion                                                                          |
 | ------------- | ------------------------------------------------------------------------------- |
@@ -322,3 +376,20 @@ that opens it and the leaving that shuts it were never seen), every click, the c
 shuts it pinned (the grab is Hyprland's), its keys (the harness has nothing to type with), the
 blur and HyprGlass on its layer and so how readable the glass is, what its always mapped layer
 costs the GPU while shut, `my.theme.motion = "off"`, and how the opening LOOKS.
+
+**Run on 22/11/2026** in the harness, every state over IPC: the 20 state-machine tests pass; a
+task running stood aside of the stand-in player as an icon, and showed `Done · 3 min 12 s` and
+then `Failed · 1 min 2 s` in the capsule; with `Privacy.micBy` forced to a name the microphone
+stood aside of the music, and held the capsule alone with the task aside of it; the real
+Pipewire of that hour (the shell's own cava recording the output) lit nothing; the island opened
+on the second monitor after `islandAim` and on the main one again after shutting; and nine hot
+reloads (shut, open on the second monitor, aimed, pinned, with a task) and one from the tree
+that was live crashed nothing. That last one loaded `Island.qml` before `Privacy.qml` had been
+copied and logged `Privacy is not defined` until the next reload: a merge needs its
+`qs-restart`.
+
+Not verified, all of it needing the live session: a fullscreen window (the harness is sway, with
+no `Hyprland` to ask), the `screencast` event, a real microphone stream and whether a muted call
+keeps it, the name Sunshine's stream carries, the wheel and the middle button (nothing in the
+harness may change a volume, and it has no pointer), a notification's click, the hover on the
+second monitor's logo, and `rebuild` calling in from a real switch.

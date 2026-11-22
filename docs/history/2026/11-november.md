@@ -1,6 +1,21 @@
 # History: november 2026
 
-16 entries. Index in [README.md](../README.md).
+17 entries. Index in [README.md](../README.md).
+
+- [x] The island by the book (asked 22/11/2026; 22/11/2026): "are we following the best
+      practices for a dynamic island?". How and why:
+      [notes/desktop/island.md](../../notes/desktop/island.md).
+      • UNDER A FULLSCREEN WINDOW the capsule was unseen and still took the volume key and the
+        notifications: they go back to the OSD and the toasts, raised over the game.
+      • TWO AT ONCE: a VPN connecting, a task and a capture stand aside of what plays as icons.
+      • A CAPTURE SHOWS: the microphone, the screen, a stream out, for as long as each lasts.
+      • A TASK IN A TERMINAL: `rebuild` shows while it runs, then how long it took, or that it failed.
+      • THE POINTER ACTS: the wheel is the volume of what plays, the middle button pauses, a
+        notification's click goes to its app; the second monitor's logo opens on a hover too.
+      • THE CENTER'S HEAD is the logo alone; its three switches sit in the sections they act on.
+      • COMPARED WITH Apple's Live Activities guide, boring.notch, Alcove and ActivSpot; rendered
+        in the headless harness, where no pointer, fullscreen or capture exists: those wait
+        for the live session.
 
 - [x] The away screen left (21/11/2026; asked 21/11/2026). The owner turns the PC off instead.
       • OUT: the black overlay, its `away` submap, its switch in the NixOS Center, its entry in

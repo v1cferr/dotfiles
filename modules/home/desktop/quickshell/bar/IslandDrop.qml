@@ -111,7 +111,13 @@ PanelWindow {
     readonly property int pad: Theme.sp4
     // The Center begins a step under the bar's foot, and ends a pad above the shape's.
     readonly property int bodyTop: Theme.barHeight + Theme.sp1 - drop.headBottom
-    readonly property int bodyTall: center.item ? drop.bodyTop + Math.ceil(center.item.implicitHeight) + drop.pad : 0
+    // The logo is the Center's title: open, it is this size, its top a step under the shape's, and
+    // the Center starts under it. Shut, it is the bar's own logo on its own pixel.
+    readonly property int logoOpen: 44
+    readonly property int logoTop: drop.headTop + Theme.sp3
+    // How much lower the Center starts than it did with the logo in the bar's row.
+    readonly property int titleRoom: Math.max(0, drop.logoTop + drop.logoOpen + Theme.sp3 - drop.headBottom - drop.bodyTop)
+    readonly property int bodyTall: center.item ? drop.bodyTop + drop.titleRoom + Math.ceil(center.item.implicitHeight) + drop.pad : 0
     // A notification shown as a card: the capsule's own width at its widest, and its card's height.
     readonly property int peekHalf: Theme.islandHalf
     readonly property int peekTall: drop.bodyTop + Math.ceil(peekCard.implicitHeight) + drop.pad
@@ -315,17 +321,25 @@ PanelWindow {
             // ── The head, on the capsule's row, holds the logo alone: the Center's switches are in
             // its own sections, so the row is the same on both sides of the logo ──
             // The logo, on the pixels the bar's own stands on: a click pins the island, or closes it.
+            // It travels with the glass (the same progress the Center shows on): grows from the bar's
+            // size to the Center's title and comes down to the top's middle, and back when it shuts.
+            // With a notification's card out it stays on the bar's pixel: the card is not the Center.
             Image {
+                id: logoImg
                 readonly property string logo: Quickshell.iconPath("nix-snowflake", true)
-                x: (drop.wide - Theme.barLogo) / 2
-                y: (Theme.barHeight - Theme.barLogo) / 2
-                width: Theme.barLogo
-                height: Theme.barLogo
+                readonly property real t: drop.peekMode ? 0 : drop.centerShown * (Island.open || shape.reach > 0 ? 1 : 0)
+                readonly property real size: Theme.barLogo + (drop.logoOpen - Theme.barLogo) * logoImg.t
+                readonly property real midY: Theme.barHeight / 2 + (drop.logoTop + drop.logoOpen / 2 - Theme.barHeight / 2) * logoImg.t
+                x: (drop.wide - logoImg.size) / 2
+                y: logoImg.midY - logoImg.size / 2
+                width: logoImg.size
+                height: logoImg.size
                 source: logo
-                sourceSize.width: Theme.barLogo * 2
-                sourceSize.height: Theme.barLogo * 2
+                sourceSize.width: drop.logoOpen * 2
+                sourceSize.height: drop.logoOpen * 2
                 fillMode: Image.PreserveAspectFit
                 smooth: true
+                mipmap: true
                 MouseArea {
                     anchors.fill: parent
                     anchors.margins: -(Theme.barCenterWidth - Theme.barLogo) / 2
@@ -365,7 +379,7 @@ PanelWindow {
             Loader {
                 id: center
                 x: drop.pad
-                y: drop.headBottom + drop.bodyTop
+                y: drop.headBottom + drop.bodyTop + drop.titleRoom
                 width: drop.wide - 2 * drop.pad
                 active: drop.everOpen
                 visible: !drop.peekMode

@@ -204,11 +204,13 @@ Item {
 
     // Half the logo's slot, then the wider side, then the padding: the same on both sides.
     readonly property int inner: Theme.barCenterWidth / 2
-    // While media rests there, what the wider side leaves empty on the left is the wave's, and it
-    // never gets fewer than five bars.
+    // While media rests there, the wave takes what each side's words leave, at its OUTER end, on both
+    // sides and mirrored (the bass by the logo): the sides are as wide as the wider one, so the other
+    // had a bare stretch, on the right whenever the artist outran the title (22/11/2026). Each side
+    // keeps at least three bars, so the wave is always on both.
     readonly property bool waving: Audio.waveIsland && Audio.bands.length > 0 && isle.last !== null && isle.last.kind === "media" && !isle.wheeling
-    readonly property int waveMin: isle.waving ? 5 * wave.bar + 4 * wave.gap + Theme.sp2 : 0
-    readonly property int side: Math.min(Theme.islandHalf - isle.inner - Theme.sp3, Math.ceil(Math.max(leftRow.implicitWidth + isle.waveMin, rightRow.implicitWidth)))
+    readonly property int waveMin: isle.waving ? 3 * wave.bar + 2 * wave.gap + Theme.sp2 : 0
+    readonly property int side: Math.min(Theme.islandHalf - isle.inner - Theme.sp3, Math.ceil(Math.max(leftRow.implicitWidth, rightRow.implicitWidth) + isle.waveMin))
     // Open, it is as wide as it gets: what comes down under it has that width.
     readonly property int half: isle.shown ? isle.inner + isle.side + Theme.sp3 : isle.inner
 
@@ -330,6 +332,17 @@ Item {
             opacity: isle.beat1
             bands: Audio.bands
         }
+        Wave {
+            id: waveRight
+            visible: isle.waving
+            bassLeft: true
+            x: Math.round(rightRow.x + rightRow.width + Theme.sp2)
+            width: Math.max(0, isle.side - rightRow.width - Theme.sp2)
+            height: Theme.barLogo - Theme.sp1
+            anchors.verticalCenter: parent.verticalCenter
+            opacity: isle.beat2
+            bands: Audio.bands
+        }
         RowLayout {
             id: leftRow
             x: Math.round(capsule.width / 2 - isle.inner - leftRow.width)
@@ -389,7 +402,7 @@ Item {
         RowLayout {
             id: rightRow
             x: Math.round(capsule.width / 2 + isle.inner)
-            width: Math.min(rightRow.implicitWidth, isle.side)
+            width: Math.min(rightRow.implicitWidth, isle.side - isle.waveMin)
             height: parent.height
             spacing: Theme.sp2
             Rectangle {

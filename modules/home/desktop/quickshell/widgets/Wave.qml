@@ -7,8 +7,10 @@ import "root:/"
 Item {
     id: wave
     property var bands: [] // 0 to 1 each, bass first
-    // Mirrored, the bass is in the middle and the treble at both ends; else the bass is at the right.
+    // Mirrored, the bass is in the middle and the treble at both ends; else the bass is at the right,
+    // or at the left with `bassLeft` (the capsule's right side, so the bass is by the logo on both).
     property bool mirror: false
+    property bool bassLeft: false
     property color color: Theme.colSubtext
     property int bar: 3
     property int gap: 2
@@ -30,7 +32,7 @@ Item {
         return wave.bands[lo] + (wave.bands[hi] - wave.bands[lo]) * (at - lo);
     }
     Row {
-        x: wave.mirror ? (wave.width - width) / 2 : wave.width - width
+        x: wave.mirror ? (wave.width - width) / 2 : (wave.bassLeft ? 0 : wave.width - width)
         anchors.verticalCenter: parent.verticalCenter
         height: parent.height
         spacing: wave.gap
@@ -38,7 +40,7 @@ Item {
             model: wave.count
             Rectangle {
                 required property int index
-                readonly property real far: wave.count < 2 ? 0 : (wave.mirror ? Math.abs(2 * index - (wave.count - 1)) / (wave.count - 1) : (wave.count - 1 - index) / (wave.count - 1))
+                readonly property real far: wave.count < 2 ? 0 : (wave.mirror ? Math.abs(2 * index - (wave.count - 1)) / (wave.count - 1) : (wave.bassLeft ? index / (wave.count - 1) : (wave.count - 1 - index) / (wave.count - 1)))
                 anchors.verticalCenter: parent.verticalCenter
                 width: wave.bar
                 // Never shorter than it is wide: silence is a row of dots. cava keeps the loudest

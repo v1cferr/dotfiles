@@ -153,9 +153,24 @@ Item {
         }
     }
 
-    // The wheel anywhere on it moves the level.
-    WheelHandler {
-        onWheel: w => slider.moved(Math.max(0, Math.min(1, slider.shown + (w.angleDelta.y > 0 ? slider.step : -slider.step))))
+    // The wheel anywhere on it moves the level, a step per notch. A layer of its own over the rest
+    // that takes no button, so the clicks still reach the icon, the track and the number: a
+    // WheelHandler on the slider sat UNDER those areas and the wheel never reached it (22/11/2026).
+    // A smooth wheel sends fractions of a notch; they add up to a step.
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.NoButton
+        property real pending: 0
+        onWheel: w => {
+            const d = w.angleDelta.y !== 0 ? w.angleDelta.y : -w.angleDelta.x;
+            pending += d / 120;
+            const notches = pending > 0 ? Math.floor(pending) : Math.ceil(pending);
+            if (notches !== 0) {
+                pending -= notches;
+                slider.moved(Math.max(0, Math.min(1, slider.shown + notches * slider.step)));
+            }
+            w.accepted = true;
+        }
     }
 
     // Left and Right set the level; Up and Down walk the panel, as on every other control.

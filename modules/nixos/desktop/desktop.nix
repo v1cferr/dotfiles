@@ -69,6 +69,8 @@ in
   # KEYRING (org.freedesktop.secrets). Under an autologin PAM never types a password, so the
   # unlock comes from a TPM-sealed one (modules/home/desktop/keyring.nix). See the notes.
   services.gnome.gnome-keyring.enable = true;
+  # Every Electron app then finds it: Chromium matches no "Hyprland" and falls back to this var.
+  environment.sessionVariables.GNOME_DESKTOP_SESSION_ID = "this-is-deprecated";
   programs.seahorse.enable = true; # the "Passwords and Keys" GUI, to manage/change the keyring's password
 
   # hyprlock's PAM. WITHOUT this it does not unlock and it LOCKS YOU OUT. The package and config

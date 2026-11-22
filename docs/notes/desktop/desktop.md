@@ -47,6 +47,29 @@ NetworkManager, Chrome, Spotifast, Dropbox.
 MIND THE AUTOLOGIN. `lightdm-autologin`'s PAM does NOT type a password, so `pam_gnome_keyring`
 NEVER receives an authtok, which means the auto-unlock does NOT come from PAM.
 
+### Electron finds it through a legacy variable (22/11/2026)
+
+Electron picks its secret backend (`safeStorage`, Chromium's os_crypt) from the desktop it
+detects, and `XDG_CURRENT_DESKTOP=Hyprland` matches no case. It falls back to `basic_text` and the
+app shows "An OS keyring couldn't be identified" or "your sign-in won't be saved", with the
+keyring up and unlocked the whole time.
+
+Before 22/11/2026 the cure was one flag per app (`--password-store=gnome-libsecret`), which every
+new Electron app had to rediscover. Now the SESSION carries `GNOME_DESKTOP_SESSION_ID`, declared
+in `modules/nixos/desktop/desktop.nix`: when `XDG_CURRENT_DESKTOP` matches nothing, Chromium's
+`GetDesktopEnvironment` still reads that old variable and lands on GNOME, which means
+`gnome_libsecret`. The value is the one GNOME itself exported for years. Measured with a bare
+Electron 43 printing `safeStorage.getSelectedStorageBackend()`: `basic_text` without it,
+`gnome_libsecret` with it.
+
+Why this variable and not `XDG_CURRENT_DESKTOP=Hyprland:GNOME`, which measured the same: the
+portals and the `OnlyShowIn=GNOME` autostart entries also read `XDG_CURRENT_DESKTOP`, and this
+one has only two other readers here. xdg-utils' `xdg-open` falls back to it too, but its GNOME
+branch needs `gio`, which is not on the PATH, so it lands on the same generic opener as before.
+Qt only reads it when `XDG_CURRENT_DESKTOP` is empty.
+
+It is a session variable, so it reaches a NEW login, not the running one.
+
 ### The unlock: a TPM-sealed password (04/10/2026)
 
 `modules/home/desktop/keyring.nix`. The "Login" keyring has a REAL password, and a copy of it is

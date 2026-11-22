@@ -15,6 +15,7 @@ let
     git
     jq
     nixos-icons
+    playerctl
     python3
     runCommand
     unstable # the CHANNEL and not a package, so `unstable.x` stays greppable at each use site
@@ -36,6 +37,7 @@ let
     text = ''hyprctl -i 0 -j monitors | ${jqBin} -r '.[] | select(.name == "${connector}") | "\(.model) · \(.width)x\(.height) @ \(.refreshRate | round) Hz"' '';
   };
   inherit (config.programs.kitty) font;
+  inherit (config.my.theme) iconTheme cursor;
 
   # Every module prints exactly one line (one row per display, a static font), so the boxes are as
   # tall as the module list, and the logo is sized from that count instead of by hand.
@@ -169,14 +171,29 @@ let
       (row "35" "󱆃" "shell" "command" {
         text = "echo zsh ${storeVersion "zsh"} · starship ${storeVersion "starship"}";
       })
+      (row "35" "󰝚" "playing" "command" {
+        # The first player that is PLAYING, cut to the value column; a dash when none is, so the
+        # row (and the boxes' height) never disappears.
+        text = ''
+          for p in $(${lib.getExe playerctl} -l 2>/dev/null); do
+            [ "$(${lib.getExe playerctl} -p "$p" status 2>/dev/null)" = Playing ] || continue
+            ${lib.getExe playerctl} -p "$p" metadata --format '{{artist}} - {{title}}' \
+              | ${awk} '{ print (length > 46 ? substr($0, 1, 45) "…" : $0) }'
+            exit
+          done
+          echo —
+        '';
+      })
       (row "35" "󰨞" "editor" "command" { text = "echo VS Code ${storeVersion "code"}"; })
       # kitty's declared font: terminalfont finds nothing outside kitty, which shifted the rows.
       (row "35" "󰛖" "font" "custom" { format = "${font.name} (${toString font.size}pt)"; })
       # Qt and GTK on one line overflow the box, so each gets its own.
       (row "35" "󰏘" "theme" "theme" { format = "{theme1}"; })
       (row "35" "󰏘" "theme" "theme" { format = "{theme2}"; })
-      (row "35" "󰋩" "icons" "icons" { })
-      (row "35" "󰆿" "cursor" "cursor" { })
+      # The declared names (my.theme), on one line: two rows of theme names were the box's filler.
+      (row "35" "󰆿" "cursor" "custom" {
+        format = "${iconTheme} icons · ${cursor.name} ${toString cursor.size}";
+      })
       close
 
       (open "hardware")

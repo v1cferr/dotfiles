@@ -12,6 +12,7 @@ let
   inherit (pkgs)
     coreutils
     gawk
+    git
     jq
     nixos-icons
     python3
@@ -22,6 +23,8 @@ let
   date = lib.getExe' coreutils "date";
   stat = lib.getExe' coreutils "stat";
   awk = lib.getExe gawk;
+  jqBin = lib.getExe jq;
+  gitRepo = "${lib.getExe git} -C ${osConfig.programs.nh.flake}"; # nh.flake = the repo path (SSOT)
 
   # The version of the binary on PATH, from its store path (…-vscode-1.143.1/bin/code): never the
   # evaluated package, which can differ from what is installed, and never running the program.
@@ -30,7 +33,7 @@ let
     ''$(p=$(readlink -f "$(command -v ${bin})"); p=''${p#/nix/store/*-}; p=''${p%%/*}; echo "''${p##*-}")'';
   # One row per connector, in my.monitors order (main first), since fastfetch cannot sort displays.
   monitor = connector: {
-    text = ''hyprctl -i 0 -j monitors | ${lib.getExe jq} -r '.[] | select(.name == "${connector}") | "\(.model) · \(.width)x\(.height) @ \(.refreshRate | round) Hz"' '';
+    text = ''hyprctl -i 0 -j monitors | ${jqBin} -r '.[] | select(.name == "${connector}") | "\(.model) · \(.width)x\(.height) @ \(.refreshRate | round) Hz"' '';
   };
   inherit (config.programs.kitty) font;
 
@@ -109,6 +112,10 @@ let
       (open "nixos")
       (row "34" "󱄅" "os" "os" { })
       (row "34" "󰌽" "kernel" "kernel" { })
+      (row "34" "󰐥" "boot" "bootmgr" {
+        # Secure Boot from the declaration (limine.nix), not fastfetch's guess at the EFI variable.
+        format = "{name}${lib.optionalString osConfig.boot.loader.limine.secureBoot.enable " · Secure Boot"}";
+      })
       (row "34" "󰘬" "nixpkgs" "command" {
         # nixos-version is <release>.<YYYYMMDD>.<rev> (<codename>): the pin's commit and date.
         text = ''
@@ -118,6 +125,17 @@ let
       })
       (row "34" "󰜗" "nix" "command" {
         text = ''v=$(nix --version); echo "Nix ''${v##* }"'';
+      })
+      (row "34" "󰌾" "inputs" "command" {
+        # Direct inputs, every locked node, and how old the newest lock is: when the flake last moved.
+        text = ''
+          ${jqBin} -r '(.nodes.root.inputs | length) as $d | [.nodes[].locked.lastModified // empty] as $l
+            | "\($d) direct · \($l | length) locked · \((now - ($l | max)) / 86400 | floor)d old"' \
+            ${osConfig.programs.nh.flake}/flake.lock
+        '';
+      })
+      (row "34" "󰜘" "dotfiles" "command" {
+        text = ''echo "$(${gitRepo} rev-list --count HEAD) commits · last $(${gitRepo} log -1 --format=%cr)"'';
       })
       (row "34" "󰏖" "packages" "packages" { })
       (row "34" "󰆼" "closure" "command" {

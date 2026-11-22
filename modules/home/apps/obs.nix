@@ -34,9 +34,10 @@ let
       gawk
     ];
     text = ''
-      # Recording: QSV on the Arc, "Small" quality (constant QP, so no bitrate to size), next to
-      # the wl-screenrec clips. "Section Key=Value", one per line.
-      sets="SimpleOutput RecEncoder=qsv
+      # Recording: QSV AV1 on the Arc, "Small" quality (constant QP, so no bitrate to size), next to
+      # the wl-screenrec clips. Not H.264: 1440p at 180 fps is past its level 5.2, QSV rejects every
+      # frame and OBS hangs on "Stopping recording" with a 0 B file. "Section Key=Value", one per line.
+      sets="SimpleOutput RecEncoder=qsv_av1
       SimpleOutput RecQuality=Small
       SimpleOutput RecFormat2=hybrid_mp4
       SimpleOutput FilePath=${recordings}"

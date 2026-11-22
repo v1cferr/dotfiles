@@ -41,8 +41,24 @@ PanelWindow {
     // The Center's width, never more than the screen leaves. Even, so its middle is the logo's.
     readonly property int wide: Math.max(2 * Theme.islandHalf, Math.min(2 * Theme.islandOpenHalf, Math.floor(((drop.screen ? drop.screen.width : 1920) - 2 * Theme.screenInset) / 2) * 2))
     implicitWidth: drop.wide
-    // Room for the spring to pass its size on the way down.
-    implicitHeight: drop.headBottom + Math.max(drop.bodyTall, drop.peekTall) + Theme.sp6
+    // Room for what it holds, and for the spring to pass its size on the way down. It GROWS at once,
+    // with headroom for the next growth (the media card unfolding), and shrinks only while the island
+    // is shut. A layer surface that resizes waits on the compositor's answer, and on Hyprland the
+    // frame held still for about 260 ms each time the open Center got shorter (22/11/2026, seen in a
+    // recording; sway, in the harness, never showed it). The room left over is transparent, and
+    // the compositor's blur ignores it (ignore_alpha, hypr/lua/appearance.lua).
+    readonly property int needTall: Math.max(drop.bodyTall, drop.peekTall)
+    readonly property int headroom: 260
+    readonly property int roomMax: drop.screen ? drop.screen.height - Theme.barTop - drop.headBottom - Theme.sp6 : 1200
+    property int roomTall: 0
+    function reroom() {
+        if (!Island.wide)
+            drop.roomTall = drop.needTall;
+        else if (drop.needTall > drop.roomTall)
+            drop.roomTall = Math.min(drop.roomMax, drop.needTall + drop.headroom);
+    }
+    onNeedTallChanged: drop.reroom()
+    implicitHeight: drop.headBottom + drop.roomTall + Theme.sp6
     color: "transparent"
     mask: Region {
         item: shape.visible ? shape : nothing
@@ -71,6 +87,7 @@ PanelWindow {
         }
         function onWideChanged() {
             drop.rehome();
+            drop.reroom();
         }
         function onAimChanged() {
             drop.rehome();

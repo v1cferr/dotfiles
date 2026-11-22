@@ -16,7 +16,7 @@ Item {
     // steps aside so the two never show at once.
     readonly property bool here: !!slot.barWindow && !!slot.barWindow.screen && slot.barWindow.screen.name === Island.where
     readonly property bool away: Island.wide && slot.here
-    // The island rests, and so opens on a hover, only on the main monitor's full bar.
+    // The island rests only on the main monitor's full bar; a hover opens it from any logo.
     property bool resting: false
     width: Theme.barCenterWidth
     height: Theme.barHeight
@@ -81,7 +81,14 @@ Item {
         Accessible.role: Accessible.Button
         Accessible.name: "NixOS Center: notifications and the session" + (Notifs.unseen > 0 ? ", " + Notifs.unseen + " unseen" : "")
         // A pinned panel owns the bar: a hover does not open the island over it.
-        onContainsMouseChanged: Island.logoHover = slot.resting && containsMouse && (slot.host.pinned === "" || slot.host.pinned === "center")
+        onContainsMouseChanged: {
+            const mine = containsMouse && (slot.host.pinned === "" || slot.host.pinned === "center");
+            // Another screen's logo calls the island over, and only while it is shut.
+            if (mine && !Island.wide)
+                Island.aim = slot.resting || !slot.barWindow || !slot.barWindow.screen ? "" : slot.barWindow.screen.name;
+            if (mine ? (slot.here || !Island.wide) : true)
+                Island.logoHover = mine;
+        }
         onClicked: slot.host.togglePanel("center", slot, slot.barContent, slot.barWindow)
     }
 }

@@ -57,6 +57,11 @@ Scope {
             else
                 Island.shut();
         }
+        // The screen whose logo the pointer would rest on ("" is the main one), for the same check.
+        function islandAim(screen: string): void {
+            if (!Island.wide)
+                Island.aim = screen;
+        }
         // How far the open island reaches under the bar, in px: 0 once it is all the way shut,
         // which is what a screenshot waits for.
         function islandReach(): int {

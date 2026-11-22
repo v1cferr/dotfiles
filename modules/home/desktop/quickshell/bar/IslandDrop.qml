@@ -59,7 +59,7 @@ PanelWindow {
         if (Island.full)
             drop.homeName = drop.bar.popScreen ? drop.bar.popScreen.name : "";
         else if (!Island.wide)
-            drop.homeName = "";
+            drop.homeName = Island.aim;
     }
     Connections {
         target: Island
@@ -69,6 +69,9 @@ PanelWindow {
                 keys.forceActiveFocus();
         }
         function onWideChanged() {
+            drop.rehome();
+        }
+        function onAimChanged() {
             drop.rehome();
         }
         // The Center is made the first time the island opens, and kept.
@@ -92,7 +95,9 @@ PanelWindow {
     readonly property int bodyTop: Theme.barHeight + Theme.sp1 - drop.headBottom
     readonly property int bodyTall: center.item ? drop.bodyTop + Math.ceil(center.item.implicitHeight) + drop.pad : 0
     readonly property real wantReach: Island.open ? drop.bodyTall : 0
-    readonly property real wantHalf: Island.open ? drop.wide / 2 : Math.max(Theme.barCenterWidth / 2, Island.headHalf)
+    // Shut, it is the capsule that rests on the main monitor; on another screen, the logo's own slot.
+    readonly property bool atHome: !!drop.screen && !!Theme.screenPrimary && drop.screen.name === Theme.screenPrimary.name
+    readonly property real wantHalf: Island.open ? drop.wide / 2 : Math.max(Theme.barCenterWidth / 2, drop.atHome ? Island.headHalf : 0)
 
     // Out and down on the spring, back on a short ease: faster out than in.
     // A long way down passes its size by the same share, which is many more pixels: past

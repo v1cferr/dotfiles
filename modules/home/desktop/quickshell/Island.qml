@@ -83,6 +83,13 @@ Singleton {
     property bool full: false   // pinned: the coordinator decides, this follows
     // The screen whose logo it hangs from: the main one, or the one whose logo pinned it.
     property string where: ""
+    // The screen whose logo the pointer rests on, when it is not the main one: where a hover opens
+    // it. It goes back to the main monitor once shut with the pointer off that logo.
+    property string aim: ""
+    onWideChanged: if (!root.wide && !root.logoHover)
+        root.aim = ""
+    onCapsuleHoverChanged: if (root.capsuleHover && !root.wide)
+        root.aim = ""
     // How wide the resting capsule is, half of it, on that screen: where the opening starts from.
     property real headHalf: 0
     readonly property bool hasMedia: Media.playing && Media.title !== ""

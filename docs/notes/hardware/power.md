@@ -100,6 +100,31 @@ concurrent games share one hold. The unit `BindsTo=gamemoded.service`, so a cras
 ends the hold instead of leaving the CPU on `performance`. A manual pick during a game wins:
 ppd releases every hold when the user switches.
 
+## The build fence: a rebuild beside a game
+
+A `rebuild` during a game lagged it, although the nix-daemon already runs `SCHED_IDLE` with idle
+I/O (`modules/nixos/core/core.nix`). Idle priority only decides who gets CPU TIME. With
+`max-jobs 3 x cores 4` the builds still fill all 12 threads, and what they take is not time:
+
+- **SMT siblings.** A compiler on cpu8 shares physical core 2 with the game's thread on cpu2. The
+  scheduler cannot help, the core's execution units are split between both.
+- **Shared L3, memory bandwidth and the package power budget.** Every core busy means a lower
+  turbo for the game's cores too.
+
+So while a game runs, `modules/nixos/gaming/build-fence.nix` moves the daemon's cgroup onto
+`my.gaming.buildCpus` (here cores 4 and 5 with their siblings, `4,5,10,11`) with a 200% quota.
+Builds run in `/system.slice/nix-daemon.service` (`use-cgroups = false`), so the property
+reaches every running build at once, and leaving the game spreads them back over 12 threads.
+
+The shape: the root unit `nix-daemon-gaming-fence` runs `systemctl set-property --runtime`
+(in `/run`, so a reboot never keeps it), a polkit rule lets the user start and stop only that
+unit, and the user unit `nix-build-fence` (`StopWhenUnneeded`) is wanted by BOTH game triggers,
+`gamemode-performance` and `game-performance`. systemd refcounts it: the fence drops only when
+neither hold is active.
+
+To check it: `systemctl show nix-daemon -p AllowedCPUs -p CPUQuotaPerSecUSec` during a game,
+and `mpstat -P ALL 1` beside a build shows load only on the fenced CPUs.
+
 ## The user-side effects: `power-profile-sync`
 
 A user unit (`default.target`, so it works over SSH too) runs `gdbus monitor` on ppd's object and

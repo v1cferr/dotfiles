@@ -3,6 +3,7 @@
 
 {
   imports = [
+    ./build-fence.nix # nix builds fenced onto my.gaming.buildCpus while a game runs
     ./hydralauncher.nix # Hydra's torrent port open (the app itself is in modules/home/apps)
     ./steam.nix # the Steam client plus Proton-GE plus gamemode plus ntsync (Remote Play/LAN with the firewall)
   ];

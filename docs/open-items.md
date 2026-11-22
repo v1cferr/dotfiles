@@ -59,9 +59,9 @@ finished work. What was closed is in the [august history](history/2026/08-august
         module the host imports, like the mice.
       • THE HOME MANAGER SIDE got its per-host layer on 10/11/2026: `hosts/<host>/home.nix` adds
         `home-manager.users.v1cferr.imports`, and the desk's holds the DDC backlight, the Razer
-        OSD, the autologin keyring, the two SFTP mounts and the weekly drill. STILL SHARED: the
-        Windows games disk and the WoW add-ons, because Bottles, glance-feed and disk-insight
-        read `my.games` and would need to live without it first.
+        OSD, the autologin keyring, the two SFTP mounts and the weekly drill. The games followed
+        on 22/11/2026: `my.games` stays shared, but its default `root` (the Windows disk) and the
+        WoW link are all it declares; the desk's other games live in `hosts/ex-b560m-v5/games.nix`.
       • THE ROUTER'S DHCP RESERVATION still names this machine `v1cferr-nixos`. Renaming it is a
         change on the device (uci, then `router-sync pull`), not a layout one.
 

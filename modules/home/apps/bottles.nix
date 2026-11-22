@@ -203,47 +203,29 @@ in
   config = {
     home.packages = [ bottlesApp ];
 
-    # WHERE EACH ARGUMENT COMES FROM: the entries that already existed were read back out of
-    # bottle.yml, and the two new ones from the .lnk Battle.net itself wrote in the prefix.
+    # The helpers a host's own game list builds its entries with (hosts/<host>/games.nix).
+    lib.bottles = {
+      inherit
+        battlenet
+        battleNetExe
+        inGame
+        inBottle
+        ;
+    };
+
+    # WHAT EVERY HOST THAT PLAYS HAS: Battle.net and WoW. A host's other games are its own list.
+    # Where each argument comes from: docs/notes/apps/bottles.md
     my.games.library = {
       "Battle.net" = inBottle battlenet battleNetExe // {
         arguments = "--no-proxy-server --disable-features=CriticalClientHint --enable-features=UserAgentClientHint --in-process-gpu";
       };
 
-      # Through Battle.net and NOT its own launcher, which is the route already proven here.
-      "Hearthstone" = inBottle battlenet battleNetExe // {
-        arguments = ''--exec="launch WTCG" --no-proxy-server --disable-features=CriticalClientHint --enable-features=UserAgentClientHint'';
-        icon = (inGame "Hearthstone" "Hearthstone.exe").path; # not Battle.net's
-      };
-
-      # Battle.net's own shim. If it fails under Wine, the fallback is Hearthstone's route with the
-      # product code, and it is written down in the notes. `inBottle` and not `inGame`: it lives on
-      # the NVMe since 18/10, not on the games disk (games-disk.nix says why).
-      "Overwatch" = inBottle battlenet "Program Files (x86)/Overwatch/Overwatch Launcher.exe" // {
-        arguments = "--productcode=pro";
-      };
-
-      # The same shim as Overwatch. Warcraft III's code is in its .lnk; WoW wrote no .lnk, so its
-      # code is the key Battle.net.config gives the only installed flavour (`_forever_`).
-      "Warcraft III" = inGame "Warcraft III" "Warcraft III Launcher.exe" // {
-        arguments = "--productcode=w3";
-      };
+      # Battle.net's own launcher shim. WoW wrote no .lnk, so its code is the key Battle.net.config
+      # gives the only installed flavour (`_forever_`).
       "World of Warcraft" = inGame "World of Warcraft" "World of Warcraft Launcher.exe" // {
         arguments = "--productcode=wowf";
         icon = (inGame "World of Warcraft" "_forever_/Wow.exe").path;
       };
-
-      "Cities Skylines II" = inGame "Cities - Skylines II" "Cities2.exe";
-      "Assassin's Creed Black Flag Resynced" =
-        inGame "Assassin Creed Black Flag Resynced" "ACBlackFlag.exe";
-
-      # `binaries/` and NOT `launcher/dowser.exe`: the Paradox launcher is what the repack replaced
-      # a Steam login with, and going straight to the exe skips a login that cannot succeed.
-      "Victoria 3" = inGame "Victoria 3" "binaries/victoria3.exe";
-
-      # Inside its own prefix (4.3 GiB of `@home`), never moved to the games disk. The GUI had
-      # added it as `valheim`, renamed in bottle.yml so this entry adopts it instead of a twin.
-      "Valheim" = inBottle "Valheim" "Valheim/valheim.exe";
     };
 
     # Each program in the app launcher (Vicinae), started the way the Library tab starts it.

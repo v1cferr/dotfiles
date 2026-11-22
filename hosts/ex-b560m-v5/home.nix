@@ -1,10 +1,11 @@
 # The part of my home that only THIS desk has: its two DDC panels, its mouse, the autologin keyring
-# and lock, the mounts its VPN reaches and its weekly drill: docs/decisions/0018-a-shared-laptop.md
+# and lock, its games, the mounts its VPN reaches and its weekly drill: docs/decisions/0018-a-shared-laptop.md
 { ... }:
 
 {
   home-manager.users.v1cferr = {
     imports = [
+      ./games.nix # the games on its Windows disk, their saves and their Bottles entries, beyond WoW
       ../../modules/home/desktop/backlight.nix # DDC/CI: both panels held at one declared brightness and white point
       ../../modules/home/desktop/keyring.nix # the "Login" keyring unlocked at start from a TPM-sealed password (autologin)
       ../../modules/home/desktop/lockscreen # the session lock plus hypridle: this desk logs in by itself, so the lock IS its login

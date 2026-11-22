@@ -97,6 +97,10 @@ so the two agree for every other bottle here and will disagree again for any nam
 
 ## Where each command line came from
 
+Battle.net and World of Warcraft are declared in `modules/home/apps/bottles.nix`, since every host
+that plays has them. The rest of the table is the desk's own list, in `hosts/ex-b560m-v5/games.nix`,
+built with the same helpers (`config.lib.bottles`).
+
 Nothing in the list was invented. The programs that already existed were read back out of
 `bottle.yml`, and Overwatch, which was missing, came from the `.lnk` file Battle.net itself wrote
 inside the prefix, decoded from `drive_c/users/Public/Desktop`:

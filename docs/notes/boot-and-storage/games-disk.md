@@ -72,7 +72,8 @@ still never mounts a volume it considers dirty.
 ## Why symlinks, and why AT THE OLD PATH
 
 `modules/home/apps/games-disk.nix` maps a path under `$HOME` to a path under `/mnt/windows/Games` and
-declares it with `mkOutOfStoreSymlink`. Out-of-store because the target is MUTABLE data the
+declares it with `mkOutOfStoreSymlink`. It declares only WoW's link, the game every host that plays
+has; the desk's other games are its own list in `hosts/ex-b560m-v5/games.nix`. Out-of-store because the target is MUTABLE data the
 launcher patches in place: copying 89 GiB into the nix store would be absurd and read-only.
 
 The symlink deliberately sits where the launcher ALREADY looks, instead of relocating the game:

@@ -266,12 +266,33 @@ always, ONE thing with the island instead of two, and with stronger glass.
   `qs ipc call bar island open` and `close` stand in for a hover, `bar islandAim <screen>` for
   the logo it rests on, and `bar islandReach` says how far it reaches under its head, in px.
 
-| Part          | Motion                                                                          |
-| ------------- | ------------------------------------------------------------------------------- |
-| The width     | the island's spring, from the capsule's width to 520 px, never past the window  |
-| The height    | the same spring, damped at 0.45 past 400 px of travel: the Center settles       |
-| What it holds | the logo from the first frame, the Center 80 ms later; revealed, never squeezed |
-| Shutting      | an ease-out over `motionHover`, back to the capsule's width, which then returns |
+| Part           | Motion                                                                             |
+| -------------- | ---------------------------------------------------------------------------------- |
+| The width      | the island's spring, from the capsule's width to 520 px, never past the window     |
+| The height     | the same spring, damped at 0.45 past 400 px of travel: the Center settles          |
+| What it holds  | follows the glass: its opacity is how far the glass has come, with a 6 px slide    |
+| Card to Center | a cross-fade on that same progress: the card out, the Center in, no frame bare     |
+| Open, resized  | a page, the media card: a 180 ms ease with no overshoot; what enters fades with it |
+| Shutting       | an ease-out over `motionHover`, the Center fading as the glass rises               |
+
+**Recorded live on 22/11/2026, and fixed the same day.** The owner sent a recording of the island in
+use (32 s at 180 fps): "not fluid and harmonious". Taken apart frame by frame, every fault had one
+cause: the glass moved, and what it held changed at once or on a clock of its own. The Center came
+down on bare glass for three frames (an 80 ms wait, then a fade of its own); a card turning into
+the Center blinked out first; closing the Center put the card back into the still tall glass before
+it shrank; and unfolding the media card or opening a page snapped the content while the spring
+trailed, cutting the foot on the way out and leaving bare glass on the way in. Now what it holds
+follows the glass (`IslandDrop.centerShown`, `cardShown`), opening the Center consumes the card
+(its notification is right there in the history), and once settled a size change is a short ease.
+
+Traced frame by frame in the harness (a `FrameAnimation` logging the glass and both opacities in
+the test copy only, since a capture took 176 ms): from the card, the Center rose from 0 as the card
+fell from 1, crossing at a third of the way, with no frame of both at 0; from the capsule the
+Center was at 0.11 on the first frame the glass moved; shutting, it fell to 0 with the glass;
+shutting after the card, the card did not come back; and a page 420 px shorter took the glass from
+573 to 153 px in about 190 ms without passing it. Four hot reloads, with the card out and the
+Center pinned, crashed nothing. Not seen: a page or the media card growing the open Center (no
+command reaches them in the harness), and how all of it looks to the owner.
 
 **Measured on 21/11/2026** in the harness, every state driven over IPC:
 

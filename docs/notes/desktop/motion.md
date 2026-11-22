@@ -201,6 +201,13 @@ goes back up on the short ease. Since 21/11/2026 what opens is the NixOS Center 
 its width springs from the capsule's to 520 px, and its height, a long way down, is damped harder
 (0.45), so it settles in under 390 ms with no bounce.
 
+What the island holds has no clock of its own (22/11/2026, after a live recording showed the
+glass coming down bare and the content snapping): its opacity follows how far the glass has come,
+a card turning into the Center cross-fades on that same progress, and once the Center has settled
+a change of its own size is a `motionNormal` ease, never the spring, with what enters fading in on
+the same ease (`widgets/FadeIn.qml`). The rule it keeps is the one the owner put as "fluid and
+harmonious": the content and its glass arrive together.
+
 The wave beside the cover ([island.md](island.md#the-wave)) never stops while music plays, and is
 not decoration: it is the spectrum of what is heard, a status that IS motion. Unlike the other such
 statuses it does go with `my.theme.motion = "off"`, since the cover and the title already say that

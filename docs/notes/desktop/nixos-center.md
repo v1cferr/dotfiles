@@ -109,6 +109,13 @@ that sums them in a line (`6.5 GB available · boot verified`). The row opens by
 the warning color, while the boot has something short of proven. Every action, key and tip is
 as it was.
 
+**The head is the logo alone, 22/11/2026.** Without its title the row held three switches right of
+the logo and nothing left of it, which the owner's rule of symmetry about the logo does not allow.
+Each went to the section it acts on, on a row shaped like the screenshots' own (a label, a word
+for the state, the switch): do-not-disturb and clear on `NOTIFICATIONS`, whose word is the count,
+`None` or `Do not disturb`; the idle timeouts on `SESSION`, `Sleeps on idle` or `Stays awake`.
+`bar/CenterHeader.qml` is gone.
+
 - **Where:** hung from the logo of the bar that was clicked, as one shape with it: 520 px wide or
   the screen's width less the windows' outer gap on each side, flush under the bar. Measured on
   12/11/2026: 260 px each side of x 1280, the logo's, and 258 each side of 540 on the second

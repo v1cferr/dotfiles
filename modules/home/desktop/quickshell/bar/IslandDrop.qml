@@ -154,38 +154,29 @@ PanelWindow {
         value: Math.max(0, shape.reach)
     }
 
-    // What it holds enters in two beats as it opens: its head, then the Center.
-    property real beat0: 1
+    // What it holds enters as it opens: the logo is there from the first frame, the Center a beat later.
     property real beat1: 1
     Connections {
         target: Island
         function onOpenChanged() {
             if (!Island.open || Theme.motionReduced)
                 return;
-            drop.beat0 = 0;
             drop.beat1 = 0;
             enter.restart();
         }
     }
-    component Beat: NumberAnimation {
-        target: drop
-        from: 0
-        to: 1
-        duration: Theme.motionNormal
-        easing.type: Easing.OutCubic
-    }
-    ParallelAnimation {
+    SequentialAnimation {
         id: enter
-        Beat {
-            property: "beat0"
+        PauseAnimation {
+            duration: Theme.motionStagger * 2
         }
-        SequentialAnimation {
-            PauseAnimation {
-                duration: Theme.motionStagger * 2
-            }
-            Beat {
-                property: "beat1"
-            }
+        NumberAnimation {
+            target: drop
+            property: "beat1"
+            from: 0
+            to: 1
+            duration: Theme.motionNormal
+            easing.type: Easing.OutCubic
         }
     }
 
@@ -241,16 +232,8 @@ PanelWindow {
             width: drop.wide
             height: drop.implicitHeight
 
-            // ── The head, on the capsule's row: the logo, and the Center's switches right of it ──
-            CenterHeader {
-                x: drop.pad
-                y: drop.headTop
-                width: drop.wide - 2 * drop.pad
-                height: Theme.barCell
-                opacity: drop.beat0
-                bar: drop.bar
-                tips: tips
-            }
+            // ── The head, on the capsule's row, holds the logo alone: the Center's switches are in
+            // its own sections, so the row is the same on both sides of the logo ──
             // The logo, on the pixels the bar's own stands on: a click pins the island, or closes it.
             Image {
                 readonly property string logo: Quickshell.iconPath("nix-snowflake", true)
@@ -287,15 +270,6 @@ PanelWindow {
                     shown: Island.open
                     onKeysWanted: keys.forceActiveFocus()
                 }
-            }
-            // The tips of the head's switches, over the Center.
-            GlassTip {
-                id: tips
-                x: drop.pad
-                y: drop.headBottom
-                width: drop.wide - 2 * drop.pad
-                height: Math.max(0, shape.height - Theme.barCell)
-                anchors.fill: undefined
             }
         }
     }

@@ -234,18 +234,46 @@ Item {
                 opacity: 0.5
             }
 
-            // ── Body: the history, newest first, only the visible cards instantiated ──
-            Text {
-                visible: Notifs.count === 0
+            // ── Notifications: do-not-disturb and clear on their own row, then the history ──
+            RowLayout {
                 Layout.fillWidth: true
-                Layout.topMargin: Theme.sp2
-                Layout.bottomMargin: Theme.sp2
-                horizontalAlignment: Text.AlignHCenter
-                text: "No notifications"
-                color: Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: Theme.fontBody
+                spacing: Theme.sp2
+                Text {
+                    Layout.fillWidth: true
+                    text: "NOTIFICATIONS"
+                    color: Theme.colDim
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontSmall
+                    font.letterSpacing: 1
+                }
+                Text {
+                    text: Notifs.dnd ? "Do not disturb" : (Notifs.count === 0 ? "None" : Notifs.count)
+                    color: Notifs.dnd ? Theme.colAlert : Theme.colSubtext
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontSmall
+                }
+                IconButton {
+                    glyph: Notifs.dnd ? "󰂛" : "󰂚"
+                    tint: Notifs.dnd ? Theme.colAlert : Theme.colSubtext
+                    active: Notifs.dnd
+                    tips: tips
+                    name: "Do Not Disturb"
+                    stateText: Notifs.dnd ? "Enabled: toasts are held, critical ones still show" : "Disabled"
+                    action: Notifs.dnd ? "Click to disable" : "Click to enable"
+                    onClicked: Notifs.toggleDnd()
+                }
+                IconButton {
+                    glyph: "󰎟"
+                    tint: Theme.colSubtext
+                    enabled: Notifs.count > 0
+                    tips: tips
+                    name: "Clear notifications"
+                    stateText: Notifs.count > 0 ? Notifs.count + " in the history" : "Nothing to clear"
+                    action: Notifs.count > 0 ? "Click to clear them all" : ""
+                    onClicked: Notifs.clearAll()
+                }
             }
+            // The history, newest first, only the visible cards instantiated.
             ListView {
                 id: list
                 visible: Notifs.count > 0
@@ -510,6 +538,35 @@ Item {
             }
 
             // ── Footer: the session; the three that end it are confirmed in place (PowerConfirm.qml) ──
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.sp2
+                Text {
+                    Layout.fillWidth: true
+                    text: "SESSION"
+                    color: Theme.colDim
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontSmall
+                    font.letterSpacing: 1
+                }
+                Text {
+                    text: center.bar.hypridleOn ? "Sleeps on idle" : "Stays awake"
+                    color: center.bar.hypridleOn ? Theme.colSubtext : Theme.colWarn
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontSmall
+                }
+                IconButton {
+                    // hypridle: on is the normal state. Off shows on the bar too, so it is never forgotten.
+                    glyph: center.bar.hypridleIcon
+                    tint: center.bar.hypridleOn ? Theme.colSubtext : Theme.colWarn
+                    active: !center.bar.hypridleOn
+                    tips: tips
+                    name: "Idle timeouts"
+                    stateText: center.bar.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"
+                    action: center.bar.hypridleOn ? "Click to disable" : "Click to enable"
+                    onClicked: center.bar.toggleIdle()
+                }
+            }
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.sp1

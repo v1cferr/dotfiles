@@ -184,7 +184,7 @@ always, ONE thing with the island instead of two, and with stronger glass.
 | ------------- | ------------------------------------------------------------------------------- |
 | The width     | the island's spring, from the capsule's width to 520 px, never past the window  |
 | The height    | the same spring, damped at 0.45 past 400 px of travel: the Center settles       |
-| What it holds | two beats 80 ms apart: its head, then the Center; revealed, never squeezed      |
+| What it holds | the logo from the first frame, the Center 80 ms later; revealed, never squeezed |
 | Shutting      | an ease-out over `motionHover`, back to the capsule's width, which then returns |
 
 **Measured on 21/11/2026** in the harness, every state driven over IPC:

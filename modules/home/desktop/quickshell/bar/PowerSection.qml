@@ -1,5 +1,6 @@
-// The NixOS Center's POWER section: the ppd profile (Balanced/Gaming/Eco), what its last apply did,
-// and the memory and GPU readings behind it. The rules: docs/notes/desktop/nixos-center.md
+// The NixOS Center's POWER: the ppd profile (Balanced/Gaming/Eco) and what its last apply did, on
+// the Power page, and the memory and GPU readings behind it, on the System page.
+// The rules: docs/notes/desktop/nixos-center.md
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.UPower
@@ -11,6 +12,10 @@ import "root:/widgets"
 ColumnLayout {
     id: power
     required property var bar
+    // Which of its two halves shows: the Center has a page for each. "profile" is the switch and
+    // what its last apply did; "readings" is the memory and the GPU behind it.
+    property string part: "profile"
+    readonly property bool onProfile: power.part === "profile"
     spacing: Theme.sp2
 
     // ── The profile: ppd is the only owner, this only asks it (polkit lets the active session) ──
@@ -96,10 +101,11 @@ ColumnLayout {
     }
 
     RowLayout {
+        visible: power.onProfile
         Layout.fillWidth: true
         spacing: Theme.sp2
         Text {
-            text: "POWER"
+            text: "LAST APPLY"
             color: Theme.colDim
             font.family: Theme.uiFont
             font.pixelSize: Theme.fontSmall
@@ -117,6 +123,7 @@ ColumnLayout {
     }
 
     RowLayout {
+        visible: power.onProfile
         Layout.fillWidth: true
         spacing: Theme.sp1
         Repeater {
@@ -176,66 +183,13 @@ ColumnLayout {
 
     // A hold (GameMode) overrides the pick until it ends; ppd then returns to the picked profile.
     Text {
-        visible: power.live && power.hold !== null
+        visible: power.onProfile && power.live && power.hold !== null
         Layout.fillWidth: true
         text: power.hold ? "Held at " + PowerProfile.toString(power.hold.profile) + " by " + (power.hold.reason || power.hold.applicationId) + ", until it ends" : ""
         color: Theme.colWarn
         font.family: Theme.uiFont
         font.pixelSize: Theme.fontMicro
         elide: Text.ElideRight
-    }
-
-    // ── System: the readings (and, under them, the boot's proof) stay folded behind one row ──
-    property bool details: false
-    property string note: "" // what else the row sums up: the boot section's one line
-    property bool alarm: false // something behind the row needs a look: it says so in color
-    signal detailsToggled
-    Rectangle {
-        id: sysRow
-        Layout.fillWidth: true
-        implicitHeight: Theme.barControl
-        radius: Theme.radiusControl
-        color: sysArea.pressed ? Theme.colPressFill : (sysArea.containsMouse ? Theme.colHoverFill : "transparent")
-        Accessible.role: Accessible.Button
-        Accessible.name: "System details, " + (power.details ? "shown" : "hidden") + ": " + sysSum.text
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: Theme.sp2
-            anchors.rightMargin: Theme.sp2
-            spacing: Theme.sp2
-            Text {
-                text: "System"
-                color: Theme.colSubtext
-                font.family: Theme.uiFont
-                font.pixelSize: Theme.fontBody
-            }
-            Text {
-                id: sysSum
-                Layout.fillWidth: true
-                text: power.cards[0].value + " available" + (power.note !== "" ? "  ·  " + power.note : "")
-                color: power.alarm ? Theme.colWarn : Theme.colDim
-                font.family: Theme.uiFont
-                font.pixelSize: Theme.fontSmall
-                elide: Text.ElideRight
-            }
-            Text {
-                text: power.details ? "expand_less" : "expand_more"
-                color: Theme.colDim
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.iconBar
-                font.variableAxes: Theme.iconAxes
-            }
-        }
-        MouseArea {
-            id: sysArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: power.detailsToggled()
-        }
-        KeyTarget {
-            onActivated: power.detailsToggled()
-        }
     }
 
     // ── The readings: all from the bar's own 2 s snapshot, no read of their own ──
@@ -275,12 +229,21 @@ ColumnLayout {
             }
         ];
     }
+    Text {
+        visible: !power.onProfile
+        text: "MEMORY"
+        color: Theme.colDim
+        font.family: Theme.uiFont
+        font.pixelSize: Theme.fontSmall
+        font.letterSpacing: 1
+    }
     RowLayout {
-        visible: power.details
+        visible: !power.onProfile
         Layout.fillWidth: true
         spacing: Theme.sp2
         Repeater {
-            // By COUNT, each column reading its own entry (the same reason as the Center's status row).
+            // By COUNT, each column reading its own entry: the snapshot behind them ticks every 2 s,
+            // and a model of objects would rebuild all five columns each time.
             model: power.cards.length
             delegate: Rectangle {
                 id: card

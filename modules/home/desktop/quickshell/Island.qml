@@ -131,16 +131,19 @@ Singleton {
     }
     // What the capsule shows holds while the pointer is on the island, or while it is open.
     readonly property bool held: root.hovered || root.open
+    // The open island shows the whole media card, not its one row: only then is the wave heard
+    // and the player's own stream looked for (the Center says so).
+    property bool mediaCard: false
     onHeldChanged: root.freeze(root.held)
     Binding {
         target: Audio
         property: "waveOpen"
-        value: root.open && root.hasMedia && !Theme.motionReduced
+        value: root.open && root.mediaCard && root.hasMedia && !Theme.motionReduced
     }
     Binding {
         target: Audio
         property: "islandOpen"
-        value: root.open && root.hasMedia
+        value: root.open && root.mediaCard && root.hasMedia
     }
 
     // ── A task somebody runs in a terminal (`rebuild`): there while it runs, then its result ──

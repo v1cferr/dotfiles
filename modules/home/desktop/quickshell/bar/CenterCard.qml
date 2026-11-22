@@ -1,12 +1,17 @@
-// The NIXOS CENTER's content: notifications (grouped for reading), a hardware summary, screenshots
-// and the session, in that order. It draws no surface and owns no window: its host does, and
-// hands it the keys. docs/notes/desktop/nixos-center.md
+// The NIXOS CENTER's content, the one panel of the shell: the day, the tiles (the everyday
+// switches and what each is now), the levels, a line of status, what plays, then the notifications
+// as its body and the session at its foot. A tile's detail is a PAGE that takes the card's place.
+// It draws no surface and owns no window: its host does, and hands it the keys.
+// docs/notes/desktop/nixos-center.md
 import Quickshell
+import Quickshell.Bluetooth
 import Quickshell.Services.Notifications
+import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
+import "root:/control"
 import "root:/media"
 import "root:/notifications"
 
@@ -25,7 +30,58 @@ Item {
     implicitHeight: card.implicitHeight
     // The list grows with the history up to what the screen leaves, then scrolls on its own, so the
     // hardware, the screenshots and the session below it always stay in reach.
-    readonly property int listMax: Math.max(160, Math.min(480, center.sh - Theme.bandTop - Theme.screenInset - 520))
+    readonly property int listMax: Math.max(160, Math.min(480, center.sh - Theme.bandTop - Theme.screenInset - 460))
+
+    // ── Pages: "" is the main view; a tile with more to show swaps the card's content in place ──
+    property string page: ""
+    readonly property var pageTitles: ({
+            net: "Network",
+            bt: "Bluetooth",
+            vpn: "VPN",
+            sound: "Sound",
+            power: "Power",
+            shots: "Screenshots",
+            system: "System"
+        })
+    function openPage(name) {
+        tips.hide(tips.target);
+        center.page = name;
+        center.takeKeys();
+    }
+    Connections {
+        target: center.bar
+        function onCenterPageWantedChanged() {
+            if (center.shown && center.bar.centerPageWanted !== "") {
+                center.openPage(center.bar.centerPageWanted);
+                center.bar.centerPageWanted = "";
+            }
+        }
+    }
+    property bool mediaOpen: false // the full media card, in the compact row's place
+    Binding {
+        target: Island
+        property: "mediaCard"
+        value: center.mediaOpen
+    }
+
+    // ── What the tiles say: each reads the service that owns its state, and sets nothing else ──
+    readonly property var adapter: Bluetooth.defaultAdapter
+    readonly property var btConnected: (center.adapter && center.adapter.devices ? center.adapter.devices.values : []).filter(d => d.connected)
+    readonly property var vpnUp: center.bar.vpnList.filter(v => v.connected)
+    readonly property string vpnPending: Object.keys(center.bar.vpnPhase).find(id => center.bar.vpnPhase[id] === "connecting") || ""
+    readonly property var profileNow: ({
+            [PowerProfile.Balanced]: ["Balanced", "speed"],
+            [PowerProfile.Performance]: ["Gaming", "sports_esports"],
+            [PowerProfile.PowerSaver]: ["Eco", "eco"]
+        })[PowerProfiles.profile] || ["Power", "speed"]
+    readonly property var profileHold: PowerProfiles.holds.length > 0 ? PowerProfiles.holds[0] : null
+    readonly property bool memTight: center.bar.psiMem >= 10
+    // The next date the calendar holds, after its filters, and how far it is.
+    readonly property string todayIso: center.bar.calYear + "-" + ("0" + center.bar.calTodayM).slice(-2) + "-" + ("0" + center.bar.calTodayD).slice(-2)
+    readonly property var nextDate: center.shown ? (Holidays.upcoming(center.bar.calYear, center.bar.calTodayM, center.bar.calTodayD, 1, Holidays.filters)[0] || null) : null
+    function inDays(n) {
+        return n <= 0 ? "today" : (n === 1 ? "tomorrow" : "in " + n + " days");
+    }
 
     // ── The history as entries: one notification, or a GROUP of similar ones (a view; the server
     // keeps every notification). Similar = same app and summary, within 5 min of the previous one,
@@ -98,22 +154,15 @@ Item {
         const diskWarn = b.diskTotal > 0 && (b.diskPct >= 90 || b.diskFree < 20 * 1073741824);
         return [
             {
-                label: "WEATHER",
-                value: b.wHas ? b.wTemp + "°C" : "n/a",
-                caption: b.wHas ? b.wText : "no data",
-                tone: b.wHas ? Theme.colText : Theme.colUnknown,
-                panel: b.wHas ? "weather" : ""
-            },
-            {
                 label: "CPU",
-                value: cpu ? cpu.temp + "°C" : "n/a",
+                value: cpu ? cpu.temp + "°" : "n/a",
                 caption: cpu ? cpu.chip : "no sensor",
                 tone: cpu ? center.tempTone(cpu) : Theme.colUnknown,
                 panel: "temp"
             },
             {
                 label: "GPU",
-                value: gpu ? gpu.temp + "°C" : "n/a",
+                value: gpu ? gpu.temp + "°" : "n/a",
                 caption: gpu ? gpu.chip : "no sensor",
                 tone: gpu ? center.tempTone(gpu) : Theme.colUnknown,
                 panel: "temp"
@@ -126,7 +175,7 @@ Item {
                 panel: "usage"
             },
             {
-                label: "DISK",
+                label: "Disk",
                 value: b.diskTotal > 0 ? b.diskPct + "%" : "n/a",
                 caption: b.diskTotal > 0 ? b.fmtBytes(b.diskFree) + " free" : "no data",
                 tone: b.diskTotal <= 0 ? Theme.colUnknown : (diskCrit ? Theme.colCrit : (diskWarn ? Theme.colWarn : Theme.colText)),
@@ -161,6 +210,12 @@ Item {
     function keyPressed(event) {
         if (center.asking)
             return;
+        // Escape leaves a page first, the panel second.
+        if (event.key === Qt.Key_Escape && center.page !== "") {
+            center.page = "";
+            event.accepted = true;
+            return;
+        }
         if ([Qt.Key_Down, Qt.Key_Right].includes(event.key)) {
             card.nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason);
             event.accepted = true;
@@ -169,10 +224,6 @@ Item {
             event.accepted = true;
         }
     }
-    // The System row: the power's readings and the boot's proof, folded until asked for. It opens
-    // by itself while the boot has something short of proven to show.
-    property bool sysOpen: false
-    readonly property bool sysShown: center.sysOpen || !bootSection.good
     onShownChanged: {
         if (center.shown)
             center.takeKeys(); // every open starts from the panel, never from the last control
@@ -180,7 +231,10 @@ Item {
         if (!center.shown && (Power.state.phase === "confirm" || Power.state.phase === "error"))
             Power.cancel();
         center.expanded = ({}); // groups open folded, every time
-        center.sysOpen = false; // and so does the System row
+        // Every open starts on the main view, unless a page was asked for (Bar.openCenter).
+        center.page = center.shown ? center.bar.centerPageWanted : "";
+        center.bar.centerPageWanted = "";
+        center.mediaOpen = false;
         if (center.shown) {
             powerSection.refresh(); // the sync's state, read on open instead of polled
             bootSection.refresh(); // boot-trust's record, same rule
@@ -207,44 +261,301 @@ Item {
         // Escape from a focused control bubbles up to here; the question answers it first (PowerConfirm).
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Escape) {
-                center.bar.closePanels();
+                center.page !== "" ? center.page = "" : center.bar.closePanels();
                 event.accepted = true;
             }
         }
 
-        // ── The sections; the confirmation takes their place while an action asks ──
+        // A word of the day's line that leads somewhere.
+        component Link: Text {
+            id: link
+            signal clicked
+            color: linkArea.containsMouse ? Theme.colText : Theme.colSubtext
+            font.family: Theme.uiFont
+            font.pixelSize: Theme.fontBody
+            elide: Text.ElideRight
+            MouseArea {
+                id: linkArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: link.clicked()
+            }
+        }
+        // A section's name, in the small capitals every panel of the shell uses.
+        component Label: Text {
+            color: Theme.colDim
+            font.family: Theme.uiFont
+            font.pixelSize: Theme.fontSmall
+            font.letterSpacing: 1
+        }
+
+        // ══ The main view; a page or the confirmation takes its place ══
         ColumnLayout {
             Layout.fillWidth: true
-            visible: !center.asking
+            visible: !center.asking && center.page === ""
             spacing: Theme.sp3
 
-            // ── What plays, when something does (media/MediaCard.qml) ──
-            MediaCard {
-                Layout.fillWidth: true
-                visible: Island.hasMedia
-                active: center.shown && Island.hasMedia
-                wave: Audio.waveOpen
-                onRevealed: center.bar.closePanels()
-            }
-            Rectangle {
-                Layout.fillWidth: true
-                visible: Island.hasMedia
-                implicitHeight: Theme.hairline
-                color: Theme.colBorder
-                opacity: 0.5
-            }
-
-            // ── Notifications: do-not-disturb and clear on their own row, then the history ──
+            // ── The day: the date, the weather, the next date the calendar holds ──
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.sp2
-                Text {
+                Link {
+                    text: center.bar.dateStr
+                    color: Theme.colText
+                    font.weight: Theme.weightStrong
+                    onClicked: center.bar.togglePanel("cal", null, null, center.bar.popBar)
+                }
+                Link {
+                    visible: center.bar.wHas
+                    text: center.bar.wTemp + "° " + center.bar.wText
+                    onClicked: center.bar.togglePanel("weather", null, null, center.bar.popBar)
+                }
+                Link {
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                    visible: center.nextDate !== null
+                    text: center.nextDate ? center.nextDate.display + " · " + center.inDays(Holidays.daysBetween(center.todayIso, center.nextDate.date)) : ""
+                    color: Theme.colDim
+                    onClicked: center.bar.togglePanel("cal", null, null, center.bar.popBar)
+                }
+            }
+
+            // ── The tiles: the everyday switches, and the doors to what has more to show ──
+            GridLayout {
+                Layout.fillWidth: true
+                columns: 4
+                rowSpacing: Theme.sp2
+                columnSpacing: Theme.sp2
+
+                QuickTile {
+                    icon: !center.bar.netConnected ? "signal_disconnected" : (center.bar.netEthernet ? "lan" : "wifi")
+                    label: !center.bar.netConnected ? "Offline" : (center.bar.netEthernet ? "Ethernet" : "Wi-Fi")
+                    name: "Network"
+                    // The link's kind while it is steady; its trouble, in a word, when it is not.
+                    stateText: !center.bar.netConnected ? "Offline" : (center.bar.netQuality.label === "steady" ? "Connected" : center.bar.netQuality.label)
+                    action: "Click for the networks"
+                    on: center.bar.netConnected
+                    warn: !center.bar.netConnected
+                    toggles: false
+                    hasPage: true
+                    tips: tips
+                    onOpened: center.openPage("net")
+                }
+                QuickTile {
+                    icon: center.adapter && center.adapter.enabled ? "bluetooth" : "bluetooth_disabled"
+                    label: center.btConnected.length > 0 ? center.btConnected[0].name : "Bluetooth"
+                    name: "Bluetooth"
+                    available: !!center.adapter
+                    stateText: !center.adapter ? "No adapter" : (!center.adapter.enabled ? "Off" : (center.btConnected.length === 0 ? "On, nothing connected" : center.btConnected.map(d => d.name).join(", ")))
+                    action: "Click to turn it " + (center.adapter && center.adapter.enabled ? "off" : "on") + " · right-click for the devices"
+                    on: !!center.adapter && center.adapter.enabled
+                    hasPage: true
+                    tips: tips
+                    onToggled: center.adapter.enabled = !center.adapter.enabled
+                    onOpened: center.openPage("bt")
+                }
+                QuickTile {
+                    visible: Theme.hasVpn
+                    icon: center.vpnUp.length > 0 ? "shield_lock" : "shield"
+                    label: center.vpnUp.length > 0 ? center.vpnUp[0].name : "VPN"
+                    name: "VPN"
+                    stateText: center.vpnPending !== "" ? "Connecting…" : (center.vpnUp.length > 0 ? center.vpnUp.map(v => v.name).join(", ") : "Off")
+                    action: (center.vpnUp.length > 0 ? "Click to take every tunnel down" : "Click to connect the one used last") + " · right-click for the tunnels"
+                    on: center.vpnUp.length > 0
+                    hasPage: true
+                    tips: tips
+                    onToggled: center.vpnUp.length > 0 ? center.bar.runVpn("disconnect", "all") : center.bar.runVpn("connect", center.bar.vpnLast)
+                    onOpened: center.openPage("vpn")
+                }
+                QuickTile {
+                    icon: Notifs.dnd ? "do_not_disturb_on" : "notifications"
+                    label: "Focus"
+                    name: "Do Not Disturb"
+                    stateText: Notifs.dnd ? "Enabled: toasts are held, critical ones still show" : "Disabled"
+                    action: Notifs.dnd ? "Click to disable" : "Click to enable"
+                    on: Notifs.dnd
+                    tips: tips
+                    onToggled: Notifs.toggleDnd()
+                }
+                QuickTile {
+                    icon: center.profileNow[1]
+                    label: center.profileNow[0]
+                    name: "Power profile"
+                    stateText: center.profileNow[0] + (center.profileHold ? ", held by " + (center.profileHold.reason || center.profileHold.applicationId) : "")
+                    action: "Click for the profiles"
+                    on: PowerProfiles.profile !== PowerProfile.Balanced
+                    toggles: false
+                    hasPage: true
+                    tips: tips
+                    onOpened: center.openPage("power")
+                }
+                QuickTile {
+                    // hypridle: on is the normal state. Off shows on the bar too, so it is never forgotten.
+                    icon: center.bar.hypridleOn ? "bedtime" : "coffee"
+                    label: center.bar.hypridleOn ? "Idle" : "Awake"
+                    name: "Idle timeouts"
+                    stateText: center.bar.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"
+                    action: center.bar.hypridleOn ? "Click to disable" : "Click to enable"
+                    warn: !center.bar.hypridleOn
+                    tips: tips
+                    onToggled: center.bar.toggleIdle()
+                }
+                QuickTile {
+                    icon: "screenshot_region"
+                    label: "Capture"
+                    name: "Screenshots"
+                    stateText: center.shotSave ? "To a PNG in ~/Pictures/Screenshots" : "To the clipboard"
+                    action: "Click for the targets"
+                    toggles: false
+                    hasPage: true
+                    tips: tips
+                    onOpened: center.openPage("shots")
+                }
+                QuickTile {
+                    icon: bootSection.good && !center.memTight ? "verified_user" : "gpp_maybe"
+                    label: "System"
+                    name: "System"
+                    // What the folded System row said: in the warning color while something is short of fine.
+                    stateText: center.bar.fmtBytes(center.bar.memAvail) + " available · " + bootSection.summary
+                    action: "Click for the memory and the boot's proof"
+                    warn: !bootSection.good || center.memTight
+                    toggles: false
+                    hasPage: true
+                    tips: tips
+                    onOpened: center.openPage("system")
+                }
+            }
+
+            // ── The levels ──
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.sp2
+                Slider {
+                    Layout.fillWidth: true
+                    name: "Volume"
+                    icon: Audio.muted || Audio.volume <= 0 ? "volume_off" : (Audio.volume <= 0.5 ? "volume_down" : "volume_up")
+                    value: Audio.volume
+                    dimmed: Audio.muted
+                    onMoved: v => Audio.setVolume(v)
+                    onIconClicked: Audio.toggleMute()
+                }
+                IconButton {
+                    glyph: "chevron_right"
+                    tint: Theme.colSubtext
+                    tips: tips
+                    name: "Sound"
+                    stateText: Audio.sink ? (Audio.sink.description || Audio.sink.name || "") : ""
+                    action: "Click for the outputs, the inputs and each app"
+                    onClicked: center.openPage("sound")
+                }
+            }
+
+            // ── Status: four readings on one line; a click opens the panel behind each ──
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.sp2
+                Repeater {
+                    // By COUNT, each reading its own entry: the snapshot behind `hw` ticks every
+                    // 2 s, and a model of objects would rebuild all four each time.
+                    model: center.hw.length
+                    delegate: Rectangle {
+                        id: hwCard
+                        required property int index
+                        readonly property var modelData: center.hw[hwCard.index]
+                        function open() {
+                            center.bar.togglePanel(hwCard.modelData.panel, null, null, center.bar.popBar);
+                        }
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 0
+                        implicitHeight: Theme.barControl
+                        radius: Theme.radiusControl
+                        color: hwArea.containsMouse ? Theme.colHoverFill : "transparent"
+                        Accessible.role: Accessible.Button
+                        Accessible.name: hwCard.modelData.label + " " + hwCard.modelData.value + ", " + hwCard.modelData.caption
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: Theme.sp1
+                            Text {
+                                text: hwCard.modelData.label
+                                color: Theme.colDim
+                                font.family: Theme.uiFont
+                                font.pixelSize: Theme.fontBody
+                            }
+                            Text {
+                                text: hwCard.modelData.value
+                                color: hwCard.modelData.tone
+                                font.family: Theme.uiFont
+                                font.pixelSize: Theme.fontBody
+                                font.weight: Theme.weightStrong
+                                font.features: Theme.fontTabular
+                            }
+                        }
+                        MouseArea {
+                            id: hwArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onContainsMouseChanged: containsMouse ? tips.show(hwCard, hwCard.modelData.label, hwCard.modelData.caption, "Click for the detail") : tips.hide(hwCard)
+                            onClicked: hwCard.open()
+                        }
+                        KeyTarget {
+                            onActivated: hwCard.open()
+                        }
+                    }
+                }
+            }
+
+            // ── What plays: one row, or the whole card when asked for (media/MediaCard.qml) ──
+            RowLayout {
+                visible: Media.hasPlayer && !center.mediaOpen
+                Layout.fillWidth: true
+                spacing: Theme.sp2
+                MediaRow {
+                    Layout.fillWidth: true
+                }
+                IconButton {
+                    glyph: "expand_more"
+                    tint: Theme.colSubtext
+                    tips: tips
+                    name: "Player"
+                    stateText: Media.source
+                    action: "Click for the seek bar, the wave and its volume"
+                    onClicked: center.mediaOpen = true
+                }
+            }
+            RowLayout {
+                visible: Media.hasPlayer && center.mediaOpen
+                Layout.fillWidth: true
+                spacing: Theme.sp2
+                Label {
+                    Layout.fillWidth: true
+                    text: "PLAYING"
+                }
+                IconButton {
+                    glyph: "expand_less"
+                    tint: Theme.colSubtext
+                    tips: tips
+                    name: "Player"
+                    action: "Click to fold it back to one row"
+                    onClicked: center.mediaOpen = false
+                }
+            }
+            MediaCard {
+                Layout.fillWidth: true
+                visible: Media.hasPlayer && center.mediaOpen
+                active: center.shown && visible
+                wave: Audio.waveOpen
+                onRevealed: center.bar.closePanels()
+            }
+
+            // ── Notifications, the body: do-not-disturb is a tile above, clear is here ──
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.sp2
+                Label {
                     Layout.fillWidth: true
                     text: "NOTIFICATIONS"
-                    color: Theme.colDim
-                    font.family: Theme.uiFont
-                    font.pixelSize: Theme.fontSmall
-                    font.letterSpacing: 1
                 }
                 Text {
                     text: Notifs.dnd ? "Do not disturb" : (Notifs.count === 0 ? "None" : Notifs.count)
@@ -253,17 +564,7 @@ Item {
                     font.pixelSize: Theme.fontSmall
                 }
                 IconButton {
-                    glyph: Notifs.dnd ? "󰂛" : "󰂚"
-                    tint: Notifs.dnd ? Theme.colAlert : Theme.colSubtext
-                    active: Notifs.dnd
-                    tips: tips
-                    name: "Do Not Disturb"
-                    stateText: Notifs.dnd ? "Enabled: toasts are held, critical ones still show" : "Disabled"
-                    action: Notifs.dnd ? "Click to disable" : "Click to enable"
-                    onClicked: Notifs.toggleDnd()
-                }
-                IconButton {
-                    glyph: "󰎟"
+                    glyph: "clear_all"
                     tint: Theme.colSubtext
                     enabled: Notifs.count > 0
                     tips: tips
@@ -326,141 +627,113 @@ Item {
                 }
             }
 
-            // ── Hardware ──
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: Theme.hairline
-                color: Theme.colEdge
-            }
+            Hairline {}
+
+            // ── The session, as icons; the three that end it are confirmed in place (PowerConfirm.qml) ──
             RowLayout {
                 Layout.fillWidth: true
-                spacing: Theme.sp2
+                spacing: Theme.sp1
                 Repeater {
-                    // By COUNT, each column reading its own entry: the snapshot behind `hw` ticks
-                    // every 2 s, and a model of objects would rebuild all five columns each time.
-                    model: center.hw.length
+                    model: Power.actions
                     delegate: Rectangle {
-                        id: hwCard
-                        required property int index
-                        readonly property var modelData: center.hw[hwCard.index]
-                        // A card with no data behind it has no panel to open.
-                        function open() {
-                            if (hwCard.modelData.panel !== "")
-                                center.bar.togglePanel(hwCard.modelData.panel, null, null, center.bar.popBar);
-                        }
+                        id: act
+                        required property var modelData
                         Layout.fillWidth: true
                         Layout.preferredWidth: 0
-                        implicitHeight: hwCol.implicitHeight + 2 * Theme.sp2
+                        implicitHeight: Theme.sp6 + Theme.sp3
                         radius: Theme.radiusControl
-                        color: hwArea.containsMouse ? Theme.colHoverFill : "transparent" // a column of text, not a box
-                        Accessible.role: Accessible.Button
-                        Accessible.name: hwCard.modelData.label + " " + hwCard.modelData.value + ", " + hwCard.modelData.caption
-                        ColumnLayout {
-                            id: hwCol
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.margins: Theme.sp2
-                            spacing: 0
-                            Text {
-                                text: hwCard.modelData.label
-                                color: Theme.colDim
-                                font.family: Theme.uiFont
-                                font.pixelSize: Theme.fontMicro
-                                font.letterSpacing: 1
-                            }
-                            Text {
-                                text: hwCard.modelData.value
-                                color: hwCard.modelData.tone
-                                font.family: Theme.uiFont
-                                font.pixelSize: Theme.fontTitle
-                                font.weight: Theme.weightStrong
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: hwCard.modelData.caption
-                                color: Theme.colDim
-                                font.family: Theme.uiFont
-                                font.pixelSize: Theme.fontMicro
-                                elide: Text.ElideRight
+                        color: actArea.containsMouse ? (act.modelData.confirm ? Theme.colHoverBgDanger : Theme.colHoverFill) : "transparent"
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.motionHover
                             }
                         }
+                        Accessible.role: Accessible.Button
+                        Accessible.name: act.modelData.label
+                        Text {
+                            anchors.centerIn: parent
+                            text: act.modelData.icon
+                            color: act.modelData.confirm ? Theme.colRed : Theme.colText
+                            font.family: Theme.uiFont
+                            font.pixelSize: 18
+                        }
                         MouseArea {
-                            id: hwArea
+                            id: actArea
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            // The detail panel, from the same bar and still under the logo (no new anchor).
-                            onClicked: hwCard.open()
+                            onContainsMouseChanged: containsMouse ? tips.show(act, act.modelData.label, "", act.modelData.confirm ? "Click, then confirm" : "") : tips.hide(act)
+                            onClicked: center.run(act.modelData)
                         }
                         KeyTarget {
-                            onActivated: hwCard.open()
+                            onActivated: center.run(act.modelData)
                         }
                     }
                 }
             }
+        }
 
-            Rectangle {
+        // ══ A page: the way back, then what the tile had more to show ══
+        PageHeader {
+            visible: !center.asking && center.page !== ""
+            title: center.pageTitles[center.page] || ""
+            onBack: center.page = ""
+        }
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: !center.asking && center.page !== ""
+            spacing: Theme.sp3
+
+            NetworkPage {
+                visible: center.page === "net"
+                active: center.shown && center.page === "net"
                 Layout.fillWidth: true
-                implicitHeight: Theme.hairline
-                color: Theme.colEdge
+                // The link's own panel: the rates, the latency, the speed test.
+                onDetail: center.bar.togglePanel("net", null, null, center.bar.popBar)
+            }
+            BluetoothPage {
+                visible: center.page === "bt"
+                active: center.shown && center.page === "bt"
+                Layout.fillWidth: true
+                onLeave: cmd => {
+                    center.bar.closePanels();
+                    center.bar.launch(cmd);
+                }
+            }
+            VpnPage {
+                visible: center.page === "vpn"
+                Layout.fillWidth: true
+                host: center.bar
+            }
+            SoundPage {
+                visible: center.page === "sound"
+                active: center.shown && center.page === "sound"
+                Layout.fillWidth: true
+                onLeave: cmd => {
+                    center.bar.closePanels();
+                    center.bar.launch(cmd);
+                }
             }
 
-            // ── Power: the ppd profile and the memory behind it (PowerSection.qml) ──
+            // ── Power: the ppd profile; System: the memory behind it (one PowerSection, two halves) ──
             PowerSection {
                 id: powerSection
+                visible: center.page === "power" || center.page === "system"
                 Layout.fillWidth: true
                 bar: center.bar
-                details: center.sysShown
-                note: bootSection.summary
-                alarm: !bootSection.good
-                onDetailsToggled: center.sysOpen = !center.sysOpen
+                part: center.page === "system" ? "readings" : "profile"
             }
-
-            // ── Boot: what the boot chain could prove this boot (BootTrustSection.qml), behind the System row ──
+            // ── What the boot chain could prove this boot (BootTrustSection.qml) ──
             BootTrustSection {
                 id: bootSection
-                visible: center.sysShown
+                visible: center.page === "system"
                 Layout.fillWidth: true
                 tips: tips
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: Theme.hairline
-                color: Theme.colEdge
-            }
-
-            // ── Screenshots: always open, the three targets and where the shot goes ──
+            // ── Screenshots: the three targets and where the shot goes ──
             RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.sp2
-                Text {
-                    Layout.fillWidth: true
-                    text: "SCREENSHOTS"
-                    color: Theme.colDim
-                    font.family: Theme.uiFont
-                    font.pixelSize: Theme.fontSmall
-                    font.letterSpacing: 1
-                }
-                Text {
-                    text: center.shotSave ? "Save PNG" : "Clipboard"
-                    color: Theme.colSubtext
-                    font.family: Theme.uiFont
-                    font.pixelSize: Theme.fontSmall
-                }
-                IconButton {
-                    glyph: center.shotSave ? "󰉉" : "󰅇"
-                    tint: center.shotSave ? Theme.colAccent : Theme.colSubtext
-                    active: center.shotSave
-                    tips: tips
-                    name: "Screenshot output"
-                    stateText: center.shotSave ? "A PNG in ~/Pictures/Screenshots" : "The clipboard"
-                    action: center.shotSave ? "Click to copy instead" : "Click to save a PNG instead"
-                    onClicked: center.shotSave = !center.shotSave
-                }
-            }
-            RowLayout {
+                visible: center.page === "shots"
                 Layout.fillWidth: true
                 spacing: Theme.sp1
                 Repeater {
@@ -490,11 +763,11 @@ Item {
                         readonly property bool up: shot.modelData.target === "primary" ? center.primaryUp : (shot.modelData.target === "secondary" ? Theme.secondaryConnected : true)
                         Layout.fillWidth: true
                         Layout.preferredWidth: 0
-                        implicitHeight: 44
-                        radius: Theme.radiusControl
+                        implicitHeight: Theme.sp6 * 2 + Theme.sp2
+                        radius: Theme.radiusSurface
                         enabled: shot.up
                         opacity: shot.up ? 1 : Theme.opacityDisabled
-                        color: shotArea.containsMouse ? Theme.colHoverFill : "transparent"
+                        color: shotArea.containsMouse ? Theme.colHoverFill : Qt.alpha(Theme.colText, 0.04)
                         Accessible.role: Accessible.Button
                         Accessible.name: "Screenshot of " + shot.modelData.name + (shot.up ? "" : ", not connected")
                         ColumnLayout {
@@ -530,92 +803,29 @@ Item {
                     }
                 }
             }
-
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: Theme.hairline
-                color: Theme.colEdge
-            }
-
-            // ── Footer: the session; the three that end it are confirmed in place (PowerConfirm.qml) ──
             RowLayout {
+                visible: center.page === "shots"
                 Layout.fillWidth: true
                 spacing: Theme.sp2
-                Text {
+                Label {
                     Layout.fillWidth: true
-                    text: "SESSION"
-                    color: Theme.colDim
-                    font.family: Theme.uiFont
-                    font.pixelSize: Theme.fontSmall
-                    font.letterSpacing: 1
+                    text: "GOES TO"
                 }
                 Text {
-                    text: center.bar.hypridleOn ? "Sleeps on idle" : "Stays awake"
-                    color: center.bar.hypridleOn ? Theme.colSubtext : Theme.colWarn
+                    text: center.shotSave ? "A PNG in ~/Pictures/Screenshots" : "The clipboard"
+                    color: Theme.colSubtext
                     font.family: Theme.uiFont
                     font.pixelSize: Theme.fontSmall
                 }
                 IconButton {
-                    // hypridle: on is the normal state. Off shows on the bar too, so it is never forgotten.
-                    glyph: center.bar.hypridleIcon
-                    tint: center.bar.hypridleOn ? Theme.colSubtext : Theme.colWarn
-                    active: !center.bar.hypridleOn
+                    glyph: center.shotSave ? "󰉉" : "󰅇"
+                    tint: center.shotSave ? Theme.colAccent : Theme.colSubtext
+                    active: center.shotSave
                     tips: tips
-                    name: "Idle timeouts"
-                    stateText: center.bar.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"
-                    action: center.bar.hypridleOn ? "Click to disable" : "Click to enable"
-                    onClicked: center.bar.toggleIdle()
-                }
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.sp1
-                Repeater {
-                    model: Power.actions
-                    delegate: Rectangle {
-                        id: act
-                        required property var modelData
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 0
-                        implicitHeight: 52
-                        radius: Theme.radiusControl
-                        color: actArea.containsMouse ? (act.modelData.confirm ? Theme.colHoverBgDanger : Theme.colHoverFill) : "transparent"
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: Theme.motionHover
-                            }
-                        }
-                        Accessible.role: Accessible.Button
-                        Accessible.name: act.modelData.label
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 2
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: act.modelData.icon
-                                color: act.modelData.confirm ? Theme.colRed : Theme.colText
-                                font.family: Theme.uiFont
-                                font.pixelSize: 18
-                            }
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: act.modelData.label
-                                color: Theme.colSubtext
-                                font.family: Theme.uiFont
-                                font.pixelSize: Theme.fontSmall
-                            }
-                        }
-                        MouseArea {
-                            id: actArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: center.run(act.modelData)
-                        }
-                        KeyTarget {
-                            onActivated: center.run(act.modelData)
-                        }
-                    }
+                    name: "Screenshot output"
+                    stateText: center.shotSave ? "A PNG in ~/Pictures/Screenshots" : "The clipboard"
+                    action: center.shotSave ? "Click to copy instead" : "Click to save a PNG instead"
+                    onClicked: center.shotSave = !center.shotSave
                 }
             }
         }

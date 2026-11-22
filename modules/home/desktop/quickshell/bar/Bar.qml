@@ -50,6 +50,10 @@ Scope {
         function panel(key: string): void {
             root.openForTest(key);
         }
+        // The NixOS Center pinned on one of its pages (net, bt, vpn, sound, power, shots, system).
+        function centerPage(page: string): void {
+            root.openCenter(page);
+        }
         // The island open as a hover that rested opens it, with no pointer; pinned is `panel center`.
         function island(state: string): void {
             if (state === "open")
@@ -1660,6 +1664,14 @@ Scope {
         target: Island
         property: "full"
         value: root.pinned === "center"
+    }
+    // The Center pinned on the main monitor, on the page asked for ("" is its main view). The card
+    // takes the page when it shows, or at once when it is already there.
+    property string centerPageWanted: ""
+    function openCenter(page) {
+        root.centerPageWanted = page || "";
+        if (root.pinned !== "center")
+            root.openForTest("center");
     }
     function openForTest(key, screenName) {
         const name = screenName || (key.startsWith("ops") ? Theme.secondaryMonitor : "");

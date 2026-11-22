@@ -80,10 +80,19 @@ Center on one: a click on a volume or a VPN in the island's capsule does exactly
 
 ## The levels
 
-`widgets/Slider.qml`: a tall rounded track with its icon inside the left end. A drag or a click
-sets the level, the wheel moves it 5%, a tap on the icon is the mute. A press that starts on the
-icon sets nothing until the pointer travels 4 px, so a mute never zeroes the volume. With the
-keyboard, Left and Right set the level and Up and Down walk the panel.
+`widgets/Slider.qml`: the icon outside, a 4 px track with the part set in the text's tone and a
+round knob that grows from 12 to 16 px under the hand, and the value as a number on the right in
+tabular figures. A drag or a click on the track sets the level, the wheel anywhere on it moves it
+5%, a tap on the icon is the mute (the icon and the track are apart, so a mute never zeroes the
+volume). With the keyboard, Left and Right set the level and Up and Down walk the panel.
+
+The two levels share one value column, so their tracks start and end on the same pixels, and the
+volume's number carries a chevron that opens the Sound page (`more`). Until 22/11/2026 they were
+tall pills filled in solid lavender with no number, the volume's shorter than the brightness's for
+the chevron beside it; the owner found them heavy, uneven, numberless and roomy, and chose thin
+tracks with a number among four directions (side by side, vertical beside the tiles, the pills
+made lighter). Measured in the harness: both tracks from x 1042 to 1496, each row 24 px tall. The
+Sound page and the media card take the same slider.
 
 The screen's level is `Backlight.qml`: what `brightness-osd` (`hypr.nix`) said last, a panel's
 backlight where the machine has one and the compositor's gamma on this desk, the same thing the

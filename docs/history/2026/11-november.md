@@ -19,6 +19,7 @@
       • THE TOASTS only where the island cannot be seen, and centered under the logo.
       • THE LOGO IS THE CENTER'S TITLE, growing with the glass; the session sits on the day's
         line and the notifications come last (chosen in two rounds of renders).
+      • THE LEVELS ARE THIN TRACKS with a knob and a number, the volume and the brightness equal.
       • FLUID AND HARMONIOUS, after a live recording: what the island holds follows its glass,
         a card cross-fades into the Center, and the open Center resizes on a short ease.
 

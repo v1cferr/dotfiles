@@ -51,6 +51,7 @@ QtObject {
         })
     readonly property real asidePrio: 8.5 // under the media, over the apps that wait
     readonly property int asideMax: 2
+    readonly property int failLife: 15000 // a task that failed stays longer than one that ended well
     readonly property int queueMax: 3
     readonly property int resumeFloor: 1000 // an interrupted event comes back only with this much left
 

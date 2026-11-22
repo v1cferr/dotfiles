@@ -56,7 +56,20 @@ in
     siteFunctions = {
       # The `-i 0` is what makes this work over SSH: hyprctl otherwise demands
       # HYPRLAND_INSTANCE_SIGNATURE, which only exists inside the graphical session.
-      rebuild = ''nh os switch "$@" ${flake} && { hyprctl -i 0 reload || true; }'';
+      # The island follows it (docs/notes/desktop/island.md#a-task-in-a-terminal): with no shell to
+      # tell, over SSH, the call fails quietly and nothing else changes.
+      rebuild = ''
+        local t0=$SECONDS rc=0
+        qs ipc call island task rebuild Rebuild start 0 >/dev/null 2>&1
+        nh os switch "$@" ${flake} || rc=$?
+        if (( rc == 0 )); then
+          qs ipc call island task rebuild Rebuild ok $(( SECONDS - t0 )) >/dev/null 2>&1
+          hyprctl -i 0 reload || true
+        else
+          qs ipc call island task rebuild Rebuild fail $(( SECONDS - t0 )) >/dev/null 2>&1
+        fi
+        return $rc
+      '';
       # The bleeding edge, ahead of the nightly: bumps the lock plus the vendored versions here.
       inherit update;
       # The day-to-day one: what the nightly validated, mostly downloaded from the R2 cache.

@@ -5,6 +5,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Hyprland
+import Quickshell.Io
 import QtQml.Models
 import QtQuick
 import "root:/island"
@@ -125,6 +126,24 @@ Singleton {
         target: Audio
         property: "islandOpen"
         value: root.open && root.hasMedia
+    }
+
+    // ── A task somebody runs in a terminal (`rebuild`): there while it runs, then its result ──
+    // The caller counts the seconds, so a shell restarted by the task itself still says how long.
+    IpcHandler {
+        target: "island"
+        function task(id: string, name: string, state: string, seconds: int): void {
+            const data = {
+                name: name,
+                state: state,
+                since: Date.now() - seconds * 1000,
+                took: seconds
+            };
+            if (state === "start")
+                root.push("task", data, 0, id);
+            else
+                root.push("task", data, state === "ok" ? undefined : math.failLife, id);
+        }
     }
 
     // What was already true when the shell came up is not news: sources speak after this.

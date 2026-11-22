@@ -91,6 +91,14 @@ Item {
                 tone: d.state === "error" ? Theme.colCrit : Theme.colText,
                 badges: e.ttl === 0
             });
+        case "task":
+            return Object.assign(none, {
+                icon: d.state === "start" ? "terminal" : (d.state === "ok" ? "check_circle" : "error"),
+                left: d.name,
+                right: d.state === "start" ? isle.span(Math.max(0, Math.round((isle.now - d.since) / 1000))) : (d.state === "ok" ? "Done" : "Failed") + " · " + isle.span(d.took),
+                tone: d.state === "ok" || d.state === "start" ? Theme.colText : Theme.colCrit,
+                badges: d.state === "start"
+            });
         case "notification":
             return Object.assign(none, {
                 icon: "notifications",
@@ -129,13 +137,27 @@ Item {
         }
         return none;
     }
+    // A running task counts its seconds, and only while the capsule shows it.
+    property real now: Date.now()
+    Timer {
+        interval: 1000
+        repeat: true
+        triggeredOnStart: true
+        running: isle.shown && isle.last !== null && isle.last.kind === "task" && isle.last.data.state === "start"
+        onTriggered: isle.now = Date.now()
+    }
+    // 75 s as `1 min 15 s`.
+    function span(sec) {
+        const m = Math.floor(sec / 60);
+        return (m > 0 ? m + " min " : "") + (sec % 60) + " s";
+    }
     // A click pins the island open, the NixOS Center, except on the two things that have an answer
     // of their own: the disk warning is dismissed, and a level or a VPN leads to the Control Center.
     function act() {
         const k = isle.last ? isle.last.kind : "";
         if (k === "media" || k === "unseen" || k === "notification")
             isle.host.togglePanel("center", isle, isle.barContent, isle.barWindow);
-        else if (k === "critical")
+        else if (k === "critical" || (k === "task" && isle.last.data.state !== "start"))
             Island.dismiss();
         else
             isle.host.openForTest("control");

@@ -240,7 +240,36 @@ let
       (row "36" "󰋊" "storage" "btrfs" { format = "{5} / {7} ({8}) · {9} alloc"; })
       close
 
-      (open "palette")
+      (open "now")
+      # From /proc and not cpuusage, whose sampling added ~0.2 s to the whole fetch.
+      (row "37" "󰓅" "load" "command" {
+        text = ''
+          read -r a b c _ < /proc/loadavg; set -- /proc/[0-9]*
+          echo "$a $b $c · $# procs"
+        '';
+      })
+      # The glance cache (glance-feed, offline): the hour's weather without the city, since this is
+      # posted, and this repo's CI, the latest run of each workflow.
+      (row "37" "󰖕" "glance" "command" {
+        text = ''
+          g=${lib.getExe config.my.glance.feed}
+          w=$($g read weather 2>/dev/null | ${jqBin} -r '.json.hourly as $h
+            | ($h.time | index(now | strflocaltime("%Y-%m-%dT%H:00"))) as $i
+            | if $i == null then empty else ($h.weather_code[$i]) as $c
+              | "\($h.temperature_2m[$i] | round)°C " + (
+                  if $c <= 1 then "clear" elif $c == 2 then "partly cloudy"
+                  elif $c == 45 or $c == 48 then "fog" elif $c >= 95 then "storm"
+                  elif ($c >= 71 and $c <= 77) or $c == 85 or $c == 86 then "snow"
+                  elif ($c >= 51 and $c <= 67) or ($c >= 80 and $c <= 82) then "rain"
+                  else "cloudy" end) end')
+          c=$($g read ci 2>/dev/null | ${jqBin} -r '[.json.github.runs[]?
+              | select(.repo | endswith("/${baseNameOf osConfig.programs.nh.flake}"))]
+            | unique_by(.name) | map(.state)
+            | if length == 0 then empty elif any(. == "failure") then "ci failing"
+              elif any(. == "running" or . == "queued") then "ci running" else "ci passing" end')
+          echo "''${w:-—} · ''${c:-—}"
+        '';
+      })
       (row "37" "󰉦" "colors" "colors" { symbol = "circle"; })
       close
     ];

@@ -9,7 +9,6 @@ import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
 import "root:/dash"
-import "root:/control"
 
 Scope {
     id: root
@@ -676,13 +675,12 @@ Scope {
     // VPN. vpnList is the RAW list (the popover needs a row per VPN); the aggregate paints the pill.
     // ONE read feeds both, because `systemctl is-active` LIES during nxBender's crash loop.
     property bool vpnConnected: false
-    property string vpnName: ""
     property var vpnList: []
     property bool vpnPopVisible: false
     property bool vpnBusy: false
     // What a VPN is doing beyond up or down, which the CLI's JSON does not say: "connecting" from the
     // command until the tunnel exists, "disconnecting" while the command runs, "error" with the
-    // CLI's own diagnosis when the tunnel never came. docs/notes/desktop/control-center.md#vpn
+    // CLI's own diagnosis when the tunnel never came. docs/notes/desktop/nixos-center.md#vpn
     property var vpnPhase: ({})
     property var vpnError: ({})
     property string vpnLast: "fai" // the one a bare "turn the VPN on" connects
@@ -740,11 +738,10 @@ Scope {
     function parseVpn(text) {
         try {
             const j = JSON.parse(text);
-            let c = false, n = "";
+            let c = false;
             (j.vpns || []).forEach(v => {
                 if (v.connected) {
                     c = true;
-                    n = v.name;
                 }
                 // The tunnel answers for the phase: up ends "connecting", down ends "disconnecting".
                 const p = root.vpnPhase[v.id] || "";
@@ -755,7 +752,6 @@ Scope {
             });
             root.vpnList = j.vpns || [];
             root.vpnConnected = c;
-            root.vpnName = n;
         } catch (e) {}
     }
     // A Process and not launch(), so we know WHEN it finished and can reread instead of waiting the
@@ -1039,17 +1035,11 @@ Scope {
                 lines: [root.hypridleOn ? "Enabled: the screens lock and sleep on idle" : "Disabled: nothing happens on idle"],
                 action: root.hypridleOn ? "Click to disable" : "Click to enable"
             };
-        if (key === "control")
+        if (key === "center")
             return {
-                title: "Control Center",
-                lines: ["Network, Bluetooth, VPN, focus, media and sound"],
+                title: "NixOS Center",
+                lines: ["The switches, the levels and the notifications", Notifs.dnd ? "Do Not Disturb: toasts are held, critical ones still show" : ""].filter(l => l !== ""),
                 action: "Click to open · scroll for the volume"
-            };
-        if (key === "notif")
-            return {
-                title: "Notifications",
-                lines: [Notifs.unseen > 0 ? Notifs.unseen + " not seen yet" : "Nothing new", Notifs.dnd ? "Do Not Disturb: toasts are held, critical ones still show" : ""].filter(l => l !== ""),
-                action: "Click for the NixOS Center · right-click to turn Do Not Disturb " + (Notifs.dnd ? "off" : "on")
             };
         if (key === "disk")
             return {
@@ -1146,9 +1136,6 @@ Scope {
             onStreamFinished: root.parseHypridle(text)
         }
     }
-
-    // Notifications: Quickshell is the daemon (Notifs.qml plus Notifications.qml). The bar's bell
-    // (NotifIndicator.qml) reads the singleton and calls its toggles.
 
     // ===== Weather (Open-Meteo; the coords and the pt-BR table are my.weather) =====
     property string wTemp: ""
@@ -1382,15 +1369,6 @@ Scope {
     property real netMainTx: 0
     property var netRxHist: []
     property var netTxHist: []
-    property int netHotRun: 0
-    property int netColdRun: 0
-    property bool netBusy: false
-    // 4 Mb/s (500 KB/s): this desk idles between 0.5 and 8 Mb/s (sync, the VPN, a stream), and
-    // 0.5 Mb/s left the pill on its rates face all day.
-    readonly property real netBusyRate: 500000
-    // The pill's two faces: the rates while traffic moves, the latency while the link idles, because
-    // "↓ 12K ↑ 8K" at rest is noise and the latency is what says the link is fine.
-    readonly property string netPillText: root.netBusy ? "↓" + root.tab(root.fmtBits(root.netMainRx), 5) + " ↑" + root.tab(root.fmtBits(root.netMainTx), 5) : (root.netProbeStat && root.netProbeStat.answered > 0 ? root.tab(Math.round(root.netProbeStat.avg), 3) + " ms" : "")
     function parseNetDev(text) {
         const lines = text.split("\n");
         const cur = ({});
@@ -1426,15 +1404,6 @@ Scope {
                 root.netMainTx = txr;
                 root.netRxHist = root.pushed(root.netRxHist, rxr);
                 root.netTxHist = root.pushed(root.netTxHist, txr);
-                // Busy after 2 samples over the threshold, idle again after 5 under: the pill must
-                // not flicker between its two faces on every page load.
-                const hot = rxr >= root.netBusyRate || txr >= root.netBusyRate;
-                root.netHotRun = hot ? root.netHotRun + 1 : 0;
-                root.netColdRun = hot ? 0 : root.netColdRun + 1;
-                if (root.netHotRun >= 2)
-                    root.netBusy = true;
-                else if (root.netColdRun >= 5)
-                    root.netBusy = false;
             }
             if (rxr > 0 || txr > 0 || iface === root.netMain)
                 rates.push({
@@ -1683,8 +1652,8 @@ Scope {
         root.vpnPopVisible = false;
         root.popBar = b;
         root.popScreen = scr;
-        // Each panel under the item that opens it: the clock's two, the Control Center, else the logo.
-        root.popCenterX = key === "cal" || key === "weather" ? b.clockCenterX : (key === "control" ? b.controlCenterX : Math.floor(b.width / 2));
+        // Each panel under the item that opens it: the clock's two, else the logo.
+        root.popCenterX = key === "cal" || key === "weather" ? b.clockCenterX : Math.floor(b.width / 2);
         root.panelShown = "";
         root.pinned = key;
         root.hideMedia();
@@ -2005,11 +1974,6 @@ Scope {
                 root.hideMedia();
             }
         }
-    }
-
-    // ===== The Control Center, the view is in control/ControlCenter.qml =====
-    ControlCenter {
-        bar: root
     }
 
     // ===== The hover hint, the view is in bar/HintPopover.qml =====

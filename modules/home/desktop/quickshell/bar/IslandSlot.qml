@@ -187,7 +187,7 @@ Item {
         return (m > 0 ? m + " min " : "") + (sec % 60) + " s";
     }
     // A click pins the island open, the NixOS Center, except on the two things that have an answer
-    // of their own: the disk warning is dismissed, and a level or a VPN leads to the Control Center.
+    // of their own: the disk warning is dismissed, and a level or a VPN leads to its page of the Center.
     function act() {
         const k = isle.last ? isle.last.kind : "";
         // A notification's click goes where its card's arrow does; with nowhere to go, the Center.
@@ -199,7 +199,7 @@ Item {
         else if (k === "critical" || (k === "task" && isle.last.data.state !== "start"))
             Island.dismiss();
         else
-            isle.host.openForTest("control");
+            isle.host.openCenter(k === "vpn" ? "vpn" : (k === "volume" || k === "mic" ? "sound" : ""));
     }
 
     // Half the logo's slot, then the wider side, then the padding: the same on both sides.

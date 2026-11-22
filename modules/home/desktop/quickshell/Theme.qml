@@ -84,14 +84,12 @@ Singleton {
         onFileChanged: reload()
         JsonAdapter {
             id: shellCfg
-            property bool controlCenter: true
             property bool island: true
             property bool vpn: true
             property bool barClear: true
             property bool islandGlass: false
         }
     }
-    readonly property bool controlCenterOn: shellCfg.controlCenter
     readonly property bool islandOn: shellCfg.island
     readonly property bool hasVpn: shellCfg.vpn
     // The bar with NO strip: its items sit on the wallpaper, and only the island is a surface.

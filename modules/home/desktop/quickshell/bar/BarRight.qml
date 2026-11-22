@@ -21,15 +21,11 @@ RowLayout {
     readonly property int clockW: Theme.barCellWidth(Math.ceil(tmClock.advanceWidth) + (Theme.barClear ? Theme.sp2 + Math.ceil(tmTime.advanceWidth) : 0))
     // And the clock stands a breath away from the status left of it.
     readonly property int clockGap: Theme.barClear ? Theme.sp2 : 0
-    // It folds once, when the row would cross the logo: the network's numbers and the VPN's name go.
-    // Icons and alerts never fold, and the tray's width comes from its item count alone.
-    readonly property int squeeze: right.bar.compact || right.measure(0) <= right.room ? 0 : 1
     readonly property bool cpuPegged: right.host.cpuPct >= 90
-    // LEAN: with the Control Center on, what it holds leaves the strip. The network keeps its icon,
-    // the VPN shows only while it is up or coming up, the sound only while muted, and the bell goes.
-    readonly property bool lean: Theme.controlCenterOn
-    readonly property bool vpnHere: Theme.hasVpn && (!right.lean || right.host.vpnConnected || Object.keys(right.host.vpnPhase).length > 0)
-    readonly property bool volHere: !right.lean || Audio.muted
+    // What the NixOS Center holds is not said twice on the strip: the network is its icon, the VPN
+    // shows only while it is up or coming up, and the sound only while muted.
+    readonly property bool vpnHere: Theme.hasVpn && (right.host.vpnConnected || Object.keys(right.host.vpnPhase).length > 0)
+    readonly property bool volHere: Audio.muted
 
     spacing: Theme.barGap
 
@@ -48,49 +44,6 @@ RowLayout {
         font.features: Theme.fontTabular
         text: "00:00"
     }
-    TextMetrics {
-        id: tmNet
-        font.family: Theme.uiFont
-        font.pixelSize: Theme.fontBody
-        font.features: Theme.fontTabular
-        text: right.host.netPillText
-    }
-    TextMetrics {
-        id: tmNetUnit
-        font.family: Theme.uiFont
-        font.pixelSize: Theme.fontSmall
-        text: right.host.netBusy ? "b/s" : ""
-    }
-    TextMetrics {
-        id: tmVpn
-        font.family: Theme.uiFont
-        font.pixelSize: Theme.fontBody
-        text: right.host.vpnConnected ? right.host.vpnName : ""
-    }
-    // The row's width at a fold level, from implicit widths and text metrics that do not depend on
-    // the level: so the level never feeds back into itself.
-    function measure(level) {
-        let w = right.clockW + right.clockGap;
-        let n = 1;
-        const extra = [[Theme.controlCenterOn, controlPill], [right.volHere, volPill], [!right.host.hypridleOn, idlePill], [right.cpuPegged, cpuPill], [diskPill.shown, diskPill], [bell.active && !right.lean, bell]];
-        for (const e of extra)
-            if (e[0]) {
-                w += e[1].implicitWidth;
-                n++;
-            }
-        // The network and the VPN change their own labels with the level, so they are measured from
-        // text metrics, never from the pills: that is what keeps this free of a loop.
-        const icon = Theme.iconSymbol;
-        const bare = right.lean || level >= 1;
-        w += bare ? Theme.barCellWidth(icon) : Theme.barCellWidth(icon + Theme.sp1 + tmNet.advanceWidth + (right.host.netBusy ? tmNetUnit.advanceWidth + Theme.sp1 : 0));
-        n++;
-        if (right.vpnHere) {
-            w += bare ? Theme.barCellWidth(icon) : Theme.barCellWidth(icon + (tmVpn.advanceWidth > 0 ? Theme.sp1 + tmVpn.advanceWidth : 0));
-            n++;
-        }
-        return w + (n - 1) * Theme.barGap + right.trayW;
-    }
-
     function volSymbol() {
         if (Audio.muted || Audio.volume <= 0)
             return "volume_off";
@@ -150,8 +103,6 @@ RowLayout {
         id: netPill
         visible: !right.bar.compact
         icon: "lan"
-        label: right.lean || right.squeeze >= 1 ? "" : right.host.netPillText
-        sub: right.lean || right.squeeze >= 1 || !right.host.netBusy ? "" : "b/s" // ONE unit for both rates
         // Neutral while the link is steady: color is for a state that needs a look.
         accent: right.host.netQuality.label === "steady" ? Theme.colSubtext : right.host.netQuality.color
         labelColor: Theme.colText
@@ -166,9 +117,7 @@ RowLayout {
         id: vpnPill
         visible: !right.bar.compact && right.vpnHere
         icon: "shield_lock"
-        label: right.host.vpnConnected && !right.lean && right.squeeze < 1 ? right.host.vpnName : ""
         accent: right.host.vpnConnected ? Theme.colText : Theme.colUnknown
-        labelColor: Theme.colText
         off: !right.host.vpnConnected
         // Tor rides along in its own purple: a VPN and Tor can be up at once.
         badge: (right.host.torSystem || right.host.torBisq) ? "" + (right.host.torBisq ? " Bisq" : "") : ""
@@ -190,22 +139,13 @@ RowLayout {
         id: volPill
         visible: !right.bar.compact && right.volHere
         icon: right.volSymbol()
-        label: right.lean ? "" : right.host.tab(Math.round(Audio.volume * 100), 3) + "%"
         accent: Audio.muted ? Theme.colUnknown : Theme.colSubtext
-        labelColor: Audio.muted ? Theme.colUnknown : Theme.colText
         off: Audio.muted
         onHoveredChanged: right.host.hoverHint("vol", volPill, right.barContent, right.bar, hovered)
         onClicked: Audio.toggleMute()
         onRightClicked: right.host.launch(["pavucontrol"])
         onScrolledUp: Audio.changeVolume(0.05)
         onScrolledDown: Audio.changeVolume(-0.05)
-    }
-    NotifIndicator {
-        id: bell
-        visible: !right.bar.compact && bell.active && !right.lean
-        host: right.host
-        barContent: right.barContent
-        barWindow: right.bar
     }
 
     // ── The tray, then the clock on the edge ──
@@ -217,15 +157,19 @@ RowLayout {
         barWindow: right.bar
     }
     Pill {
-        // The Control Center's entry point; a scroll on it is the volume, so sound needs no item.
-        id: controlPill
-        visible: !right.bar.compact && Theme.controlCenterOn
-        // Do Not Disturb shows HERE while it is on, since the bell left the strip.
+        // The NixOS Center's door on this side; a scroll on it is the volume, so sound needs no item.
+        id: centerPill
+        visible: !right.bar.compact
+        // Do Not Disturb shows HERE while it is on: the strip has no bell.
         icon: Notifs.dnd ? "do_not_disturb_on" : "tune"
         accent: Notifs.dnd ? Theme.colAlert : Theme.colBarQuiet
-        selected: right.host.pinned === "control"
-        onHoveredChanged: right.host.hoverHint("control", controlPill, right.barContent, right.bar, hovered)
-        onClicked: right.host.togglePanel("control", controlPill, right.barContent, right.bar)
+        selected: right.host.pinned === "center"
+        onHoveredChanged: right.host.hoverHint("center", centerPill, right.barContent, right.bar, hovered)
+        // The Center hangs from the logo whoever asks for it, so it opens through the service's own toggle.
+        onClicked: {
+            right.host.hideHint();
+            Notifs.toggleCenter();
+        }
         onScrolledUp: Audio.changeVolume(0.05)
         onScrolledDown: Audio.changeVolume(-0.05)
     }

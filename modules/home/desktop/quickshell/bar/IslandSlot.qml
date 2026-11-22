@@ -1,4 +1,4 @@
-// The ISLAND's capsule: it grows out from behind the logo, the same on both sides, and says one
+// The ISLAND's capsule: it grows out from behind the logo, each side as wide as what it says, and says one
 // thing at a time. The logo is not in it and never moves; Island.qml decides what it shows.
 // docs/notes/desktop/island.md
 import Quickshell.Widgets
@@ -202,52 +202,73 @@ Item {
             isle.host.openCenter(k === "vpn" ? "vpn" : (k === "volume" || k === "mic" ? "sound" : ""));
     }
 
-    // Half the logo's slot, then the wider side, then the padding: the same on both sides.
+    // Half the logo's slot, then each side's own content, then the padding. The two sides need not
+    // match: the logo never moves, and a side wider than what it says would only be empty glass
+    // (22/11/2026: the symmetric capsule left a blank stretch after a short "30 s", and the owner
+    // asked for it lopsided instead).
     readonly property int inner: Theme.barCenterWidth / 2
-    // While media rests there, ONE wave takes the gap the symmetry leaves: both sides are as wide as
-    // the wider one, so the shorter side's words leave room, and the wave fills it at that side's
-    // outer end, the bass by the logo. With the two sides about even it goes left at its least, four
-    // bars, and the other side keeps that little as breathing room. (22/11/2026: one on each side
-    // left three idle dots on the long side, and the owner asked for one.)
+    // While media rests there, ONE short wave sits at the outer end of the shorter side, the bass by
+    // the words, so the capsule leans less to one side. (22/11/2026: one on each side was asked away.)
     readonly property bool waving: Audio.waveIsland && Audio.bands.length > 0 && isle.last !== null && isle.last.kind === "media" && !isle.wheeling
-    readonly property int waveMin: isle.waving ? 4 * wave.bar + 3 * wave.gap + Theme.sp2 : 0
+    readonly property int waveBars: 6
+    readonly property int waveWidth: isle.waveBars * wave.bar + (isle.waveBars - 1) * wave.gap
+    readonly property int waveRoom: isle.waving ? isle.waveWidth + Theme.sp2 : 0
     readonly property real leftWords: leftRow.implicitWidth
     readonly property real rightWords: rightRow.implicitWidth
-    readonly property bool gapRight: isle.rightWords < isle.leftWords // the gap is on the right
+    readonly property bool waveRight: isle.rightWords < isle.leftWords
     readonly property int cap: Theme.islandHalf - isle.inner - Theme.sp3
-    readonly property int side: Math.min(isle.cap, Math.ceil(Math.max(isle.leftWords, isle.rightWords, Math.min(isle.leftWords, isle.rightWords) + isle.waveMin)))
-    // Open, it is as wide as it gets: what comes down under it has that width.
-    readonly property int half: isle.shown ? isle.inner + isle.side + Theme.sp3 : isle.inner
+    readonly property int leftSide: Math.min(isle.cap, Math.ceil(isle.leftWords + (isle.waveRight ? 0 : isle.waveRoom)))
+    readonly property int rightSide: Math.min(isle.cap, Math.ceil(isle.rightWords + (isle.waveRight ? isle.waveRoom : 0)))
+    readonly property int halfLeft: isle.shown ? isle.inner + isle.leftSide + Theme.sp3 : isle.inner
+    readonly property int halfRight: isle.shown ? isle.inner + isle.rightSide + Theme.sp3 : isle.inner
 
-    function resize() {
-        grow.stop();
-        shrink.stop();
+    // Each side has its own pull: opening or changing size it is a spring that overshoots a
+    // little; closing it just eases out, faster.
+    function resize(pull, ease, what, to) {
+        pull.stop();
+        ease.stop();
         if (Theme.motionReduced) {
-            capsule.reach = isle.half;
+            capsule[what] = to;
         } else if (isle.shown) {
-            grow.to = isle.half;
-            grow.restart();
+            pull.to = to;
+            pull.restart();
         } else {
-            shrink.to = isle.half;
-            shrink.restart();
+            ease.to = to;
+            ease.restart();
         }
     }
-    onHalfChanged: isle.resize()
-    Component.onCompleted: capsule.reach = isle.half
-    SpringAnimation {
-        id: grow
+    onHalfLeftChanged: isle.resize(growLeft, shrinkLeft, "reachLeft", isle.halfLeft)
+    onHalfRightChanged: isle.resize(growRight, shrinkRight, "reachRight", isle.halfRight)
+    Component.onCompleted: {
+        capsule.reachLeft = isle.halfLeft;
+        capsule.reachRight = isle.halfRight;
+    }
+    component Grow: SpringAnimation {
         target: capsule
-        property: "reach"
         spring: Theme.islandSpring
         damping: Theme.islandDamping
         epsilon: 0.25
     }
-    NumberAnimation {
-        id: shrink
+    component Shrink: NumberAnimation {
         target: capsule
-        property: "reach"
         duration: Theme.motionHover
         easing.type: Easing.OutCubic
+    }
+    Grow {
+        id: growLeft
+        property: "reachLeft"
+    }
+    Shrink {
+        id: shrinkLeft
+        property: "reachLeft"
+    }
+    Grow {
+        id: growRight
+        property: "reachRight"
+    }
+    Shrink {
+        id: shrinkRight
+        property: "reachRight"
     }
 
     // A NEW event enters in three beats, out from the logo: the icon, the name, the value. The
@@ -297,23 +318,32 @@ Item {
         }
     }
 
-    // Where the island's opening starts from, and where its closing ends: this capsule's reach.
+    // Where the island's opening starts from, and where its closing ends: this capsule's reach,
+    // as half its width and how far its middle sits right of the logo's.
     Binding {
         when: isle.here
         target: Island
         property: "headHalf"
-        value: capsule.span
+        value: (capsule.spanLeft + capsule.spanRight) / 2
+    }
+    Binding {
+        when: isle.here
+        target: Island
+        property: "headShift"
+        value: (capsule.spanRight - capsule.spanLeft) / 2
     }
     Rectangle {
         id: capsule
-        // Opening or changing size it is pulled by a spring and overshoots a little; closing it
-        // just eases out, faster. It never gets smaller than the logo's own slot, nor wider than
-        // the island's.
-        property real reach: isle.inner
-        readonly property real span: Math.min(Theme.islandHalf, Math.max(isle.inner, capsule.reach))
-        x: Math.round(isle.width / 2 - capsule.span)
+        // Each side never gets smaller than the logo's own slot, nor wider than the island's.
+        property real reachLeft: isle.inner
+        property real reachRight: isle.inner
+        readonly property real spanLeft: Math.min(Theme.islandHalf, Math.max(isle.inner, capsule.reachLeft))
+        readonly property real spanRight: Math.min(Theme.islandHalf, Math.max(isle.inner, capsule.reachRight))
+        // Where the logo's middle falls inside it.
+        readonly property real mid: Math.round(capsule.spanLeft)
+        x: Math.round(isle.width / 2 - capsule.spanLeft)
         y: Theme.barCellY
-        width: Math.round(2 * capsule.span)
+        width: Math.round(capsule.spanLeft + capsule.spanRight)
         height: Theme.barCell
         radius: height / 2
         color: Theme.colBarGlass
@@ -329,9 +359,9 @@ Item {
 
         Wave {
             id: wave
-            visible: isle.waving && !isle.gapRight
-            x: Math.round(capsule.width / 2 - isle.inner - isle.side)
-            width: Math.max(0, isle.side - leftRow.width - Theme.sp2)
+            visible: isle.waving && !isle.waveRight
+            x: leftRow.x - Theme.sp2 - width
+            width: isle.waveWidth
             height: Theme.barLogo - Theme.sp1
             anchors.verticalCenter: parent.verticalCenter
             opacity: isle.beat1
@@ -339,10 +369,10 @@ Item {
         }
         Wave {
             id: waveRight
-            visible: isle.waving && isle.gapRight
+            visible: isle.waving && isle.waveRight
             bassLeft: true
-            x: Math.round(rightRow.x + rightRow.width + Theme.sp2)
-            width: Math.max(0, isle.side - rightRow.width - Theme.sp2)
+            x: rightRow.x + rightRow.width + Theme.sp2
+            width: isle.waveWidth
             height: Theme.barLogo - Theme.sp1
             anchors.verticalCenter: parent.verticalCenter
             opacity: isle.beat2
@@ -350,8 +380,8 @@ Item {
         }
         RowLayout {
             id: leftRow
-            x: Math.round(capsule.width / 2 - isle.inner - leftRow.width)
-            width: Math.min(leftRow.implicitWidth, isle.side - (isle.gapRight ? 0 : isle.waveMin))
+            x: capsule.mid - isle.inner - leftRow.width
+            width: Math.min(leftRow.implicitWidth, isle.leftSide - (isle.waveRight ? 0 : isle.waveRoom))
             height: parent.height
             spacing: Theme.sp1
             // The cover while media plays; the event's icon otherwise, and when a cover fails to load.
@@ -406,8 +436,8 @@ Item {
         }
         RowLayout {
             id: rightRow
-            x: Math.round(capsule.width / 2 + isle.inner)
-            width: Math.min(rightRow.implicitWidth, isle.side - (isle.gapRight ? isle.waveMin : 0))
+            x: capsule.mid + isle.inner
+            width: Math.min(rightRow.implicitWidth, isle.rightSide - (isle.waveRight ? isle.waveRoom : 0))
             height: parent.height
             spacing: Theme.sp2
             Rectangle {

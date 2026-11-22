@@ -93,6 +93,8 @@ Singleton {
         root.aim = ""
     // How wide the resting capsule is, half of it, on that screen: where the opening starts from.
     property real headHalf: 0
+    // And how far its middle sits right of the logo's: its two sides need not match.
+    property real headShift: 0
     readonly property bool hasMedia: Media.playing && Media.title !== ""
     readonly property bool open: root.full || root.rested || root.forced
     // A notification with more than a title, while the capsule shows it and the Center is not open:

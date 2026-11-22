@@ -125,6 +125,8 @@ PanelWindow {
     // Shut, it is the capsule that rests on the main monitor; on another screen, the logo's own slot.
     readonly property bool atHome: !!drop.screen && !!Theme.screenPrimary && drop.screen.name === Theme.screenPrimary.name
     readonly property real wantHalf: Island.open ? drop.wide / 2 : (Island.peek ? drop.peekHalf : Math.max(Theme.barCenterWidth / 2, drop.atHome ? Island.headHalf : 0))
+    // Shut, its middle sits where the lopsided capsule's does; out, it centers on the logo.
+    readonly property real wantShift: Island.open || Island.peek ? 0 : (drop.atHome ? Island.headShift : 0)
     // Which of the two it holds while it is out: the card, from a notification that came down until
     // the Center opens or the shape is back in. Held, so the Center never shows in a closing card.
     property bool peekMode: false
@@ -200,6 +202,12 @@ PanelWindow {
         else
             shape.half = drop.wantHalf;
     }
+    onWantShiftChanged: {
+        if (Island.wide || Island.open || Island.peek)
+            drop.move(toLogo, offCenter, "shift", drop.wantShift, Math.abs(drop.wantShift) < Math.abs(shape.shift));
+        else
+            shape.shift = drop.wantShift;
+    }
     component Pull: SpringAnimation {
         target: shape
         spring: Theme.islandSpring
@@ -226,6 +234,14 @@ PanelWindow {
     Ease {
         id: gather
         property: "half"
+    }
+    Pull {
+        id: toLogo
+        property: "shift"
+    }
+    Ease {
+        id: offCenter
+        property: "shift"
     }
     Binding {
         target: Island
@@ -281,12 +297,13 @@ PanelWindow {
         id: shape
         property real half: Theme.barCenterWidth / 2 // from the logo's middle to each side
         property real reach: 0 // how far it comes down under the capsule's row
+        property real shift: 0 // how far its middle sits right of the logo's
         visible: Island.wide
         level: "island"
         radius: Theme.barCell / 2
         // Never wider than its window: the spring's overshoot is spent on the way, not past the edge.
         readonly property real span: Math.min(drop.wide / 2, shape.half)
-        x: Math.round(drop.wide / 2 - shape.span)
+        x: Math.round(drop.wide / 2 - shape.span + shape.shift)
         y: drop.headTop
         width: Math.round(2 * shape.span)
         height: Theme.barCell + Math.max(0, Math.round(shape.reach))

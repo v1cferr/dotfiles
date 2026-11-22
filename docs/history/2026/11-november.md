@@ -17,6 +17,8 @@
       • A CARD UNDER THE LOGO for one with more than a title: its body, its buttons, its close.
       • EVERY ONE GOES TO THE ISLAND, critical and with buttons too; a critical card stays.
       • THE TOASTS only where the island cannot be seen, and centered under the logo.
+      • THE LOGO IS THE CENTER'S TITLE, growing with the glass; the session sits on the day's
+        line and the notifications come last (chosen in two rounds of renders).
       • FLUID AND HARMONIOUS, after a live recording: what the island holds follows its glass,
         a card cross-fades into the Center, and the open Center resizes on a short ease.
 

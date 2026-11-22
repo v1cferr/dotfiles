@@ -25,15 +25,24 @@ island can never disagree.
 
 | Part          | Holds                                                                                   |
 | ------------- | --------------------------------------------------------------------------------------- |
-| The day       | the date, the weather and the calendar's next date; each leads to its own panel         |
+| The title     | the NixOS logo, grown from the bar's 20 px to 44 px as the island opens                 |
+| The day       | the date and the weather, the calendar's next date under them, the session on the right |
 | The tiles     | eight: the everyday switches, and the doors to what has more to show                    |
 | The levels    | the volume, whose chevron opens the Sound page, and the screen's level                  |
 | Status        | CPU and GPU temperature, RAM, disk: four readings on one line, each opening its panel   |
 | What plays    | one row (the cover, the track, three keys); a chevron unfolds the whole media card      |
-| Notifications | the body: the history, newest first and grouped, scrolling on its own past 480 px       |
-| Session       | five icons, their commands the old power menu's; the three that end it ask first        |
+| Notifications | the last part: the history, newest first and grouped, scrolling past 480 px             |
 
-The history scrolls by itself, so however long it grows, the session under it stays in reach.
+The history scrolls by itself, and nothing is under it: since 22/11/2026 the session's five icons
+sit small on the right of the day's line (the owner asked for them up top and for the notifications
+last), and the pill that asks grows there, pushing its neighbours. The logo became the Center's
+title the same day: it travels with the glass on the progress the Center shows on, from the bar's
+pixel and size to 44 px at the top's middle, and back when it shuts; with a notification's card
+out it stays on the bar's pixel. Both were chosen in two rounds of renders (the logo at 36, 44 or
+56 px; the next date under the date or gone; the pill pushing or covering; the logo retracing its
+way or fading), the recommended option each time. Traced in the harness, the logo was at 26.8 px
+when the glass had come 88 px down and at 44 px from 360 px on, and retraced the same values
+shutting.
 
 ## The tiles
 

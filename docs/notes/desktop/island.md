@@ -182,14 +182,17 @@ and then as cleaner, more fluid and lighter than its first version.
   child process with `media/cava.ini`: it reads what is heard and prints 24 levels a frame, bass
   first, 24 frames a second, already smoothed and scaled to what plays. `widgets/Wave.qml` only
   draws them: bars that rise and fall in place, 3 px wide, with no clock of their own.
-- **The bass is by the cover** in the capsule, and the treble at the far end; the bars between
+- **The bass is by the logo** on both sides of the capsule, and the treble at the far ends; the bars between
   read between two bands, so five bars or twenty show the same shape.
 - **Only while it is seen.** cava runs while media is what the capsule shows, or while the media
   panel is open. A volume key or a notification takes the capsule for a moment, so cava outlives
   the asking by 8 s instead of starting again each time; a pause ends it. With
   `my.theme.motion = "off"` there is no wave and the gap is back, and the same on a host where
   cava is not installed yet.
-- It takes what the wider side leaves, and never fewer than five bars.
+- It sits at the outer end of BOTH sides, mirrored, the bass by the logo, each half taking what its
+  own side's words leave, three bars at least (22/11/2026). Until then it took only the left side's
+  gap, and with an artist longer than the title the bare stretch was on the right, beside the
+  title: the owner sent a capture of `ILLENIUM, Joni Fatora` against `Sleepwalker`.
 - It hears the default output, not the player alone: a notification's sound moves it too.
 
 **Why cava and not Quickshell's own meter.** The first version (the same day) was a level over

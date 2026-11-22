@@ -1,4 +1,4 @@
-# THEME / DARK MODE plus the UI font. GTK follows color-scheme; Qt is qt6ct + Kvantum, KDE apps a color scheme.
+# THEME / DARK MODE plus the UI font. GTK is a preset's own theme or Stylix's; Qt is qt6ct + Kvantum, KDE apps a color scheme.
 # The 2 vendored themes and the 3 build traps in the icons: docs/notes/desktop/theme.md
 {
   pkgs,
@@ -16,10 +16,31 @@ let
     fetchFromGitHub
     gtk3
     stdenvNoCC
+    tokyonight-gtk-theme
     ;
   inherit (pkgs.kdePackages) kconfig; # kwriteconfig6, which the activation writes with
 
   p = config.my.theme.palette; # SSOT: modules/home/desktop/palette.nix (rule 11, decision 0001)
+
+  # A preset's OWN GTK theme beats Stylix's recolored adw-gtk3, like kitty/bat/btop (decision 0012).
+  # A preset missing here (and every base16 scheme) falls back to Stylix. Adding one is one entry.
+  gtkThemes = {
+    tokyo-night = {
+      name = "Tokyonight-Dark"; # the Night variant: bg #1a1b26, the same as the palette
+      package = tokyonight-gtk-theme.override {
+        colorVariants = [ "dark" ];
+        sizeVariants = [ "standard" ];
+        themeVariants = [ "default" ];
+      };
+    };
+  };
+  gtkTheme = gtkThemes.${config.my.theme.name} or null;
+
+  # GTK3's client-side shadow is a transparent margin that Hyprland blurs and dims, which drew a
+  # thick dark frame around the portal's file chooser. Hyprland already draws border and shadow.
+  noCsdShadow = ''
+    decoration, decoration:backdrop { box-shadow: none; margin: 0; }
+  '';
 
   # The theme is the Win11OS GEOMETRY recolored by the palette, so the name carries both.
   kvantumTheme = "Win11OS-${config.my.theme.slug}";
@@ -216,13 +237,26 @@ in
 
   # It writes ~/.config/gtk-3.0 and gtk-4.0. The packages are declared HERE (rule 4); the font
   # comes from modules/nixos/.
-  # The THEME and the font are Stylix's now (adw-gtk3 recolored by the palette, stylix.nix).
+  # The THEME is gtkTheme when the preset has one, else Stylix's (adw-gtk3 recolored, stylix.nix).
   gtk = {
     enable = true;
     iconTheme = {
       name = config.my.theme.iconTheme; # SSOT: my.theme.iconTheme
       package = win11-icons; # the Windows 11 icons (Win11-dark); see the derivation in the let
     };
+  }
+  // lib.optionalAttrs (gtkTheme != null) {
+    theme = gtkTheme;
+    # libadwaita ignores gtk-theme; home-manager @imports this theme's gtk-4.0 CSS into gtk.css.
+    gtk4.theme = gtkTheme;
+    gtk3.extraCss = noCsdShadow;
+    gtk4.extraCss = noCsdShadow;
+  };
+
+  # Stylix's GTK target would set the theme too, so it steps aside when the preset brings its own.
+  stylix.targets.gtk = {
+    enable = gtkTheme == null;
+    extraCss = noCsdShadow;
   };
 
   # Qt: qt6ct as the platform theme and Kvantum as the style, the pairing Kvantum documents. With

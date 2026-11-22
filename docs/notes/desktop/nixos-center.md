@@ -390,8 +390,11 @@ that is only in the history never lights it, and neither does one carried over a
 
 ## The toasts
 
-`notifications/Notifications.qml`: top right of the main monitor (whichever screen is left when it
-is unplugged), 8 px under the bar and on the windows' 12 px outer gap, 380 px wide, 8 px apart. A
+`notifications/Notifications.qml`: only where the island cannot be seen, a fullscreen window over it
+or the island off ([island.md](island.md#the-card), 22/11/2026: everywhere else a notification is
+the island's). Centered at the top of the main monitor (whichever screen is left when it is
+unplugged), 8 px under the bar, 380 px wide, 8 px apart; until 22/11/2026 it stood in the top
+right corner. A
 toast is the COMPACT card: a 28 px icon, the summary on one line and the body on two, never taller.
 
 - **Three at most.** A fourth pushes the oldest off the screen, never out of the history.

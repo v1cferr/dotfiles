@@ -1,6 +1,12 @@
 # History: november 2026
 
-18 entries. Index in [README.md](../README.md).
+19 entries. Index in [README.md](../README.md).
+
+- [x] Notifications come down from the island (asked 22/11/2026; 22/11/2026): the top right corner
+      is gone. How and why: [notes/desktop/island.md](../../notes/desktop/island.md#the-card).
+      • A CARD UNDER THE LOGO for one with more than a title: its body, its buttons, its close.
+      • EVERY ONE GOES TO THE ISLAND, critical and with buttons too; a critical card stays.
+      • THE TOASTS only where the island cannot be seen, and centered under the logo.
 
 - [x] The NixOS Center reformulated, and the Control Center folded into it (asked 22/11/2026;
       22/11/2026): "cleaner, more intuitive and more informative". How and why:

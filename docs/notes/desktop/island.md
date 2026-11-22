@@ -19,7 +19,7 @@ Lower is more urgent. A level the user is setting beats a result, which beats ne
 | 1        | The root filesystem about to fill                   | until it is answered | the bar's `df` (95% used or under 5 GiB free) |
 | 3        | Volume, mute, microphone, brightness, DPI           | 1.5 s                | `osd/Osd.qml`, which keeps its anti-flash arm |
 | 4        | A VPN's result; a task's (15 s when it failed)      | 4 s; 6 s             | the bar's VPN phases; `island task` over IPC  |
-| 5        | A plain notification                                | 5 s                  | `Notifs.qml`                                  |
+| 5        | A notification (a critical one stays)               | 5 s                  | `Notifs.qml`                                  |
 | 6        | A Bluetooth device connected or gone                | 3 s                  | `Quickshell.Bluetooth`                        |
 | 8        | Media playing: the cover, artist, title             | while it plays       | `Media.qml`                                   |
 | 8.5      | The background: a VPN connecting, a task, a capture | while it lasts       | the same sources, and `Privacy.qml`           |
@@ -139,6 +139,38 @@ so a shell the task itself restarted still says how long it took.
 the result. With no shell to tell, over SSH, the call fails quietly and the rebuild is the same.
 It says nothing of the phase: reading `nh`'s output to tell a build from a switch would take its
 terminal away from it.
+
+## The card
+
+Since 22/11/2026 a notification with more than a title brings the island down as a CARD under the
+logo (asked for as "the notification and its content in the NixOS Center while it is not open":
+a browser's finished download still opened a toast in the top right corner, since one with
+buttons, or a critical one, never went to the island). The pattern is the iPhone's banner out of
+the Dynamic Island.
+
+- **Which:** one with a body, buttons of its own or the critical urgency (`Notifs.hasContent`). One
+  with a title alone stays in the capsule, as before.
+- **Where:** the same window and shape as the Center (`bar/IslandDrop.qml`), at a third size: the
+  capsule's own width at its widest (416 px) and the card's height, on the island's spring. The
+  logo stays on its pixel. The card is `notifications/NotifCard.qml` with `inIsland`: compact, and
+  on the island's glass instead of its own.
+- **How long:** 5 s, frozen while the pointer is on it; a critical one has no end and stays until
+  it is answered. A hover on the card holds it and never opens the Center; the logo's click pins
+  the Center, and the card grows into it without shutting first.
+- **Its clicks:** the card goes where it leads (its default action, else its app's window, else
+  the Center); a button is its own action; the close and the right button dismiss it. Dismissed,
+  expired or closed by its app, it leaves the island at once (`Notifs.gone`).
+- **The toasts** show only where the island cannot be seen: a fullscreen window over it, or the
+  island off. They stand at the top of the screen's middle now, under the logo, and no longer in
+  the right corner.
+
+Run on 22/11/2026 in the harness with `notify-send` on its private bus: one with two buttons, one
+with a body, one with a title alone (the capsule, no card) and a critical one (still out 6 s
+later) each showed as said; pinning the Center grew the card into it; `notif clear` took the card
+in; a hot reload crashed nothing; and with the island off the toast stood centered under the logo.
+A hot reload forgets a critical card that was out (the notification stays in the history), as the
+capsule always forgot what it showed. Not verified: a real download, any click on the card or its
+buttons, the hover holding it, and a fullscreen window.
 
 ## The wave
 
@@ -319,15 +351,15 @@ pair stands out of the spread.
 
 ## What it replaced
 
-| Before                         | With the island up                                                                  |
-| ------------------------------ | ----------------------------------------------------------------------------------- |
-| The bottom OSD                 | its events go to the capsule; the window stays shut                                 |
-| A toast for every notification | a plain one goes to the capsule; a critical one, or one with buttons, stays a toast |
-| The media item on the bar      | what plays rests in the capsule; the controls are in the NixOS Center               |
+| Before                         | With the island up                                                    |
+| ------------------------------ | --------------------------------------------------------------------- |
+| The bottom OSD                 | its events go to the capsule; the window stays shut                   |
+| A toast for every notification | the capsule, or the island's card when it has more than a title       |
+| The media item on the bar      | what plays rests in the capsule; the controls are in the NixOS Center |
 
 A notification is never shown twice: `Notifs.qml` sends each one either to `popups` (the toasts) or
-through `arrived` (the island). Do-not-disturb and an open NixOS Center
-silence both the same way, and a critical one still pierces both as a toast.
+through `arrived` (the island), and the toasts only where the island cannot be seen. Do-not-disturb
+and an open NixOS Center silence both the same way, and a critical one still pierces both.
 
 ## Turning it off
 

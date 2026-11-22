@@ -72,7 +72,8 @@ Singleton {
     // one answers to its name or is the only one playing; else the volume is the output's.
     property bool panelOpen: false
     property bool islandOpen: false
-    readonly property var playing: ((root.panelOpen || root.islandOpen) && Pipewire.nodes) ? Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream) : []
+    property bool capsuleHeld: false // the pointer on the capsule while media rests there: its wheel is the volume
+    readonly property var playing: ((root.panelOpen || root.islandOpen || root.capsuleHeld) && Pipewire.nodes) ? Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream) : []
     PwObjectTracker {
         objects: root.playing
     }

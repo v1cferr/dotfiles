@@ -26,7 +26,34 @@ Item {
     property var last: null
     onEvChanged: if (isle.ev)
         isle.last = isle.ev
-    readonly property var v: isle.view(isle.last)
+    // The wheel over the resting media is its volume: the capsule says the level while it turns,
+    // itself, since the pointer on it holds what the island shows.
+    property bool wheeling: false
+    readonly property bool onMedia: isle.shown && isle.last !== null && isle.last.kind === "media"
+    readonly property var v: isle.view(isle.wheeling ? {
+        kind: "volume",
+        data: {
+            name: Audio.mediaIsPlayer ? Media.source : "",
+            level: Audio.mediaVolume,
+            muted: Audio.mediaMuted
+        }
+    } : isle.last)
+    Timer {
+        id: wheelRest
+        interval: 1200
+        onTriggered: isle.wheeling = false
+    }
+    function turn(up) {
+        Island.hush();
+        Audio.setMediaVolume(Math.round((Audio.mediaVolume + (up ? 0.05 : -0.05)) * 20) / 20);
+        isle.wheeling = true;
+        wheelRest.restart();
+    }
+    Binding {
+        target: Audio
+        property: "capsuleHeld"
+        value: isle.onMedia && area.containsMouse
+    }
 
     width: 2 * Theme.islandHalf
     height: Theme.barHeight
@@ -60,7 +87,7 @@ Item {
         case "volume":
             return Object.assign(none, {
                 icon: d.muted || d.level <= 0 ? "volume_off" : (d.level <= 0.5 ? "volume_down" : "volume_up"),
-                left: "Volume",
+                left: d.name || "Volume",
                 right: d.muted ? "Muted" : pct(d.level),
                 level: d.muted ? 0 : d.level
             });
@@ -163,7 +190,11 @@ Item {
     // of their own: the disk warning is dismissed, and a level or a VPN leads to the Control Center.
     function act() {
         const k = isle.last ? isle.last.kind : "";
-        if (k === "media" || k === "unseen" || k === "notification")
+        // A notification's click goes where its card's arrow does; with nowhere to go, the Center.
+        if (k === "notification" && Notifs.open(isle.last.data.id)) {
+            Island.hush();
+            Island.dismiss();
+        } else if (k === "media" || k === "unseen" || k === "notification")
             isle.host.togglePanel("center", isle, isle.barContent, isle.barWindow);
         else if (k === "critical" || (k === "task" && isle.last.data.state !== "start"))
             Island.dismiss();
@@ -175,7 +206,7 @@ Item {
     readonly property int inner: Theme.barCenterWidth / 2
     // While media rests there, what the wider side leaves empty on the left is the wave's, and it
     // never gets fewer than five bars.
-    readonly property bool waving: Audio.waveIsland && Audio.bands.length > 0 && isle.last !== null && isle.last.kind === "media"
+    readonly property bool waving: Audio.waveIsland && Audio.bands.length > 0 && isle.last !== null && isle.last.kind === "media" && !isle.wheeling
     readonly property int waveMin: isle.waving ? 5 * wave.bar + 4 * wave.gap + Theme.sp2 : 0
     readonly property int side: Math.min(Theme.islandHalf - isle.inner - Theme.sp3, Math.ceil(Math.max(leftRow.implicitWidth + isle.waveMin, rightRow.implicitWidth)))
     // Open, it is as wide as it gets: what comes down under it has that width.
@@ -439,18 +470,33 @@ Item {
             }
         }
     }
-    // The pointer on it holds it; resting there opens the island, and a click pins it. The whole
+    // The pointer on it holds it; resting there opens the island, and a click pins it (or goes to
+    // the app a notification came from). On what plays the wheel and the middle button act instead. The whole
     // capsule is one zone, up to the screen's edge and down to the bar's foot, so a pointer thrown
     // at the top of the screen lands on it. Never the keyboard: it is not a window.
     MouseArea {
+        id: area
         x: capsule.x
         width: capsule.width
         height: Theme.barHeight
         enabled: isle.shown
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+        // On what plays: the wheel is its volume, and the middle button pauses it.
+        onWheel: w => {
+            if (isle.onMedia && w.angleDelta.y !== 0)
+                isle.turn(w.angleDelta.y > 0);
+        }
         // A pinned panel owns the bar: a hover does not open the island over it.
         onContainsMouseChanged: Island.capsuleHover = containsMouse && (isle.host.pinned === "" || isle.host.pinned === "center")
-        onClicked: isle.act()
+        onClicked: mouse => {
+            if (mouse.button !== Qt.MiddleButton)
+                isle.act();
+            else if (isle.onMedia && Media.player && Media.player.canTogglePlaying) {
+                Island.hush();
+                Media.player.togglePlaying();
+            }
+        }
     }
 }

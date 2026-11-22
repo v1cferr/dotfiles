@@ -99,6 +99,14 @@ Singleton {
         if (root.hovered)
             root.spent = true;
     }
+    // The pointer is on the capsule to act on it (a wheel, a click that led elsewhere), not to open
+    // it: it stays shut until the pointer has been away.
+    function hush() {
+        if (root.full)
+            return;
+        root.rested = false;
+        root.spent = true;
+    }
     onFullChanged: if (!root.full)
         root.shut()
     Timer {
@@ -225,6 +233,7 @@ Singleton {
         target: Notifs
         function onArrived(n) {
             root.push("notification", {
+                id: n.id,
                 icon: n.desktopEntry || n.appName || "",
                 fallback: Notifs.appIconOf(n),
                 app: n.appName || "",

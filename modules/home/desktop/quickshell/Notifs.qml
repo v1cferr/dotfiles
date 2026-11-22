@@ -130,6 +130,23 @@ Singleton {
         if (n)
             n.dismiss();
     }
+    // Go to what a notification is about, as its card's arrow does: its own default action when
+    // it has one, else its app's window. False when there is neither, so the caller can do better.
+    function open(id) {
+        const n = server.trackedNotifications.values.find(x => x.id === id);
+        if (!n)
+            return false;
+        const act = (n.actions || []).find(a => a.identifier === "default");
+        const w = act ? null : Windows.find([n.desktopEntry, n.appName], "");
+        if (act)
+            act.invoke();
+        else if (w)
+            w.activate();
+        else
+            return false;
+        root.dismiss(n);
+        return true;
+    }
     function clearAll() {
         const vals = server.trackedNotifications.values.slice();
         for (let i = 0; i < vals.length; i++)

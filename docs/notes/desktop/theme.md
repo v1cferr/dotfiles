@@ -9,10 +9,31 @@ Stylix only APPLIES it ([decision 0012](../../decisions/0012-stylix-applies-the-
 1. `color-scheme = "prefer-dark"` is the signal read by GTK4/libadwaita apps AND forwarded by
    `xdg-desktop-portal-gtk` to the Electron/Chromium apps (VS Code, Chrome, LibreWolf).
    It is what darkens most of them.
-2. `gtk-theme` names Stylix's `adw-gtk3`, recolored by a generated `gtk.css` (`window_bg_color`,
+2. `gtk-theme` names the preset's OWN GTK theme when `gtkThemes` in `theme.nix` has one, and
+   Stylix's `adw-gtk3` otherwise, recolored by a generated `gtk.css` (`window_bg_color`,
    `accent_color` and the rest of libadwaita's named colors) in the palette. Until 13/10/2026 this
    was stock `Adwaita-dark`, so pavucontrol, Seahorse, Bottles, Czkawka, virt-manager and Blueman
    were gray. Measured on a headless sway: `#2d2d2d` before, `#1a1b26` after.
+
+## The tokyo-night preset wears its own GTK theme
+
+Since 22/11/2026 `tokyo-night` runs `Tokyonight-Dark`, Fausto-Korpsvart's Tokyonight-GTK-Theme from
+nixpkgs, Night variant (window `#1a1b26`, the palette's `bg`). adw-gtk3 had the right colors in
+Adwaita's shape; this one is drawn for the palette, the same reason kitty, bat and btop use their
+official themes over base16's (decision 0012). Its accent is the theme's own teal `#27a1b9`, not
+the palette's blue.
+
+- **Only that preset.** `gtkThemes.${my.theme.name} or null`: the other presets and every base16
+  scheme keep Stylix's adw-gtk3, so the switch still works. A Gruvbox or Catppuccin GTK theme is one
+  more entry in that map.
+- **libadwaita ignores `gtk-theme`.** `gtk.gtk4.theme` makes home-manager write
+  `@import url(".../gtk-4.0/gtk.css")` at the top of `~/.config/gtk-4.0/gtk.css`, which is what
+  libadwaita apps do read (the upstream installer's `-l` flag does the same by copying).
+- **Stylix's GTK target steps aside** (`stylix.targets.gtk.enable`, set in `theme.nix` next to the
+  map), or both would own `gtk.theme`.
+- **The portal shadow fix lives in `theme.nix`** (`noCsdShadow`), fed to Stylix's `extraCss` on one
+  path and to `gtk3`/`gtk4.extraCss` on the other. GTK3's client-side shadow is a transparent margin
+  that Hyprland blurs and dims, which drew a thick dark frame around the portal's file chooser.
 
 **The trap**: GTK on Wayland reads the theme name from dconf, through the settings portal, and NOT
 from `settings.ini`. A key dropped from Nix also stays in dconf. So `gtk-theme` is still set, to
@@ -21,7 +42,7 @@ from `settings.ini`. A key dropped from Nix also stays in dconf. So `gtk-theme` 
 ## Stylix: what it themes, and what it does not
 
 `autoEnable = true`: any app Stylix has a target for follows the palette when it is installed. Today
-that is GTK, mpv (OSD), yazi, fzf, starship and MangoHud (colors only). Each exception is in
+that is GTK (on presets without their own theme), mpv (OSD), yazi, fzf, starship and MangoHud (colors only). Each exception is in
 `stylix.nix` with its reason, in three groups:
 
 - **Themed here from the same palette**, with keys base16 has no slot for: Hyprland (Lua written

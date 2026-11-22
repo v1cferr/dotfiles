@@ -100,30 +100,44 @@ concurrent games share one hold. The unit `BindsTo=gamemoded.service`, so a cras
 ends the hold instead of leaving the CPU on `performance`. A manual pick during a game wins:
 ppd releases every hold when the user switches.
 
-## The build fence: a rebuild beside a game
+## The game fence: the rest gets only what the game leaves free
 
 A `rebuild` during a game lagged it, although the nix-daemon already runs `SCHED_IDLE` with idle
-I/O (`modules/nixos/core/core.nix`). Idle priority only decides who gets CPU TIME. With
-`max-jobs 3 x cores 4` the builds still fill all 12 threads, and what they take is not time:
+I/O (`modules/nixos/core/core.nix`). Idle priority only decides who gets CPU TIME, and it sets no
+ceiling: an idle task still fills every cycle the game leaves free. With `max-jobs 3 x cores 4`
+the builds fill all 12 threads and share with the game what the scheduler cannot split:
 
-- **SMT siblings.** A compiler on cpu8 shares physical core 2 with the game's thread on cpu2. The
-  scheduler cannot help, the core's execution units are split between both.
+- **SMT siblings.** A compiler on cpu8 shares physical core 2 with the game's thread on cpu2.
 - **Shared L3, memory bandwidth and the package power budget.** Every core busy means a lower
   turbo for the game's cores too.
 
-So while a game runs, `modules/nixos/gaming/build-fence.nix` moves the daemon's cgroup onto
-`my.gaming.buildCpus` (here cores 4 and 5 with their siblings, `4,5,10,11`) with a 200% quota.
-Builds run in `/system.slice/nix-daemon.service` (`use-cgroups = false`), so the property
-reaches every running build at once, and leaving the game spreads them back over 12 threads.
+MEASURED 22/11/2026 with WoW open and a nix-daemon-only fence already up: the CPU still sat at
+100%, now from Playwright tests (headless Chrome plus node) another Claude session ran inside the
+VS Code scope. So the fence covers everything that is not the game, and it is ADAPTIVE (asked
+for: the cores the game does not use stay available):
 
-The shape: the root unit `nix-daemon-gaming-fence` runs `systemctl set-property --runtime`
-(in `/run`, so a reboot never keeps it), a polkit rule lets the user start and stop only that
-unit, and the user unit `nix-build-fence` (`StopWhenUnneeded`) is wanted by BOTH game triggers,
-`gamemode-performance` and `game-performance`. systemd refcounts it: the fence drops only when
-neither hold is active.
+- **App scopes** (`app.slice`/`background.slice` `*.scope`: VS Code and what its terminals run,
+  browsers, Discord, terminals) get `CPUWeight=idle` plus a `CPUQuota` recomputed every 2 s:
+  `threads - ceil(game's usage) - 2 headroom`, never under 2 CPUs. With WoW on ~2 cores the rest
+  can still use ~8 of the 12 threads; a game that grows shrinks them. User DAEMONS stay out on
+  purpose: Sunshine, the portals and audio must not starve under a game.
+- **`system.slice`** gets `CPUWeight=idle` (only what the game leaves), and the nix-daemon also
+  `AllowedCPUs=my.gaming.buildCpus` (here cores 4 and 5 with their siblings, `4,5,10,11`), off
+  the game's cores.
+- **The game's scope is spared and measured.** Its PIDs come from GameMode (`ListGames` on
+  D-Bus) and from the game windows Hyprland records in `$XDG_RUNTIME_DIR/game-pids` (`rules.lua`,
+  same `is_game` test as the Gaming hold); its cgroup comes from `/proc/<pid>/cgroup`, and its
+  usage from that cgroup's `cpu.stat`.
 
-To check it: `systemctl show nix-daemon -p AllowedCPUs -p CPUQuotaPerSecUSec` during a game,
-and `mpstat -P ALL 1` beside a build shows load only on the fenced CPUs.
+The shape: the user unit `game-fence` (`StopWhenUnneeded`) is wanted by BOTH game triggers,
+`gamemode-performance` and `game-performance`, so systemd refcounts it. It starts the root
+oneshot `game-fence-system` (a polkit rule lets the user start and stop only that unit), then
+loops, so an app opened mid-game is fenced too. Everything is `set-property --runtime` (in
+`/run`): stopping the unit releases each fenced scope, and a reboot never keeps the fence. The
+quota is per scope, so two heavy apps can together pass it, still idle under the game.
+
+To check it during a game: `cat $XDG_RUNTIME_DIR/game-fence.units`, then
+`systemctl --user show <scope> -p CPUQuotaPerSecUSec -p CPUWeight` on one of them.
 
 ## The user-side effects: `power-profile-sync`
 

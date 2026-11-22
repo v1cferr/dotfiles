@@ -53,13 +53,20 @@ local function is_game(class)
   return class:match("%.exe$") ~= nil or class:match("^steam_app_%d+$") ~= nil or class == "gamescope"
 end
 local gaming = nil -- unknown after a reload, so the first check always says it
+local game_pids = nil
 local function sync_game_hold()
-  local any = false
+  local pids = {}
   for _, w in ipairs(hl.get_windows()) do
     if w.mapped and is_game(w.class) then
-      any = true
-      break
+      table.insert(pids, tostring(w.pid))
     end
+  end
+  local any = #pids > 0
+  -- The game fence (modules/nixos/gaming/game-fence.nix) spares the scopes of these PIDs.
+  local list = table.concat(pids, " ")
+  if list ~= game_pids then
+    game_pids = list
+    hl.exec_cmd("printf '%s\\n' " .. list .. ' > "$XDG_RUNTIME_DIR/game-pids"')
   end
   if any ~= gaming then
     gaming = any

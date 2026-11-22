@@ -120,6 +120,10 @@ Singleton {
     }
     onFullChanged: if (!root.full)
         root.shut()
+    // Opened, the Center shows the notification a card was showing, in its history: the card has
+    // said what it had to, and does not come back when the Center closes.
+    onOpenChanged: if (root.open && root.state.current && root.state.current.kind === "notification")
+        root.drop("notification")
     Timer {
         interval: Theme.hoverIntent
         running: (root.capsuleHover || root.logoHover) && !root.rested && !root.spent && !root.full

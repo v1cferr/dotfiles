@@ -66,8 +66,11 @@ stdenv.mkDerivation {
     runHook postInstall
   '';
 
+  # The Soloist it downloads looks for PipeWire's client.conf only in /etc/pipewire, /usr/share
+  # or $PIPEWIRE_CONFIG_DIR; NixOS has none of them, so it fell back to a silent dummy driver.
   postFixup = ''
-    wrapProgram $out/bin/spotifast --prefix LD_LIBRARY_PATH : ${runtimeLibs}
+    wrapProgram $out/bin/spotifast --prefix LD_LIBRARY_PATH : ${runtimeLibs} \
+      --set-default PIPEWIRE_CONFIG_DIR ${pipewire}/share/pipewire
   '';
 
   # What vendored-bump runs on `update`.

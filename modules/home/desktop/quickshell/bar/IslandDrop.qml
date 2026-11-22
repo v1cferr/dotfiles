@@ -241,7 +241,7 @@ PanelWindow {
             width: drop.wide
             height: drop.implicitHeight
 
-            // ── The head, on the capsule's row: the Center's name, the logo, its switches ──
+            // ── The head, on the capsule's row: the logo, and the Center's switches right of it ──
             CenterHeader {
                 x: drop.pad
                 y: drop.headTop

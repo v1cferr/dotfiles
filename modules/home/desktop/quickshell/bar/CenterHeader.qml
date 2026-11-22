@@ -1,5 +1,5 @@
-// The NixOS Center's HEAD: its name left of the logo and its three switches right of it (the idle
-// timeouts, do-not-disturb, clear), on the row the island's capsule was.
+// The NixOS Center's HEAD: its three switches right of the logo (the idle timeouts,
+// do-not-disturb, clear), on the row the island's capsule was. It carries no name.
 // The island's window places it; the logo between the two halves is not its to draw.
 // docs/notes/desktop/nixos-center.md
 import QtQuick
@@ -19,14 +19,9 @@ RowLayout {
         implicitHeight: Theme.barCell
     }
 
-    Text {
+    // No name: the logo in the middle of the row says whose panel this is.
+    Item {
         Layout.fillWidth: true
-        text: "NixOS Center"
-        color: Theme.colSubtext
-        font.family: Theme.uiFont
-        font.pixelSize: Theme.fontLabel
-        font.letterSpacing: 1
-        elide: Text.ElideRight
     }
     HeadButton {
         // hypridle: on is the normal state. Off shows on the bar too, so it is never forgotten.

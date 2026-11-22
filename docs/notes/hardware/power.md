@@ -211,7 +211,7 @@ readings belong to this log, taken while nobody is at the keyboard.
 
 ## RGB
 
-Not part of any profile. The LEDs are already driven by OpenRGB profiles and their own switch (`rgb-lights`), and
+Not part of any profile. The LEDs are already driven by OpenRGB (the GPU's colour and the peripherals' declared look), and
 the gain is too small to justify a second writer of their state.
 
 ## Rejected

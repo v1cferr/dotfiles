@@ -5,7 +5,8 @@
 - [x] The away screen left (21/11/2026; asked 21/11/2026). The owner turns the PC off instead.
       • OUT: the black overlay, its `away` submap, its switch in the NixOS Center, its entry in
         Vicinae and the notifications' hold that only it used.
-      • KEPT: the LEDs' own switch, `rgb-lights`, and why their look is declared
+      • THE LEDS' SWITCH WENT TOO, `rgb-lights on|off` and its two entries in Vicinae: it had
+        been written for the away screen. Their look is still declared and applied at boot
         ([notes/hardware/peripheral-rgb.md](../../notes/hardware/peripheral-rgb.md)).
 
 - [x] The NixOS Center as one island of glass (asked 21/11/2026; 21/11/2026). How and why:

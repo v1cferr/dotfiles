@@ -59,7 +59,8 @@ case [0006](0006-no-disk-encryption.md) names as the default, a machine that lea
 imported by that host, exactly like a device module (rule 4), and the category `default.nix`
 keeps only what every host gets. The desk's are listed in `hosts/ex-b560m-v5/roles.nix`: the
 exposed SSH and its guards, the FAI gateway, the router's log, the VPNs, LightDM with autologin,
-the secrets vault and the games.
+the secrets vault and the games. The laptop picked the games too (`hosts/t480s/games.nix`, 22/11/2026),
+for WoW in my home only, with the games folder under `~/Games` instead of a Windows disk.
 
 **The laptop holds none of the desk's secrets.** `secrets/secrets.yaml` is not readable there.
 Both password hashes are root-only files written once by the install, outside the store and

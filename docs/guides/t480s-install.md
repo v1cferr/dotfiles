@@ -58,6 +58,24 @@ letters, digits and spaces, which sit on the same keys in every layout this hous
   run, before the `home-manager` command exists, is
   `nix run home-manager/release-26.05 -- switch --flake <his repository>`.
 
+## WoW on the laptop
+
+The system side is declared (`hosts/t480s/games.nix`); the game and its Battle.net prefix are
+state, so they are COPIED from the desk instead of downloaded, over the LAN, as `v1cferr`:
+
+- `~/.local/share/bottles/`: the runners and DXVK/VKD3D components, plus the `Battlenet` bottle
+  WITHOUT the games inside its `Program Files (x86)` (Overwatch, and the links Home Manager makes).
+  Battle.net then already knows WoW at its install path, so there is no "locate the game" round.
+- `/mnt/windows/Games/World of Warcraft/` to `~/Games/World of Warcraft/`, WITHOUT `_retail_`,
+  `_classic_beta_`, the caches and logs, and `_forever_/WTF/Config.wtf`. That last file holds the
+  desk's 1440p graphics settings; without it WoW detects the UHD 620 and picks its own preset.
+  Characters, key bindings and add-on settings (`WTF/Account`) come along.
+
+Copy BEFORE the rebuild that brings `games.nix`: its activation registers the bottle's programs
+in Bottles and copies the add-ons only when the bottle and the game folder already exist. Close
+Battle.net on the desk first, or the copied prefix is caught mid-write. Battle.net asks for the
+login again on a new machine.
+
 ## What is NOT done yet
 
 - **Secure Boot.** The keys exist in `/var/lib/sbctl` but are not enrolled. The runbook is the

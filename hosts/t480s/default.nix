@@ -14,6 +14,7 @@ in
     ./desktop.nix # GDM as the greeter and GNOME beside the shared Hyprland
     ./home.nix # the part of my home only this laptop has (what "lock" means with no lock)
     ./vpn.nix # WireGuard to the house router from boot, carrying all traffic
+    ./games.nix # WoW through Bottles, with the games folder in my home
   ];
 
   networking.hostName = "t480s";

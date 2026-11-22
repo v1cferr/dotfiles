@@ -14,6 +14,7 @@ let
     gawk
     git
     jq
+    lm_sensors
     nixos-icons
     playerctl
     python3
@@ -197,6 +198,9 @@ let
       close
 
       (open "hardware")
+      (row "36" "󰚗" "board" "command" {
+        text = "echo \"$(</sys/class/dmi/id/board_name) · BIOS $(</sys/class/dmi/id/bios_version)\"";
+      })
       # temp reads coretemp's package and xe's pkg sensor, the same ones `sensors` shows.
       (row "36" "󰻠" "cpu" "cpu" {
         temp = true;
@@ -206,10 +210,34 @@ let
         temp = true;
         format = "{name} ({driver}) · {temperature}";
       })
-      (row "36" "󰆧" "vulkan" "vulkan" { format = "{api-version}"; })
+      # The codec module prints encoders and decoders on two lines, so its JSON is read instead:
+      # what the GPU encodes, newest codec first.
+      (row "36" "󰕧" "codec" "command" {
+        text = ''
+          ${lib.getExe config.programs.fastfetch.package} --logo none -s codec --format json | ${jqBin} -r '
+            (.[0].result[0].encoders // []) | map(sub(" / H.265"; "")) | reverse
+            | if length > 0 then join(" · ") + " encode" else "—" end'
+        '';
+      })
+      # The board's spinning fans (nct6775), then the GPU's (xe), which stops at idle (zero RPM mode)
+      # and so is named instead of vanishing.
+      (row "36" "󰈐" "fans" "command" {
+        text = ''
+          ${lib.getExe lm_sensors} -j 2>/dev/null | ${jqBin} -r '
+            def rpm: [to_entries[] | select(.key | test("^fan")) | .value | to_entries[]
+              | select(.key | test("_input$")) | .value | floor];
+            ([to_entries[] | select(.key | test("^xe-") | not) | .value | rpm[] | select(. > 0)]
+              | map(tostring) | join(" · ")) as $board
+            | ([to_entries[] | select(.key | test("^xe-")) | .value | rpm[]] | first) as $gpu
+            | [($board | select(. != "") | . + " RPM"),
+               ($gpu | if . == null then empty elif . > 0 then "gpu \(.) RPM" else "gpu stopped" end)]
+            | if length > 0 then join(" · ") else "—" end'
+        '';
+      })
       (row "36" "󰍛" "memory" "memory" { })
       (row "36" "󰓡" "swap" "swap" { })
-      (row "36" "󰋊" "disk" "disk" { folders = "/"; })
+      # btrfs and not disk: the same used/total, plus how much of it is already allocated in chunks.
+      (row "36" "󰋊" "storage" "btrfs" { format = "{5} / {7} ({8}) · {9} alloc"; })
       close
 
       (open "palette")

@@ -1,5 +1,5 @@
-# The keyboard's and the mouse's LEDs through OpenRGB: the look is declared here, applied at boot,
-# and `rgb-lights on|off` is the switch (two entries in Vicinae). Why: docs/notes/hardware/peripheral-rgb.md
+# The keyboard's and the mouse's LEDs through OpenRGB: the look is declared here and applied at
+# boot. Why declared and not saved from the device: docs/notes/hardware/peripheral-rgb.md
 {
   config,
   lib,
@@ -8,79 +8,47 @@
 }:
 
 let
-  inherit (pkgs) openrgb writeShellApplication;
+  inherit (pkgs) openrgb;
 
   cfg = config.my.rgb.peripherals;
 
   # One `--device NAME --mode MODE [--color RRGGBB]` triple per device, so a single call sets all.
-  args =
-    state:
-    lib.concatStrings (
-      lib.mapAttrsToList (
-        device: d:
-        let
-          s = d.${state};
-        in
-        " --device ${lib.escapeShellArg device} --mode ${lib.escapeShellArg s.mode}"
-        + lib.optionalString (s.color != null) " --color ${s.color}"
-      ) cfg
-    );
-
-  look = lib.types.submodule {
-    options = {
-      mode = lib.mkOption {
-        type = lib.types.str;
-        description = "An OpenRGB mode name, as `openrgb --list-detailed` prints it.";
-      };
-      color = lib.mkOption {
-        type = lib.types.nullOr (lib.types.strMatching "[0-9A-Fa-f]{6}");
-        default = null;
-        description = "RRGGBB, for the modes that take one.";
-      };
-    };
-  };
-
-  rgbLights = writeShellApplication {
-    name = "rgb-lights";
-    runtimeInputs = [ openrgb ];
-    text = ''
-      case "''${1:-}" in
-        on) exec openrgb${args "on"} ;;
-        off) exec openrgb${args "off"} ;;
-        *) echo "usage: rgb-lights on|off" >&2; exit 2 ;;
-      esac
-    '';
-  };
+  args = lib.concatStrings (
+    lib.mapAttrsToList (
+      device: look:
+      " --device ${lib.escapeShellArg device} --mode ${lib.escapeShellArg look.mode}"
+      + lib.optionalString (look.color != null) " --color ${look.color}"
+    ) cfg
+  );
 in
 {
   options.my.rgb.peripherals = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule {
         options = {
-          on = lib.mkOption {
-            type = look;
-            description = "The look while in use.";
+          mode = lib.mkOption {
+            type = lib.types.str;
+            description = "An OpenRGB mode name, as `openrgb --list-detailed` prints it.";
           };
-          off = lib.mkOption {
-            type = look;
-            description = "The look that reads as dark. Not every device has an `Off` mode.";
+          color = lib.mkOption {
+            type = lib.types.nullOr (lib.types.strMatching "[0-9A-Fa-f]{6}");
+            default = null;
+            description = "RRGGBB, for the modes that take one.";
           };
         };
       }
     );
     default = { };
     description = ''
-      Peripherals by their OpenRGB device name. The ON look is DECLARED and not saved from the
-      device, because these keep their effect in firmware and OpenRGB cannot read it back: a
-      saved profile restores an empty `Custom`/`Direct`, which is dark.
+      Peripherals by their OpenRGB device name, each with the look it wears. It is DECLARED and
+      not saved from the device, because these keep their effect in firmware and OpenRGB cannot
+      read it back: a saved profile restores an empty `Custom`/`Direct`, which is dark.
     '';
   };
 
   config = lib.mkIf (cfg != { }) {
-    # The server owns hidraw/i2c as root; both the boot unit and my user reach it over the SDK.
+    # The server owns hidraw/i2c as root; the boot unit reaches it over the SDK.
     services.hardware.openrgb.enable = true;
-
-    environment.systemPackages = [ rgbLights ];
 
     systemd.services.openrgb-peripherals = {
       description = "Apply the declared look to the keyboard's and the mouse's LEDs";
@@ -100,7 +68,7 @@ in
               lib.attrNames cfg
             )
           }; then
-            exec ${lib.getExe rgbLights} on
+            exec ${lib.getExe openrgb}${args}
           fi
           sleep 1
         done

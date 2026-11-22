@@ -18,20 +18,10 @@ in
     ../../modules/nixos/hardware/power-log.nix # a CSV a minute of the measurable draw (CPU plus the Arc), read by `power-report`
   ];
 
-  # The keyboard (a Redragon Magic Wand Pro, which OpenRGB sees as EVision) and the mouse as they
-  # ship, and their dark for `rgb-lights off`. The EVision has no `Off`, so black Static is its dark.
+  # The keyboard (a Redragon Magic Wand Pro, which OpenRGB sees as EVision) and the mouse, as they ship.
   my.rgb.peripherals = {
-    "EVision Keyboard 0C45:5004" = {
-      on.mode = "Spectrum Cycle";
-      off = {
-        mode = "Static";
-        color = "000000";
-      };
-    };
-    "Razer Deathadder V2" = {
-      on.mode = "Spectrum Cycle";
-      off.mode = "Off";
-    };
+    "EVision Keyboard 0C45:5004".mode = "Spectrum Cycle";
+    "Razer Deathadder V2".mode = "Spectrum Cycle";
   };
 
   hardware.cpu.intel.updateMicrocode = true; # an Intel CPU on this board

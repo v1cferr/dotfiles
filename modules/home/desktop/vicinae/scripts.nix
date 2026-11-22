@@ -243,20 +243,6 @@ let
         text = "qs ipc call notif clear";
       }
       {
-        name = "rgb-on";
-        glyph = "md-led_on";
-        title = "RGB lights on";
-        group = "Desktop";
-        text = "rgb-lights on";
-      }
-      {
-        name = "rgb-off";
-        glyph = "md-led_off";
-        title = "RGB lights off";
-        group = "Desktop";
-        text = "rgb-lights off";
-      }
-      {
         name = "reload-hyprland";
         glyph = "md-reload";
         title = "Reload Hyprland";

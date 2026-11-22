@@ -112,4 +112,4 @@ off is a `--post-cmd` that runs AFTER Hyprland is gone. Against what runs here:
   lose anything on `terminate-user`.
 
 So the session's actions stay on systemd and logind, and the NixOS Center's confirmation
-([nixos-center](../desktop/nixos-center.md#the-confirmation-22102026)) asks first.
+([nixos-center](../desktop/nixos-center.md#the-confirmation)) asks first.

@@ -22,6 +22,23 @@ TestCase {
         compare(m.action("suspend").cmd.join(" "), "systemctl suspend");
         compare(m.actions.filter(a => a.confirm).map(a => a.key).join(","), "logout,reboot,poweroff");
     }
+    function test_asking_again_is_the_confirmation() {
+        let s = go(m.idle, "request", {
+            key: "reboot"
+        });
+        compare(s.run, false, "the first click only arms it");
+        s = go(s, "request", {
+            key: "poweroff"
+        });
+        compare(s.phase, "confirm");
+        compare(s.key, "poweroff", "another one asked moves the question, and runs nothing");
+        compare(s.run, false);
+        s = go(s, "request", {
+            key: "poweroff"
+        });
+        compare(s.phase, "busy");
+        compare(s.run, true);
+    }
     function test_a_destructive_action_asks_first() {
         const s = go(m.idle, "request", {
             key: "poweroff"

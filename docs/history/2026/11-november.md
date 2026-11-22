@@ -14,6 +14,7 @@
         with its option and the bar it gave way to. SUPER+X pins the Center; the item on the bar's right left too, the same day.
       • THE SCREEN'S LEVEL got a slider, which asks the script the brightness keys run.
       • DARKEN LEFT the session's row, unused: five actions, and nothing of its own behind it.
+      • A SECOND CLICK CONFIRMS what ends the session; the question that took the card's place left.
       • CHOSEN among three structures drawn for the owner; the references were GNOME's 2026
         plan, macOS's Control Center, Android's shade and Noctalia's cards.
 

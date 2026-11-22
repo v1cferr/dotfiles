@@ -1,6 +1,6 @@
 pragma Singleton
 // The session actions' state: Lock, Log out, Suspend, Reboot, Shut down. One command at a
-// time, its exit code read, and the three that end the session asked first in bar/PowerConfirm.qml.
+// time, its exit code read, and the three that end the session ask first: a second click on the same one is the yes.
 // IPC: `qs ipc call power ask <key>`. The rules: docs/notes/desktop/nixos-center.md
 import Quickshell
 import Quickshell.Io
@@ -36,7 +36,22 @@ Singleton {
         }
         stall.running = next.phase === "handoff";
     }
+    // A second click on what asks is the yes. Not the second half of a double click, though, and
+    // not a click that comes long after: the question lapses by itself.
+    readonly property int armGap: 400
+    readonly property int armLife: 5000
+    property real armedAt: 0
+    readonly property bool armed: root.state.phase === "confirm"
+    onArmedChanged: if (root.armed)
+        root.armedAt = Date.now()
+    Timer {
+        interval: root.armLife
+        running: root.armed
+        onTriggered: root.cancel()
+    }
     function request(key) {
+        if (root.armed && key === root.state.key && Date.now() - root.armedAt < root.armGap)
+            return;
         root.send({
             type: "request",
             key: key

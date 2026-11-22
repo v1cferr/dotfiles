@@ -190,12 +190,14 @@ Item {
             center.bar.closePanels(); // a safe action must not leave the panel over what it does
         Power.request(a.key);
     }
-    // While an action asks, failed or hands over, the card shows PowerConfirm instead of its sections.
-    readonly property bool asking: {
-        const a = Power.current, ph = Power.state.phase;
-        return !!a && (ph === "confirm" || ph === "error" || ph === "handoff" || (ph === "busy" && !!a.ends));
-    }
-    onAskingChanged: center.asking ? Qt.callLater(() => confirmView.focusDefault()) : center.takeKeys()
+    // What the session's row says about itself, on one line over it: the question while an action
+    // that ends the session is armed (a second click on it is the yes), that it is going, or why
+    // it did not. Nothing takes the card's place.
+    readonly property string powerPhase: Power.state.phase
+    onPowerPhaseChanged: if (center.powerPhase !== "idle")
+        center.page = "" // the row that says it is on the main view
+    readonly property bool powerGoing: !!Power.current && (center.powerPhase === "handoff" || (center.powerPhase === "busy" && !!Power.current.ends))
+    readonly property string powerLine: !Power.current ? "" : (center.powerPhase === "confirm" ? "Click " + Power.current.label + " again to confirm" : (center.powerGoing ? Power.current.going + "…" : (center.powerPhase === "error" ? Power.state.error : "")))
     // A question or a failure while the Center is closed (a failed suspend, `qs ipc call power ask`).
     Connections {
         target: Power
@@ -208,9 +210,12 @@ Item {
     // starts at the first control, Tab does by itself. Each control is a KeyTarget.
     // A key its host did not use: an arrow starts at the first control.
     function keyPressed(event) {
-        if (center.asking)
+        // Escape answers "no" to an armed action first, then leaves a page, then the panel.
+        if (event.key === Qt.Key_Escape && (center.powerPhase === "confirm" || center.powerPhase === "error")) {
+            Power.cancel();
+            event.accepted = true;
             return;
-        // Escape leaves a page first, the panel second.
+        }
         if (event.key === Qt.Key_Escape && center.page !== "") {
             center.page = "";
             event.accepted = true;
@@ -258,10 +263,13 @@ Item {
         id: card
         width: parent.width
         spacing: Theme.sp3
-        // Escape from a focused control bubbles up to here; the question answers it first (PowerConfirm).
+        // Escape from a focused control bubbles up to here: "no" to an armed action first.
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Escape) {
-                center.page !== "" ? center.page = "" : center.bar.closePanels();
+                if (center.powerPhase === "confirm" || center.powerPhase === "error")
+                    Power.cancel();
+                else
+                    center.page !== "" ? center.page = "" : center.bar.closePanels();
                 event.accepted = true;
             }
         }
@@ -293,7 +301,7 @@ Item {
         // ══ The main view; a page or the confirmation takes its place ══
         ColumnLayout {
             Layout.fillWidth: true
-            visible: !center.asking && center.page === ""
+            visible: center.page === ""
             spacing: Theme.sp3
 
             // ── The day: the date, the weather, the next date the calendar holds ──
@@ -640,7 +648,24 @@ Item {
 
             Hairline {}
 
-            // ── The session, as icons; the three that end it are confirmed in place (PowerConfirm.qml) ──
+            // ── The session, as icons. The three that end it ask first, in place: the icon stays lit
+            // and a second click on it is the yes; Escape, another click or five seconds is the no ──
+            Text {
+                visible: center.powerLine !== ""
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                text: center.powerLine
+                color: center.powerPhase === "error" ? Theme.colCrit : (center.powerGoing ? Theme.colSubtext : Theme.colRed)
+                font.family: Theme.uiFont
+                font.pixelSize: Theme.fontBody
+                wrapMode: Text.WordWrap
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: center.powerPhase === "error" || center.powerPhase === "confirm"
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: Power.cancel()
+                }
+            }
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.sp1
@@ -653,7 +678,10 @@ Item {
                         Layout.preferredWidth: 0
                         implicitHeight: Theme.sp6 + Theme.sp3
                         radius: Theme.radiusControl
-                        color: actArea.containsMouse ? (act.modelData.confirm ? Theme.colHoverBgDanger : Theme.colHoverFill) : "transparent"
+                        readonly property bool armed: Power.armed && Power.state.key === act.modelData.key
+                        color: act.armed || (actArea.containsMouse && act.modelData.confirm) ? Theme.colHoverBgDanger : (actArea.containsMouse ? Theme.colHoverFill : "transparent")
+                        border.width: act.armed ? Theme.hairline : 0
+                        border.color: Theme.colRed
                         Behavior on color {
                             ColorAnimation {
                                 duration: Theme.motionHover
@@ -673,7 +701,7 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onContainsMouseChanged: containsMouse ? tips.show(act, act.modelData.label, "", act.modelData.confirm ? "Click, then confirm" : "") : tips.hide(act)
+                            onContainsMouseChanged: containsMouse ? tips.show(act, act.modelData.label, "", act.modelData.confirm ? "Click, then click again to confirm" : "") : tips.hide(act)
                             onClicked: center.run(act.modelData)
                         }
                         KeyTarget {
@@ -686,13 +714,13 @@ Item {
 
         // ══ A page: the way back, then what the tile had more to show ══
         PageHeader {
-            visible: !center.asking && center.page !== ""
+            visible: center.page !== ""
             title: center.pageTitles[center.page] || ""
             onBack: center.page = ""
         }
         ColumnLayout {
             Layout.fillWidth: true
-            visible: !center.asking && center.page !== ""
+            visible: center.page !== ""
             spacing: Theme.sp3
 
             NetworkPage {
@@ -839,12 +867,6 @@ Item {
                     onClicked: center.shotSave = !center.shotSave
                 }
             }
-        }
-
-        PowerConfirm {
-            id: confirmView
-            Layout.fillWidth: true
-            visible: center.asking
         }
     }
 }

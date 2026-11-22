@@ -21,9 +21,6 @@ QtObject {
             cmd: ["sh", "-c", "loginctl terminate-user \"$USER\""], // LightDM launches a bare Hyprland (no uwsm)
             confirm: true,
             ends: true,
-            title: "Log out?",
-            body: "Every app in this session is closed. Unsaved work is lost.",
-            verb: "Log out",
             going: "Logging out"
         },
         {
@@ -39,9 +36,6 @@ QtObject {
             cmd: ["systemctl", "reboot"],
             confirm: true,
             ends: true,
-            title: "Restart the computer?",
-            body: "Every app is closed and the machine restarts. Unsaved work is lost.",
-            verb: "Restart",
             going: "Restarting"
         },
         {
@@ -51,9 +45,6 @@ QtObject {
             cmd: ["systemctl", "poweroff"],
             confirm: true,
             ends: true,
-            title: "Shut down the computer?",
-            body: "Every app is closed and the machine powers off. Unsaved work is lost.",
-            verb: "Shut down",
             going: "Shutting down"
         }
     ]
@@ -84,6 +75,11 @@ QtObject {
                 return Object.assign({}, s, {
                     run: false
                 }); // one request at a time: a double click never runs twice
+            // Asked again while it asks: that is the answer. Another one asked moves the question.
+            if (s.phase === "confirm" && a.key === s.key)
+                return st("busy", {
+                    run: true
+                });
             return a.confirm ? st("confirm") : st("busy", {
                 run: true
             });

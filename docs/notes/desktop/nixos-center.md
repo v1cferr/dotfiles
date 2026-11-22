@@ -141,11 +141,11 @@ synchronously at startup so a notification in the first instant cannot slip past
 state, not configuration (rule 6), and it needed no daemon. Tested on 17/10/2026 through
 `qs ipc call notif dnd`: the file went `false`, `true`, `false`.
 
-**The three actions that end the session ask first, in the card** (22/10/2026, replacing the
-second click). Log out, reboot and shut down turn the Center's own card into the question
-(`bar/PowerConfirm.qml`): Cancel is focused, Escape or closing the Center cancels, the arrows or Tab
-move between the buttons, Enter confirms. Lock and suspend run at once, since each is undone
-by coming back to the keyboard. Details in [the confirmation](#the-confirmation-22102026).
+**The three actions that end the session ask first, with a second click** (22/11/2026). A click
+on Log out, Reboot or Shut down arms it: the icon stays lit and one line over the row says `Click
+Shut down again to confirm`. A second click on the same icon is the yes. Lock and suspend run at
+once, since each is undone by coming back to the keyboard. Details in
+[the confirmation](#the-confirmation).
 
 **The commands are the power menu's, unchanged** (they live in `power/PowerMath.qml` now), with the same reasons: the lock starts
 `lockscreen.service` before marking the `LockedHint` (`loginctl lock-session` alone only emits the
@@ -153,31 +153,34 @@ signal), logging out is `loginctl
 terminate-user` because LightDM starts a bare Hyprland. The history of each is in
 [bar.md](bar.md#the-power-menu) and [lockscreen.md](lockscreen.md).
 
-## The confirmation (22/10/2026)
+## The confirmation
 
-`Power.qml` owns the five actions (six until 22/11/2026, when Darken left unused); the Center's footer and `qs ipc call power ask <key>` only request
-them. The rules it keeps:
+`Power.qml` owns the five actions (six until 22/11/2026, when Darken left unused); the Center's
+foot and `qs ipc call power ask <key>` only request them. The rules it keeps:
 
 - **One command at a time.** The state machine is pure (`power/PowerMath.qml`, phases `idle`,
   `confirm`, `busy`, `handoff`, `error`) and `quickshell/tests/tst_power.qml` covers it: a double
   confirm never runs twice, a running command cannot be cancelled into a lie.
 - **The exit code is read.** The old footer fired the command and closed the panel. Now a non-zero
   exit shows the command's last stderr line, so a poweroff held by a logind inhibitor or a suspend
-  that failed says so, in the card, for any of the five.
-- **No fake progress.** When reboot or shut down is accepted the card says `Restarting` or
-  `Shutting down`, static, and the OS takes over. If nothing happened after 90 s (a delay
+  that failed says so, on the line over the row, for any of the five.
+- **No fake progress.** When reboot or shut down is accepted the line says `Restarting…` or
+  `Shutting down…`, static, and the OS takes over. If nothing happened after 90 s (a delay
   inhibitor), it turns into an error instead of waiting forever.
-- **In the card, not over the desktop.** The first version was a separate window, centered and
-  dimmed on the main monitor. Seen live, the choice was the card itself: the question stays where
-  the click was, and there is no second window, scrim or keyboard grab to keep in step with the
-  Center's. Its keys are the panel's: Escape inside the question answers no and keeps the Center
-  open; the panel's own Escape handler gets the keyboard back after (`BarPanel.takeKeys`).
-- **Closing is a no.** A click outside or the logo closes the Center, and a closed Center cancels a
-  pending question. Nothing confirms by going away.
+- **A second click, not a question in the card's place** (22/11/2026, asked for as "click once,
+  confirm?, click again"). From 22/10/2026 the card itself turned into the question, with Cancel
+  and a red button, and before that it was a separate dimmed window. Both are gone
+  (`bar/PowerConfirm.qml` with them): asking again while it asks IS the answer, in the state
+  machine itself, and asking for another one moves the question there and runs nothing.
+- **Not the second half of a double click.** The same icon asked again within 400 ms of arming is
+  ignored (`Power.armGap`).
+- **Every other way out is a no.** Escape, a click on the line, five seconds with no second click
+  (`Power.armLife`), and closing the Center, by a click outside, the logo, or the pointer leaving
+  one opened by a hover. Nothing confirms by going away.
 - **It comes to you.** A question over IPC, or a failure of an action that closed the Center
   (suspend), fires `Power.attention`, and the Center opens itself on the main monitor through the
   same path as `qs ipc call notif toggle`.
-- **Motion** is the Center's own: no new animation; the buttons' color uses `Theme.ms()`.
+- **Motion** is the Center's own: no new animation.
 
 Tested on 22/10/2026 with the whole shell in a headless sway, `hyprctl` stubbed out and
 `QS_POWER_DRYRUN` set (every command becomes `exit 0` or `exit 1`, and the test copy also replaced
@@ -185,6 +188,12 @@ the commands with `true`): the card turned into the question, Escape brought the
 Right then Enter confirmed, a failure showed `Shut down failed (exit 1).` with Close focused and
 Enter on it brought the sections back, a failed suspend opened the closed Center, and success
 showed `Restarting`. Not yet seen on Hyprland, where the focus grab is the real one.
+
+The second click was run on 22/11/2026 the same way, over `power ask` with `QS_POWER_DRYRUN=1`
+confirmed in the process's environment first: Shut down armed (the icon lit, the line over the
+row), asked again it ran and the line read `Shut down failed (exit 1).`; Reboot asked after it
+took the question; and five seconds later the row was at rest. The 84 logic tests pass, one of
+them new. No real click was made, so the 400 ms guard was never exercised by a hand.
 
 ## Boot (22/10/2026)
 

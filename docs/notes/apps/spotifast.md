@@ -45,35 +45,35 @@ work; only the sound is refused, and nothing on this machine changes that. It is
 24/10/2026, on the first play.
 
 The way around it keeps spotifast as the app: [Soloist](https://github.com/spotify/soloist),
-Spotify's OFFICIAL headless Connect receiver, runs as a `--user` service
-(`modules/home/apps/spotifast.nix`) and shows up in spotifast's device list under the hostname.
-Spotifast picks it once and remembers the choice; Soloist gets its keys through Spotify's own
-engine, so it plays. No Electron, no CEF.
+Spotify's OFFICIAL headless Connect receiver, gets its keys through Spotify's own engine, so it
+plays. Since 0.15 spotifast downloads Soloist from Spotify's CDN and runs it as a CHILD process
+(Settings > Spotify Soloist), named `Spotifast Soloist (<id>)`. No Electron, no CEF, and nothing
+in the repo: no package, no unit, no secret.
 
-- **Package.** [`pkgs/soloist/`](../../../pkgs/soloist/package.nix), the release binary, unfree.
-  It links only glibc and libatomic and dlopens libpulse, which PipeWire answers.
-- **It EXPIRES.** A build stops 90 days after it is made, exiting 10. The unit does not restart
-  on 10; `update` (its bump reads the URL's Last-Modified) plus a rebuild does.
-- **Nobody has to remember that.** The `soloist-expiry` timer runs daily at 10:00 (catching up
-  after a powered-off morning) and, from 14 days out, warns on the desktop and on the phone (ntfy).
-  The deadline is the version (the build date) plus 90 days; on 24/10/2026 it said 88, the same as
-  Soloist's own `client expires in 88 days`. It warns instead of updating on its own because an
-  unattended bump would commit and switch the system with nobody looking.
+- **Why not our own.** From 24/10 to 22/11/2026 the repo vendored Soloist and ran it as a
+  `--user` unit, because spotifast could not yet. Spotifast cannot attach to an external one, so
+  that unit became a duplicate and was removed. The built-in one also ends two chores: a build
+  EXPIRES 90 days after it is made, and spotifast fetches the new ones itself (falling back to
+  the last build that worked), so neither a daily bump nor an expiry warning is needed.
+- **The trade.** The PC is a Connect speaker only while spotifast runs (the autostart opens it
+  hidden), and the binary lives outside the store, under `~/.local/state/spotifast/soloist/`
+  (`builds/` for the binaries, `accounts/<hash>/` for the session and `soloist-output.log`).
+- **Silent until it finds PipeWire.** The downloaded binary looks for PipeWire's `client.conf`
+  only in `/etc/pipewire`, `/usr/share/pipewire` or `$PIPEWIRE_CONFIG_DIR`, and NixOS has none of
+  them. It then logged `Pipewire initialization failed!!` (only with `-v`), played into a dummy
+  driver and paused 20 ms after every play (22/11/2026). The package's wrapper sets
+  `PIPEWIRE_CONFIG_DIR`, and the child inherits it.
 - **The API key.** Generated once in the Spotify for Developers dashboard (Soloist API Key page,
-  Premium only), stored in Bitwarden as `Spotify Soloist API Key`, then `sync-secrets` and a
-  rebuild. It reaches the unit as `SOLOIST_API_KEY` through the `soloist.env` template, and systemd
-  expands it into `--api-key`: the binary ignores the variable, despite what upstream's guide
-  suggests (`Error: --api-key is required`, 24/10/2026). The unit does not exist until the vault
-  holds the key.
-- **Pairing is ONE time, from the phone.** Spotifast's own ZeroConf login reaches Soloist
-  (`zeroconf: received addUser`) and is ignored without a word, so the first login comes from the
-  official app on the phone instead. Its ZeroConf port is random per start and closed to the LAN,
-  so it is opened only for that minute (`iptables -I nixos-fw -p tcp --dport <port> -j
-  nixos-fw-accept`, then `-D`). The login lands in the StateDirectory and survives restarts
-  (measured 24/10/2026: `logged in as ...` again with no phone), so after that Soloist is a normal
-  device of the account and no inbound port is needed.
-- **Checking it.** `journalctl --user -u soloist` says `logged in as <user>`; then the hostname
-  in spotifast's devices.
+  Premium only) and pasted into spotifast's setup, which keeps it in the Secret Service. The
+  Bitwarden item `Spotify Soloist API Key` stays as the copy to paste again.
+- **Pairing is ONE time, from the phone.** Spotifast's guide pairs through the desktop app, which
+  this machine does not have; the phone's Spotify app does the same over ZeroConf. Soloist's
+  ZeroConf port is random per start (no flag fixes it) and closed to the LAN, so it is opened only
+  for that minute (`iptables -I nixos-fw -p tcp --dport <port> -j nixos-fw-accept`, then `-D`),
+  with the port read from `ss -lntp` for the child's PID. The login lands in its `accounts/`
+  folder and survives restarts, so after that no inbound port is needed.
+- **Checking it.** `soloist-output.log` says `logged in as <user>`, and spotifast leaves the
+  "Waiting for Spotify..." step.
 
 ## Around it
 

@@ -133,7 +133,6 @@ let
     };
     # PDF reader and editor, the same binary layout as zapfast, so the same unstable build.
     pdfcraft = final.unstable.callPackage ../pkgs/pdfcraft/package.nix { inherit (final) callPackage; };
-    soloist = final.callPackage ../pkgs/soloist/package.nix { }; # Spotify's Connect receiver, spotifast's speaker
     razer-dpi = final.callPackage ../pkgs/razer-dpi/package.nix { }; # the Razer mouse's live DPI, over hidraw
     notify = final.callPackage ../pkgs/notify/package.nix { }; # the ntfy push, shared by the shell and sshd's PAM
     wow-addons = final.callPackage ../pkgs/wow-addons/package.nix { }; # WoW Forever add-ons, each on its latest stable release

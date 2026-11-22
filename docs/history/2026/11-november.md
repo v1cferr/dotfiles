@@ -1,6 +1,16 @@
 # History: november 2026
 
-19 entries. Index in [README.md](../README.md).
+20 entries. Index in [README.md](../README.md).
+
+- [x] Spotifast plays through its OWN Soloist (asked 22/11/2026; 22/11/2026): its 0.17 setup
+      asked to pair the Soloist it now downloads and runs itself. How and why:
+      [notes/apps/spotifast.md](../../notes/apps/spotifast.md#playback-goes-through-soloist).
+      • OURS LEFT: `pkgs/soloist`, its `--user` unit, the 90-day expiry timer, the daily bump and
+        the `soloist_api_key` secret. Spotifast keeps the key and updates the build itself.
+      • PAIRED ONCE from the phone, its random port opened for that minute; the session survives
+        a restart.
+      • SILENT AT FIRST: the downloaded binary did not find PipeWire's `client.conf` on NixOS and
+        paused every play; the wrapper now sets `PIPEWIRE_CONFIG_DIR`.
 
 - [x] Notifications come down from the island (asked 22/11/2026; 22/11/2026): the top right corner
       is gone. How and why: [notes/desktop/island.md](../../notes/desktop/island.md#the-card).

@@ -186,8 +186,7 @@ in
         ".local/share/qBittorrent"
         ".config/spotifast"
         ".local/share/spotifast"
-        ".local/state/spotifast"
-        ".local/state/soloist" # the Spotify session; re-pairing only works from the phone
+        ".local/state/spotifast" # also the built-in Soloist and its pairing
         ".config/YouTube Music" # Pear Desktop: the Google session and its plugins
         ".config/zapfast"
         ".local/share/zapfast"

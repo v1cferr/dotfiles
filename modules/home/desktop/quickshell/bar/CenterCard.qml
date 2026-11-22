@@ -325,9 +325,16 @@ Item {
 
         // ══ The main view; a page or the confirmation takes its place ══
         ColumnLayout {
+            id: mainView
             Layout.fillWidth: true
             visible: center.page === ""
             spacing: Theme.sp3
+            onVisibleChanged: if (visible && center.shown)
+                mainIn.restart()
+            FadeIn {
+                id: mainIn
+                target: mainView
+            }
 
             // ── The day: the date, the weather, the next date the calendar holds ──
             RowLayout {
@@ -552,9 +559,16 @@ Item {
 
             // ── What plays: one row, or the whole card when asked for (media/MediaCard.qml) ──
             RowLayout {
+                id: mediaRow
                 visible: Media.hasPlayer && !center.mediaOpen
                 Layout.fillWidth: true
                 spacing: Theme.sp2
+                onVisibleChanged: if (visible && center.shown)
+                    mediaRowIn.restart()
+                FadeIn {
+                    id: mediaRowIn
+                    target: mediaRow
+                }
                 MediaRow {
                     Layout.fillWidth: true
                 }
@@ -586,9 +600,16 @@ Item {
                 }
             }
             MediaCard {
+                id: mediaCard
                 Layout.fillWidth: true
                 visible: Media.hasPlayer && center.mediaOpen
                 active: center.shown && visible
+                onVisibleChanged: if (visible && center.shown)
+                    mediaCardIn.restart()
+                FadeIn {
+                    id: mediaCardIn
+                    target: mediaCard
+                }
                 wave: Audio.waveOpen
                 onRevealed: center.bar.closePanels()
             }
@@ -825,9 +846,22 @@ Item {
             onBack: center.page = ""
         }
         ColumnLayout {
+            id: pageView
             Layout.fillWidth: true
             visible: center.page !== ""
             spacing: Theme.sp3
+            // Each page comes in, from the main view and from another page alike.
+            Connections {
+                target: center
+                function onPageChanged() {
+                    if (center.page !== "" && center.shown)
+                        pageIn.restart();
+                }
+            }
+            FadeIn {
+                id: pageIn
+                target: pageView
+            }
 
             NetworkPage {
                 visible: center.page === "net"

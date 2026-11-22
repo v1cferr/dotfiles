@@ -92,7 +92,11 @@ tall pills filled in solid lavender with no number, the volume's shorter than th
 the chevron beside it; the owner found them heavy, uneven, numberless and roomy, and chose thin
 tracks with a number among four directions (side by side, vertical beside the tiles, the pills
 made lighter). Measured in the harness: both tracks from x 1042 to 1496, each row 24 px tall. The
-Sound page and the media card take the same slider.
+Sound page and the media card take the same slider. The first version took the wheel through a
+`WheelHandler` under the three areas that take clicks, and the wheel never reached it (the owner
+found it the same day); a layer that takes no button, over the rest, has it now, and a smooth
+wheel's fractions of a notch add up to a 5% step. The harness has no pointer to scroll with, so
+that one was left to the owner's hand.
 
 The screen's level is `Backlight.qml`: what `brightness-osd` (`hypr.nix`) said last, a panel's
 backlight where the machine has one and the compositor's gamma on this desk, the same thing the

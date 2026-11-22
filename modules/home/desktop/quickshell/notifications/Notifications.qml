@@ -1,5 +1,7 @@
-// The TOASTS, top right of the main monitor under the bar; the history lives in the NixOS Center
-// (bar/CenterCard.qml). The card is NotifCard.qml: docs/notes/desktop/nixos-center.md
+// The TOASTS: only where the island cannot be seen (a fullscreen window covers it, or it is off),
+// at the top of the main monitor's middle, under the bar, where the island's card would come
+// down. Everywhere else a notification is the island's. The card is NotifCard.qml:
+// docs/notes/desktop/nixos-center.md
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
@@ -17,15 +19,13 @@ Scope {
         visible: Notifs.popups.length > 0
         // The main monitor, or whichever screen is left when it is unplugged (Theme's fallback).
         screen: Theme.screenPrimary
+        // Anchored to the top alone, so it stands centered on the screen: sp2 under the bar.
         anchors {
             top: true
-            right: true
         }
-        // From the screen's edge: sp2 under the bar, and right on the windows' outer gap.
         exclusionMode: ExclusionMode.Ignore
         margins {
             top: Theme.bandTop
-            right: Theme.screenInset
         }
         color: "transparent"
         implicitWidth: 380

@@ -61,8 +61,11 @@ in the repo: no package, no unit, no secret.
 - **Silent until it finds PipeWire.** The downloaded binary looks for PipeWire's `client.conf`
   only in `/etc/pipewire`, `/usr/share/pipewire` or `$PIPEWIRE_CONFIG_DIR`, and NixOS has none of
   them. It then logged `Pipewire initialization failed!!` (only with `-v`), played into a dummy
-  driver and paused 20 ms after every play (22/11/2026). The package's wrapper sets
-  `PIPEWIRE_CONFIG_DIR`, and the child inherits it.
+  driver and paused 20 ms after every play (22/11/2026). It also `dlopen`s
+  `libpipewire-0.3.so.0`, which only worked while the session happened to export PipeWire's lib;
+  launched without it, the same silent pause came back. The package's wrapper sets
+  `PIPEWIRE_CONFIG_DIR` and puts PipeWire's `lib` on `LD_LIBRARY_PATH`, and the child inherits
+  both. To see it: `soloist -v`, which says `PipeWire not available: libpipewire-0.3.so.0`.
 - **The API key.** Generated once in the Spotify for Developers dashboard (Soloist API Key page,
   Premium only) and pasted into spotifast's setup, which keeps it in the Secret Service. The
   Bitwarden item `Spotify Soloist API Key` stays as the copy to paste again.

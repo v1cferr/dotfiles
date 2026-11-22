@@ -33,6 +33,8 @@ let
     libxcursor
     libxi
     libxrandr
+    # Not for spotifast: the Soloist child dlopens libpipewire-0.3.so.0 and inherits this path.
+    pipewire
   ];
 in
 stdenv.mkDerivation {
@@ -66,8 +68,8 @@ stdenv.mkDerivation {
     runHook postInstall
   '';
 
-  # The Soloist it downloads looks for PipeWire's client.conf only in /etc/pipewire, /usr/share
-  # or $PIPEWIRE_CONFIG_DIR; NixOS has none of them, so it fell back to a silent dummy driver.
+  # The Soloist it downloads dlopens libpipewire (above) and looks for client.conf only in
+  # /etc/pipewire, /usr/share or $PIPEWIRE_CONFIG_DIR; missing either, it plays into a dummy driver.
   postFixup = ''
     wrapProgram $out/bin/spotifast --prefix LD_LIBRARY_PATH : ${runtimeLibs} \
       --set-default PIPEWIRE_CONFIG_DIR ${pipewire}/share/pipewire

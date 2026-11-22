@@ -158,6 +158,8 @@ Scope {
     PanelWindow {
         id: osd
         WlrLayershell.namespace: "qs-panel"
+        // Over a fullscreen window too: a key's answer must be seen in a game.
+        WlrLayershell.layer: Island.covered ? WlrLayer.Overlay : WlrLayer.Top
         visible: root.shown
 
         screen: Theme.screenPrimary

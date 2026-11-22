@@ -4,6 +4,7 @@ pragma Singleton
 // docs/notes/desktop/island.md
 import Quickshell
 import Quickshell.Bluetooth
+import Quickshell.Hyprland
 import QtQml.Models
 import QtQuick
 import "root:/island"
@@ -11,8 +12,19 @@ import "root:/island"
 Singleton {
     id: root
 
-    // On, and with a screen wide enough to hold it: without one the OSD and the toasts stay in charge.
-    readonly property bool live: Theme.islandOn && !!Theme.screenPrimary && Theme.screenPrimary.width >= Theme.compactWidth
+    // A window in fullscreen on the main monitor covers the bar, and the capsule with it. The
+    // workspace says so for a maximized window too, which covers nothing: the window itself settles it.
+    readonly property var hyprMonitor: Theme.screenPrimary ? Hyprland.monitorFor(Theme.screenPrimary) : null
+    readonly property bool covered: {
+        const ws = root.hyprMonitor ? root.hyprMonitor.activeWorkspace : null;
+        if (!ws || !ws.hasFullscreen)
+            return false;
+        const tops = ws.toplevels ? ws.toplevels.values : [];
+        return tops.length === 0 || tops.some(t => !t.wayland || t.wayland.fullscreen);
+    }
+    // On, seen, and with a screen wide enough to hold it: otherwise the OSD and the toasts stay in
+    // charge, so no event goes to a capsule nobody sees.
+    readonly property bool live: Theme.islandOn && !root.covered && !!Theme.screenPrimary && Theme.screenPrimary.width >= Theme.compactWidth
     property var state: math.idle
     readonly property var current: root.live ? root.state.current : null
     readonly property int seq: root.state.seq

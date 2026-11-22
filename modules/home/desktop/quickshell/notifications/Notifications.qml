@@ -12,6 +12,8 @@ Scope {
     PanelWindow {
         id: popupWin
         WlrLayershell.namespace: "qs-panel"
+        // Over a fullscreen window too, where the island cannot be seen.
+        WlrLayershell.layer: Island.covered ? WlrLayer.Overlay : WlrLayer.Top
         visible: Notifs.popups.length > 0
         // The main monitor, or whichever screen is left when it is unplugged (Theme's fallback).
         screen: Theme.screenPrimary

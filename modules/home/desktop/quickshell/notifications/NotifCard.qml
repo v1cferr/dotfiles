@@ -14,9 +14,10 @@ Rectangle {
     id: card
     property var notif
     property bool isPopup: false
+    property bool inIsland: false // the island's card: compact, on the island's own glass
     readonly property bool critical: card.notif !== null && card.notif !== undefined && card.notif.urgency === NotificationUrgency.Critical
     // A toast is the compact variant: a smaller icon and the body held to two lines.
-    readonly property bool compact: card.isPopup
+    readonly property bool compact: card.isPopup || card.inIsland
 
     // The "default" action (the one that "activates"/focuses the app that notified) becomes a
     // little arrow at the top of the card; the other actions stay as text buttons.
@@ -96,7 +97,7 @@ Rectangle {
     implicitHeight: cardRow.implicitHeight + 2 * (card.compact ? Theme.sp2 : Theme.sp3)
     radius: Theme.radiusSurface
     // A toast is glass of its own; inside the Center a card is a faint inset on the panel's glass.
-    color: card.isPopup ? Theme.colSurfacePop : (cardHover.hovered ? Theme.colHoverFill : Qt.alpha(Theme.colText, 0.04))
+    color: card.inIsland ? "transparent" : (card.isPopup ? Theme.colSurfacePop : (cardHover.hovered ? Theme.colHoverFill : Qt.alpha(Theme.colText, 0.04)))
     Behavior on color {
         ColorAnimation {
             duration: Theme.motionHover

@@ -10,6 +10,7 @@ import QtQuick
 import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
+import "root:/notifications"
 
 PanelWindow {
     id: drop
@@ -41,7 +42,7 @@ PanelWindow {
     readonly property int wide: Math.max(2 * Theme.islandHalf, Math.min(2 * Theme.islandOpenHalf, Math.floor(((drop.screen ? drop.screen.width : 1920) - 2 * Theme.screenInset) / 2) * 2))
     implicitWidth: drop.wide
     // Room for the spring to pass its size on the way down.
-    implicitHeight: drop.headBottom + drop.bodyTall + Theme.sp6
+    implicitHeight: drop.headBottom + Math.max(drop.bodyTall, drop.peekTall) + Theme.sp6
     color: "transparent"
     mask: Region {
         item: shape.visible ? shape : nothing
@@ -94,10 +95,26 @@ PanelWindow {
     // The Center begins a step under the bar's foot, and ends a pad above the shape's.
     readonly property int bodyTop: Theme.barHeight + Theme.sp1 - drop.headBottom
     readonly property int bodyTall: center.item ? drop.bodyTop + Math.ceil(center.item.implicitHeight) + drop.pad : 0
-    readonly property real wantReach: Island.open ? drop.bodyTall : 0
+    // A notification shown as a card: the capsule's own width at its widest, and its card's height.
+    readonly property int peekHalf: Theme.islandHalf
+    readonly property int peekTall: drop.bodyTop + Math.ceil(peekCard.implicitHeight) + drop.pad
+    readonly property real wantReach: Island.open ? drop.bodyTall : (Island.peek ? drop.peekTall : 0)
     // Shut, it is the capsule that rests on the main monitor; on another screen, the logo's own slot.
     readonly property bool atHome: !!drop.screen && !!Theme.screenPrimary && drop.screen.name === Theme.screenPrimary.name
-    readonly property real wantHalf: Island.open ? drop.wide / 2 : Math.max(Theme.barCenterWidth / 2, drop.atHome ? Island.headHalf : 0)
+    readonly property real wantHalf: Island.open ? drop.wide / 2 : (Island.peek ? drop.peekHalf : Math.max(Theme.barCenterWidth / 2, drop.atHome ? Island.headHalf : 0))
+    // Which of the two it holds while it is out: the card, from a notification that came down until
+    // the Center opens or the shape is back in. Held, so the Center never shows in a closing card.
+    property bool peekMode: false
+    property var peekNotif: null
+    Connections {
+        target: Island
+        function onPeekChanged() {
+            if (Island.peek) {
+                drop.peekNotif = Island.peek;
+                drop.peekMode = true;
+            }
+        }
+    }
 
     // Out and down on the spring, back on a short ease: faster out than in.
     // A long way down passes its size by the same share, which is many more pixels: past
@@ -118,11 +135,16 @@ PanelWindow {
             ease.restart();
         }
     }
-    onWantReachChanged: drop.move(fall, rise, "reach", drop.wantReach, Island.open)
+    // Growing is the spring and shrinking the ease, whichever of the two sizes it goes to or from.
+    onWantReachChanged: {
+        if (Island.open)
+            drop.peekMode = false; // the card becomes the Center without closing first
+        drop.move(fall, rise, "reach", drop.wantReach, drop.wantReach > shape.reach);
+    }
     // The half follows the capsule while shut (nothing is drawn then), and moves only to open or shut.
     onWantHalfChanged: {
-        if (Island.wide)
-            drop.move(spread, gather, "half", drop.wantHalf, Island.open);
+        if (Island.wide || Island.open || Island.peek)
+            drop.move(spread, gather, "half", drop.wantHalf, drop.wantHalf > shape.half);
         else
             shape.half = drop.wantHalf;
     }
@@ -157,6 +179,14 @@ PanelWindow {
         target: Island
         property: "dropReach"
         value: Math.max(0, shape.reach)
+    }
+    // All the way in: the next time out is the Center's, unless a card comes down again.
+    Connections {
+        target: Island
+        function onDropReachChanged() {
+            if (Island.dropReach <= 0 && !Island.peek)
+                drop.peekMode = false;
+        }
     }
 
     // What it holds enters as it opens: the logo is there from the first frame, the Center a beat later.
@@ -261,6 +291,30 @@ PanelWindow {
                 }
             }
 
+            // ── A notification as a card, under the logo: a click goes where it leads, its buttons and
+            // its ✕ are its own, the pointer on it holds it (Island.held) and never opens the Center ──
+            MouseArea {
+                anchors.fill: peekCard
+                visible: drop.peekMode
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    const n = drop.peekNotif;
+                    if (n && Notifs.open(n.id))
+                        Island.dismiss();
+                    else
+                        Notifs.toggleCenter();
+                }
+            }
+            NotifCard {
+                id: peekCard
+                x: (drop.wide - 2 * drop.peekHalf) / 2 + Theme.sp2
+                y: drop.headBottom + drop.bodyTop
+                width: 2 * drop.peekHalf - 2 * Theme.sp2
+                visible: drop.peekMode
+                notif: drop.peekNotif
+                inIsland: true
+            }
+
             // ── The NixOS Center, made the first time the island opens ──
             Loader {
                 id: center
@@ -268,6 +322,7 @@ PanelWindow {
                 y: drop.headBottom + drop.bodyTop
                 width: drop.wide - 2 * drop.pad
                 active: drop.everOpen
+                visible: !drop.peekMode
                 opacity: drop.beat1
                 sourceComponent: CenterCard {
                     bar: drop.bar

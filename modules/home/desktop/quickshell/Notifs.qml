@@ -19,9 +19,11 @@ Singleton {
     property var popups: []
     // How many notifications to keep; past it the oldest go, but never a critical or resident one.
     readonly property int historyLimit: 100
-    // A new notification that is the ISLAND's to show: a plain one, while the island is up. A
-    // critical one, or one with buttons, is a toast as before, and never both.
+    // A new notification that is the ISLAND's to show: every one, while the island is up. With
+    // it covered or off a toast shows it instead, and never both.
     signal arrived(var n)
+    // One that left (dismissed, expired, closed by its app): whatever shows it lets it go.
+    signal gone(int id)
     // Arrived while the Center was closed, and not seen yet: the dot on the logo, and the count on the bar's bell.
     property int unseen: 0
     property bool unseenCritical: false
@@ -132,8 +134,16 @@ Singleton {
     }
     // Go to what a notification is about, as its card's arrow does: its own default action when
     // it has one, else its app's window. False when there is neither, so the caller can do better.
+    function find(id) {
+        return server.trackedNotifications ? (server.trackedNotifications.values.find(x => x.id === id) || null) : null;
+    }
+    // What a notification carries past its title: a body, buttons of its own, or the urgency that
+    // must be answered. The island shows such a one as a card, not in the capsule alone.
+    function hasContent(n) {
+        return !!n && (n.urgency === NotificationUrgency.Critical || (n.body || "") !== "" || (n.actions || []).some(a => a.identifier !== "default"));
+    }
     function open(id) {
-        const n = server.trackedNotifications.values.find(x => x.id === id);
+        const n = root.find(id);
         if (!n)
             return false;
         const act = (n.actions || []).find(a => a.identifier === "default");
@@ -215,6 +225,8 @@ Singleton {
                 m[n.id] = Date.now();
                 root.arrivedAt = m;
             }
+            const id = n.id;
+            n.closed.connect(() => root.gone(id));
             // keepOnReload hands the old ones over again on a hot reload: history, not news.
             if (n.lastGeneration)
                 return;
@@ -225,10 +237,10 @@ Singleton {
                 root.unseenList = root.unseenList.concat([n]);
             }
             // Shown only with DND off and the Center closed; Critical pierces all.
-            // A plain one goes to the island when it is up; one that asks for an answer stays a toast.
+            // Every one goes to the island when it is up (a card when it carries more than a title);
+            // a toast only where the island cannot be seen.
             if (critical || (!root.dnd && !root.centerOpen)) {
-                const asks = critical || (n.actions || []).some(a => a.identifier !== "default");
-                if (Island.live && !asks)
+                if (Island.live)
                     root.arrived(n);
                 else
                     root.popups = root.popups.concat([n]).slice(-root.maxToasts);

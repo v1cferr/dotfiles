@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Services.Notifications
 import QtQml.Models
 import QtQuick
 import "root:/island"
@@ -94,9 +95,12 @@ Singleton {
     property real headHalf: 0
     readonly property bool hasMedia: Media.playing && Media.title !== ""
     readonly property bool open: root.full || root.rested || root.forced
+    // A notification with more than a title, while the capsule shows it and the Center is not open:
+    // the island comes down as a card that shows it whole (bar/IslandDrop.qml).
+    readonly property var peek: (root.live && !root.open && root.current !== null && root.current.kind === "notification" && root.current.data.peek) ? Notifs.find(root.current.data.id) : null
     // How far it reaches under its head, in px, and whether any of it is still out.
     property real dropReach: 0
-    readonly property bool wide: root.open || root.dropReach > 0
+    readonly property bool wide: root.open || root.peek !== null || root.dropReach > 0
     // Dismissed with the pointer still on it (the logo's click, Escape): it does not open again
     // until the pointer has been away for a moment.
     property bool spent: false
@@ -242,13 +246,20 @@ Singleton {
     Connections {
         target: Notifs
         function onArrived(n) {
+            // A critical one stays until it is answered; the rest keep their kind's time.
             root.push("notification", {
                 id: n.id,
                 icon: n.desktopEntry || n.appName || "",
                 fallback: Notifs.appIconOf(n),
                 app: n.appName || "",
-                summary: n.summary || n.body || ""
-            });
+                summary: n.summary || n.body || "",
+                peek: Notifs.hasContent(n)
+            }, n.urgency === NotificationUrgency.Critical ? 0 : undefined);
+        }
+        // The one the island holds was dismissed, expired or closed by its app: it goes with it.
+        function onGone(id) {
+            if (root.state.current && root.state.current.kind === "notification" && root.state.current.data.id === id)
+                root.drop("notification");
         }
     }
     // Apps with notifications not seen yet rest under everything else, media included; the count

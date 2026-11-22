@@ -22,6 +22,8 @@
       • THE LEVELS ARE THIN TRACKS with a knob and a number, the volume and the brightness equal.
       • FLUID AND HARMONIOUS, after a live recording: what the island holds follows its glass,
         a card cross-fades into the Center, and the open Center resizes on a short ease.
+      • THE CAPSULE LEANS: each side as wide as what it says, so no blank glass across from a
+        short `30 s`; the island opens from it and centers on the logo on the way down.
 
 - [x] The NixOS Center reformulated, and the Control Center folded into it (asked 22/11/2026;
       22/11/2026): "cleaner, more intuitive and more informative". How and why:

@@ -62,9 +62,12 @@ and does not move: on 12/11/2026, with a notification and then a brightness chan
 logo's ink stayed centered on x 1280.0.
 
 The sides of the bar stop 208 px from the screen's center (`Theme.islandHalf`) whether the capsule
-shows or not, so an event never moves a workspace or an icon. The capsule is symmetric: both sides
-take the width of the wider one, an icon and a name left of the logo, a level and a word right of
-it, each eliding past its room.
+shows or not, so an event never moves a workspace or an icon. Each side of the capsule is as wide
+as what it says, an icon and a name left of the logo, a level and a word right of it, each eliding
+past its room. The two need not match: the logo stays put and the capsule leans to the longer side.
+It was symmetric until 22/11/2026, when a short `30 s` across from `Rebuild` left a blank stretch
+of glass and the owner asked for it lopsided instead. The island opens from that lopsided capsule
+and centers on the logo as it comes down (`Island.headShift`), and closes back into it.
 
 A hover on the capsule OPENS the island into the NixOS Center, and a click pins it
 ([open](#open)). On a level or a VPN the click opens the Center on that page instead, and the disk
@@ -174,9 +177,9 @@ buttons, the hover holding it, and a fullscreen window.
 
 ## The wave
 
-The capsule is symmetric, so a title wider than the artist left a gap beside the cover. Since
-12/11/2026 a wave of what is heard takes it, asked for as "really synchronized with the audio",
-and then as cleaner, more fluid and lighter than its first version.
+Since 12/11/2026 a wave of what is heard rests in the capsule beside what plays, asked for as
+"really synchronized with the audio", and then as cleaner, more fluid and lighter than its first
+version. It first filled the gap the then symmetric capsule left beside the shorter side.
 
 - **It is the real spectrum.** `Audio.qml` runs [cava](https://github.com/karlstav/cava) as a
   child process with `media/cava.ini`: it reads what is heard and prints 24 levels a frame, bass
@@ -187,14 +190,14 @@ and then as cleaner, more fluid and lighter than its first version.
 - **Only while it is seen.** cava runs while media is what the capsule shows, or while the media
   panel is open. A volume key or a notification takes the capsule for a moment, so cava outlives
   the asking by 8 s instead of starting again each time; a pause ends it. With
-  `my.theme.motion = "off"` there is no wave and the gap is back, and the same on a host where
-  cava is not installed yet.
-- ONE wave takes the gap the symmetry leaves, at the shorter side's outer end, the bass by the
-  logo; with the two sides about even it goes left at four bars, and the other side keeps that
-  little as breathing room (22/11/2026). It first took only the left side's gap, so with an artist
-  longer than the title the bare stretch was on the right (`ILLENIUM, Joni Fatora` against
-  `Sleepwalker`, a capture of the owner's); then a wave on each side left three idle dots on the
-  long one, and the owner asked for one.
+  `my.theme.motion = "off"` there is no wave, and the same on a host where cava is not installed
+  yet.
+- ONE wave of six bars sits at the outer end of the shorter side, the bass by the words, so the
+  capsule leans less. It first took only the left side's gap, so with an artist longer than the
+  title the bare stretch was on the right (`ILLENIUM, Joni Fatora` against `Sleepwalker`, a capture
+  of the owner's); then a wave on each side left three idle dots on the long one, and the owner
+  asked for one (22/11/2026). With the capsule lopsided since the same day it no longer fills a
+  gap, so its width is fixed.
 - It hears the default output, not the player alone: a notification's sound moves it too.
 
 **Why cava and not Quickshell's own meter.** The first version (the same day) was a level over

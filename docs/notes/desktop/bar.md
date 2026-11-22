@@ -24,7 +24,7 @@ workspaces as capsules.
 | A text, a glyph | its own 1 px shade (`Text.Raised`, `Theme.colBarShade`): the text's style, no effect on the GPU                                               |
 | The island      | the one surface left: its resting capsule takes the strip's glass (`colBarGlass`) and a hairline                                              |
 | The workspaces  | each is its apps' icons, an empty one a dot, the active one in a glass capsule ([the rail](#the-workspace-rail-18102026-bare-since-11112026)) |
-| The tray        | one tone at rest, an icon's own colors under the pointer ([the tray](#the-tray))                                                              |
+| The tray        | its apps' own colors: one tone was tried and dropped ([the tray](#the-tray))                                                                  |
 | The clock       | the time strong, the date quiet, a breath from the status icons ([the clock](#the-clock))                                                     |
 
 Nothing else moved: the logo's slot, the regions' room, every panel and hint, the IPC, the
@@ -850,10 +850,9 @@ thing is a binding and needs no event of its own.
 
 ## The tray
 
-On the clear bar (21/11/2026) every icon rests in ONE tone: drawn without saturation, lifted a
-little and pulled 35% toward the text's color (a `MultiEffect` per icon, still while nothing
-changes), so five apps' brand colors do not outshout the status beside them. The pointer on an
-icon gives it its own colors back.
+Every icon shows its app's own colors. On the clear bar (21/11/2026) the tray rested in ONE tone
+for a day (desaturated and pulled toward the text's color, its colors back under the pointer), and
+on 22/11/2026 the colors came back by choice: they tell the apps apart at a glance.
 
 A StatusNotifier tray (`TrayStrip.qml`), pinned to the main monitor's right edge. It populates when `qs` is the
 watcher, with Waybar gone. Left click activates, middle is `secondaryActivate`, scroll scrolls, and

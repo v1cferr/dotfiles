@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.SystemTray
 import QtQuick
-import QtQuick.Effects
 import QtQuick.Layouts
 import "root:/"
 import "root:/widgets"
@@ -65,13 +64,8 @@ Item {
                         }
                     }
                 }
-                // On the clear bar every icon rests in ONE tone, so five apps' brand colors do not
-                // outshout the status beside them; the pointer gives an icon its own colors back.
-                readonly property bool mono: Theme.barClear && !trayArea.containsMouse
                 Image {
-                    id: trayImg
                     anchors.centerIn: parent
-                    visible: !trayDel.mono
                     // path icons: it only shows after resolving to file:// (which avoids the broken load)
                     source: trayDel.isPathIcon ? trayDel.resolvedIcon : trayDel.rawIcon
                     sourceSize.width: 16
@@ -79,16 +73,6 @@ Item {
                     width: 16
                     height: 16
                     opacity: trayDel.modelData.status === 0 ? 0.55 : 1
-                }
-                MultiEffect {
-                    anchors.fill: trayImg
-                    visible: trayDel.mono
-                    source: trayImg
-                    saturation: -1
-                    brightness: 0.15
-                    colorization: 0.35
-                    colorizationColor: Theme.colText
-                    opacity: trayImg.opacity
                 }
                 MouseArea {
                     id: trayArea

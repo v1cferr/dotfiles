@@ -88,7 +88,7 @@
         with a shoulder past each side of the head, on either monitor's logo.
 
 - [x] The Control Center (12/11/2026; asked 11/11/2026). How and why:
-      [notes/desktop/control-center.md](../../notes/desktop/control-center.md).
+      [notes/desktop/nixos-center.md](../../notes/desktop/nixos-center.md).
       • ONE PANEL for network, Bluetooth, VPN, focus, the playing track and the sound, under its
         item on the bar's right or SUPER+A; it owns no state.
       • THE SHELL'S FIRST SLIDER AND SWITCH: `Slider`, `ControlTile`; a Sound page with the

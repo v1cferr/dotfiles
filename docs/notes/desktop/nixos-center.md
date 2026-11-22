@@ -141,9 +141,9 @@ synchronously at startup so a notification in the first instant cannot slip past
 state, not configuration (rule 6), and it needed no daemon. Tested on 17/10/2026 through
 `qs ipc call notif dnd`: the file went `false`, `true`, `false`.
 
-**The three actions that end the session ask first, with a second click** (22/11/2026). A click
-on Log out, Reboot or Shut down arms it: the icon stays lit and one line over the row says `Click
-Shut down again to confirm`. A second click on the same icon is the yes. Lock and suspend run at
+**The three actions that end the session ask first, in place** (22/11/2026). A click on Log out,
+Reboot or Shut down turns the icon into a pill in the row itself, with its name and a ring that
+empties in 4 s; a second click on the pill is the yes. Lock and suspend run at
 once, since each is undone by coming back to the keyboard. Details in
 [the confirmation](#the-confirmation).
 
@@ -167,15 +167,21 @@ foot and `qs ipc call power ask <key>` only request them. The rules it keeps:
 - **No fake progress.** When reboot or shut down is accepted the line says `Restarting…` or
   `Shutting down…`, static, and the OS takes over. If nothing happened after 90 s (a delay
   inhibitor), it turns into an error instead of waiting forever.
-- **A second click, not a question in the card's place** (22/11/2026, asked for as "click once,
-  confirm?, click again"). From 22/10/2026 the card itself turned into the question, with Cancel
-  and a red button, and before that it was a separate dimmed window. Both are gone
-  (`bar/PowerConfirm.qml` with them): asking again while it asks IS the answer, in the state
-  machine itself, and asking for another one moves the question there and runs nothing.
+- **The icon becomes the question** (22/11/2026). Asked for first as "click once, confirm?, click
+  again", then as cleaner and more modern than that. Before, the card itself turned into the
+  question, with Cancel and a red button (22/10/2026), and before that it was a separate dimmed
+  window; for a few hours a line of text over the row did it. Now the icon grows into a red pill,
+  on a spring damped not to pass the row, with its name (`Shut down`) and a ring that empties
+  (`widgets/ArmRing.qml`); its neighbours narrow to make room. Going, the same pill says
+  `Shutting down…`; failed, it says `Failed`, its tip says why, and a click closes it. Asking
+  again while it asks IS the answer, in the state machine itself, and asking for another one
+  moves the question there, with its own 4 s. The patterns compared were inline confirmation
+  (Zapier, Filament), hold to confirm (motion.dev, the Apple Watch) and undo after the fact
+  (Gmail, GNOME's shutdown); the owner chose the first.
 - **Not the second half of a double click.** The same icon asked again within 400 ms of arming is
   ignored (`Power.armGap`).
-- **Every other way out is a no.** Escape, a click on the line, five seconds with no second click
-  (`Power.armLife`), and closing the Center, by a click outside, the logo, or the pointer leaving
+- **Every other way out is a no.** Escape, a click on Lock or Suspend (which then does not run), the
+  ring running out (`Power.armLife`, 4 s), and closing the Center, by a click outside, the logo, or the pointer leaving
   one opened by a hover. Nothing confirms by going away.
 - **It comes to you.** A question over IPC, or a failure of an action that closed the Center
   (suspend), fires `Power.attention`, and the Center opens itself on the main monitor through the
@@ -189,11 +195,14 @@ Right then Enter confirmed, a failure showed `Shut down failed (exit 1).` with C
 Enter on it brought the sections back, a failed suspend opened the closed Center, and success
 showed `Restarting`. Not yet seen on Hyprland, where the focus grab is the real one.
 
-The second click was run on 22/11/2026 the same way, over `power ask` with `QS_POWER_DRYRUN=1`
-confirmed in the process's environment first: Shut down armed (the icon lit, the line over the
-row), asked again it ran and the line read `Shut down failed (exit 1).`; Reboot asked after it
-took the question; and five seconds later the row was at rest. The 84 logic tests pass, one of
-them new. No real click was made, so the 400 ms guard was never exercised by a hand.
+The pill was run on 22/11/2026 the same way, over `power ask` with `QS_POWER_DRYRUN=1` confirmed
+in the process's environment first: Shut down out as a pill with its ring; Reboot asked 2.5 s
+later took the pill and its own 4 s (the first version kept Shut down's clock and lapsed early,
+which this run caught); asked again it ran and the pill read `Failed`; Log out's ring half empty
+2 s in; and the row at rest once it ran out. Two hot reloads with the pill out crashed nothing.
+The `Shutting down…` face was not rendered: a dry run that succeeds was refused by the session's
+own guard, and nothing real was run to see it. No real click was made, so the 400 ms guard was
+never exercised by a hand.
 
 ## Boot (22/10/2026)
 

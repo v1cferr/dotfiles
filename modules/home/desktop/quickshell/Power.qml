@@ -39,14 +39,21 @@ Singleton {
     // A second click on what asks is the yes. Not the second half of a double click, though, and
     // not a click that comes long after: the question lapses by itself.
     readonly property int armGap: 400
-    readonly property int armLife: 5000
+    readonly property int armLife: 4000
     property real armedAt: 0
     readonly property bool armed: root.state.phase === "confirm"
-    onArmedChanged: if (root.armed)
-        root.armedAt = Date.now()
+    // Which one asks: a question moved to another action starts its own time.
+    readonly property string armedKey: root.armed ? root.state.key : ""
+    onArmedKeyChanged: {
+        lapse.stop();
+        if (root.armedKey !== "") {
+            root.armedAt = Date.now();
+            lapse.start();
+        }
+    }
     Timer {
+        id: lapse
         interval: root.armLife
-        running: root.armed
         onTriggered: root.cancel()
     }
     function request(key) {

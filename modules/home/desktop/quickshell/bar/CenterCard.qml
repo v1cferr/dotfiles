@@ -186,18 +186,43 @@ Item {
 
     // ── The session: the five actions live in Power.qml, which asks before the three that end it ──
     function run(a) {
+        // While one asks, a click on an action that does not ask is a no, not that action.
+        if (Power.armed && !a.confirm) {
+            Power.cancel();
+            return;
+        }
         if (!a.confirm)
             center.bar.closePanels(); // a safe action must not leave the panel over what it does
         Power.request(a.key);
     }
-    // What the session's row says about itself, on one line over it: the question while an action
-    // that ends the session is armed (a second click on it is the yes), that it is going, or why
-    // it did not. Nothing takes the card's place.
+    // The action that is OUT of the row as a pill: armed (a second click on the pill is the yes,
+    // before its ring empties), going, or failed. Nothing takes the card's place, and no line is
+    // added: the pill says it all.
     readonly property string powerPhase: Power.state.phase
     onPowerPhaseChanged: if (center.powerPhase !== "idle")
         center.page = "" // the row that says it is on the main view
     readonly property bool powerGoing: !!Power.current && (center.powerPhase === "handoff" || (center.powerPhase === "busy" && !!Power.current.ends))
-    readonly property string powerLine: !Power.current ? "" : (center.powerPhase === "confirm" ? "Click " + Power.current.label + " again to confirm" : (center.powerGoing ? Power.current.going + "…" : (center.powerPhase === "error" ? Power.state.error : "")))
+    readonly property string outKey: !Power.current ? "" : ((center.powerPhase === "confirm" || center.powerGoing || center.powerPhase === "error") ? Power.state.key : "")
+    // What is left of the armed action's time, 1 to 0: the pill's ring. A value, not a motion, so it
+    // runs with the motion off too, where the pill counts the seconds in words instead.
+    property real armLeft: 1
+    NumberAnimation {
+        id: armClock
+        target: center
+        property: "armLeft"
+        from: 1
+        to: 0
+        duration: Power.armLife
+    }
+    Connections {
+        target: Power
+        function onArmedKeyChanged() {
+            armClock.stop();
+            center.armLeft = 1;
+            if (Power.armedKey !== "")
+                armClock.start();
+        }
+    }
     // A question or a failure while the Center is closed (a failed suspend, `qs ipc call power ask`).
     Connections {
         target: Power
@@ -648,64 +673,145 @@ Item {
 
             Hairline {}
 
-            // ── The session, as icons. The three that end it ask first, in place: the icon stays lit
-            // and a second click on it is the yes; Escape, another click or five seconds is the no ──
-            Text {
-                visible: center.powerLine !== ""
+            // ── The session, as icons. The three that end it ask first, in place: a click turns the
+            // icon into a pill with its name and a ring that empties in 4 s, and a second click on the
+            // pill is the yes. Escape, a click on another icon, the ring running out or the Center
+            // closing is the no. Going or failed, the same pill says so. ──
+            Item {
+                id: sess
                 Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                text: center.powerLine
-                color: center.powerPhase === "error" ? Theme.colCrit : (center.powerGoing ? Theme.colSubtext : Theme.colRed)
-                font.family: Theme.uiFont
-                font.pixelSize: Theme.fontBody
-                wrapMode: Text.WordWrap
-                MouseArea {
-                    anchors.fill: parent
-                    enabled: center.powerPhase === "error" || center.powerPhase === "confirm"
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Power.cancel()
+                implicitHeight: Theme.sp6 + Theme.sp3
+                readonly property int n: Power.actions.length
+                readonly property real gap: Theme.sp1
+                readonly property real base: (sess.width - (sess.n - 1) * sess.gap) / sess.n
+                // The pill's width: its ring, its words and their padding, never under an icon's cell.
+                readonly property real pillW: Math.max(sess.base, Math.min(sess.width / 2, pillWords.advanceWidth + Theme.iconSymbol + 3 * Theme.sp3))
+                // How far the pill is out, 0 to 1, on the island's spring; in, a short ease.
+                property real spread: 0
+                readonly property real seen: Math.max(0, Math.min(1, sess.spread)) // for a color: the spring passes 1
+                property string shown: "" // the key that is out, held while it goes back in
+                readonly property string want: center.outKey
+                onWantChanged: {
+                    if (sess.want !== "")
+                        sess.shown = sess.want;
+                    out.stop();
+                    back.stop();
+                    if (Theme.motionReduced) {
+                        sess.spread = sess.want !== "" ? 1 : 0;
+                        if (sess.want === "")
+                            sess.shown = "";
+                    } else if (sess.want !== "") {
+                        out.restart();
+                    } else {
+                        back.restart();
+                    }
                 }
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.sp1
-                Repeater {
-                    model: Power.actions
-                    delegate: Rectangle {
-                        id: act
-                        required property var modelData
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 0
-                        implicitHeight: Theme.sp6 + Theme.sp3
-                        radius: Theme.radiusControl
-                        readonly property bool armed: Power.armed && Power.state.key === act.modelData.key
-                        color: act.armed || (actArea.containsMouse && act.modelData.confirm) ? Theme.colHoverBgDanger : (actArea.containsMouse ? Theme.colHoverFill : "transparent")
-                        border.width: act.armed ? Theme.hairline : 0
-                        border.color: Theme.colRed
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: Theme.motionHover
+                SpringAnimation {
+                    id: out
+                    target: sess
+                    property: "spread"
+                    to: 1
+                    spring: Theme.islandSpring
+                    damping: 0.45 // it settles inside the row, never past it
+                    epsilon: 0.005
+                }
+                NumberAnimation {
+                    id: back
+                    target: sess
+                    property: "spread"
+                    to: 0
+                    duration: Theme.motionHover
+                    easing.type: Easing.OutCubic
+                    onFinished: sess.shown = ""
+                }
+                readonly property var outAction: Power.actions.find(x => x.key === sess.shown) || null
+                readonly property string words: !sess.outAction ? "" : (center.powerPhase === "error" ? "Failed" : (center.powerGoing ? sess.outAction.going + "…" : sess.outAction.label + (Theme.motionReduced ? " · " + Math.ceil(center.armLeft * Power.armLife / 1000) : "")))
+                TextMetrics {
+                    id: pillWords
+                    font.family: Theme.uiFont
+                    font.pixelSize: Theme.fontBody
+                    font.weight: Theme.weightStrong
+                    text: sess.outAction ? (sess.outAction.going + "…") : ""
+                }
+
+                Row {
+                    anchors.fill: parent
+                    spacing: sess.gap
+                    Repeater {
+                        model: Power.actions
+                        delegate: Rectangle {
+                            id: act
+                            required property var modelData
+                            readonly property bool isOut: sess.shown === act.modelData.key
+                            readonly property real grow: sess.spread * (sess.pillW - sess.base)
+                            readonly property bool failed: act.isOut && center.powerPhase === "error"
+                            readonly property bool going: act.isOut && center.powerGoing
+                            width: sess.shown === "" ? sess.base : (act.isOut ? sess.base + act.grow : sess.base - act.grow / (sess.n - 1))
+                            height: parent.height
+                            radius: act.isOut ? height / 2 : Theme.radiusControl
+                            clip: true
+                            color: act.isOut ? Qt.alpha(act.going ? Theme.colText : Theme.colRed, (act.going ? 0.08 : 0.2) * sess.seen) : (actArea.containsMouse ? (act.modelData.confirm ? Theme.colHoverBgDanger : Theme.colHoverFill) : "transparent")
+                            border.width: act.isOut && !act.going ? Theme.hairline : 0
+                            border.color: Qt.alpha(Theme.colRed, sess.seen)
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.motionHover
+                                }
                             }
-                        }
-                        Accessible.role: Accessible.Button
-                        Accessible.name: act.modelData.label
-                        Text {
-                            anchors.centerIn: parent
-                            text: act.modelData.icon
-                            color: act.modelData.confirm ? Theme.colRed : Theme.colText
-                            font.family: Theme.uiFont
-                            font.pixelSize: 18
-                        }
-                        MouseArea {
-                            id: actArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onContainsMouseChanged: containsMouse ? tips.show(act, act.modelData.label, "", act.modelData.confirm ? "Click, then click again to confirm" : "") : tips.hide(act)
-                            onClicked: center.run(act.modelData)
-                        }
-                        KeyTarget {
-                            onActivated: center.run(act.modelData)
+                            Accessible.role: Accessible.Button
+                            Accessible.name: act.isOut ? sess.words + (center.powerPhase === "confirm" ? ", click again to confirm" : "") : act.modelData.label
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: Theme.sp2 * sess.spread * (act.isOut ? 1 : 0)
+                                Item {
+                                    width: Theme.iconSymbol + Theme.sp2
+                                    height: width
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    ArmRing {
+                                        anchors.fill: parent
+                                        visible: act.isOut && center.powerPhase === "confirm" && !Theme.motionReduced
+                                        opacity: sess.seen
+                                        part: center.armLeft
+                                    }
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: act.modelData.icon
+                                        color: act.going ? Theme.colSubtext : (act.modelData.confirm ? Theme.colRed : Theme.colText)
+                                        font.family: Theme.uiFont
+                                        font.pixelSize: act.isOut ? 14 : 18
+                                    }
+                                }
+                                Text {
+                                    visible: act.isOut && sess.spread > 0.05
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    opacity: Math.max(0, (sess.seen - 0.4) / 0.6)
+                                    text: sess.words
+                                    color: act.failed ? Theme.colCrit : (act.going ? Theme.colSubtext : Theme.colText)
+                                    font.family: Theme.uiFont
+                                    font.pixelSize: Theme.fontBody
+                                    font.weight: Theme.weightStrong
+                                }
+                            }
+                            MouseArea {
+                                id: actArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                enabled: !act.going
+                                cursorShape: Qt.PointingHandCursor
+                                onContainsMouseChanged: {
+                                    if (!containsMouse)
+                                        tips.hide(act);
+                                    else if (act.failed)
+                                        tips.show(act, act.modelData.label + " did not happen", Power.state.error, "Click to close");
+                                    else if (!act.isOut)
+                                        tips.show(act, act.modelData.label, "", act.modelData.confirm ? "Click, then click the pill to confirm" : "");
+                                }
+                                onClicked: act.failed ? Power.cancel() : center.run(act.modelData)
+                            }
+                            KeyTarget {
+                                onActivated: act.failed ? Power.cancel() : center.run(act.modelData)
+                            }
                         }
                     }
                 }

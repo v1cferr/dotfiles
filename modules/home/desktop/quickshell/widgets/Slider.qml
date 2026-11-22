@@ -1,6 +1,7 @@
-// A SLIDER for a level the user sets (a volume, a brightness): a tall rounded track with its icon
-// inside the left end. The owner holds the value; this only reports where the user put it.
-// Its keys and the tap on the icon: docs/notes/desktop/nixos-center.md#the-levels
+// A SLIDER for a level the user sets (a volume, a brightness): the icon outside, a thin track with
+// a round knob, and the value as a number on the right. The owner holds the value; this only
+// reports where the user put it. Its keys and the tap on the icon:
+// docs/notes/desktop/nixos-center.md#the-levels
 import QtQuick
 import "root:/"
 
@@ -11,74 +12,149 @@ Item {
     property string name: ""
     property real step: 0.05
     property bool dimmed: false // the level is there but not in effect (muted)
+    // A way on from the value (the Sound page): a small chevron after the number, and the number
+    // and the chevron are its button.
+    property bool more: false
+    property string moreName: ""
+    // The value's column, the same on two sliders stacked so their tracks start and end together.
+    property int tailWidth: slider.more ? 52 : 36
     signal moved(real value)
     signal iconClicked
+    signal moreClicked
 
-    implicitHeight: Theme.barControl
+    implicitHeight: 24
     activeFocusOnTab: true
     Accessible.role: Accessible.Slider
     Accessible.name: slider.name + ", " + Math.round(slider.value * 100) + "%"
 
     readonly property real shown: Math.max(0, Math.min(1, slider.value))
+    readonly property bool hot: trackArea.containsMouse || trackArea.pressed || slider.activeFocus
 
+    // ── The icon: a tap is the mute ──
     Rectangle {
-        id: track
-        anchors.fill: parent
+        id: iconCell
+        width: slider.height
+        height: slider.height
         radius: height / 2
-        color: Theme.colCellHoverFill
-    }
-    Rectangle {
-        // Never narrower than the icon's circle, so the icon always sits on the fill.
-        width: Math.round(Math.max(track.height, slider.shown * track.width))
-        height: track.height
-        radius: track.radius
-        color: Qt.alpha(Theme.colText, slider.dimmed ? 0.35 : 0.88)
-    }
-    Text {
-        x: (track.height - width) / 2
-        anchors.verticalCenter: parent.verticalCenter
-        text: slider.icon
-        color: Theme.colBgSolid
-        font.family: Theme.iconFont
-        font.pixelSize: Theme.iconSymbol
-        font.variableAxes: Theme.iconAxes
-    }
-    Rectangle {
-        anchors.fill: parent
-        radius: track.radius
-        color: "transparent"
-        border.width: 2
-        border.color: Theme.colAccent
-        visible: slider.activeFocus
+        color: iconArea.containsMouse ? Theme.colHoverFill : "transparent"
+        Text {
+            anchors.centerIn: parent
+            text: slider.icon
+            color: slider.dimmed ? Theme.colDim : Theme.colSubtext
+            font.family: Theme.iconFont
+            font.pixelSize: Theme.iconBar
+            font.variableAxes: Theme.iconAxes
+        }
+        MouseArea {
+            id: iconArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: slider.iconClicked()
+        }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        // A press on the icon is a tap until the pointer travels: only then does it set the level.
-        property real downX: 0
-        property bool onIcon: false
-        property bool dragged: false
-        function at(x) {
-            slider.moved(Math.max(0, Math.min(1, x / width)));
+    // ── The track: 4 px, the filled part in the text's tone, a knob that grows under the hand ──
+    Item {
+        id: lane
+        x: iconCell.width + Theme.sp2
+        width: slider.width - x - Theme.sp2 - slider.tailWidth
+        height: slider.height
+        readonly property real knobR: slider.hot ? 8 : 6
+        Rectangle {
+            id: track
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width
+            height: 4
+            radius: 2
+            color: Theme.colCellHoverFill
         }
-        onPressed: m => {
-            downX = m.x;
-            onIcon = m.x <= height;
-            dragged = false;
-            if (!onIcon)
-                at(m.x);
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.round(slider.shown * track.width)
+            height: track.height
+            radius: track.radius
+            color: Qt.alpha(Theme.colText, slider.dimmed ? 0.3 : 0.75)
         }
-        onPositionChanged: m => {
-            if (!pressed)
-                return;
-            if (onIcon && !dragged && Math.abs(m.x - downX) < Theme.sp1)
-                return;
-            dragged = true;
-            at(m.x);
+        Rectangle {
+            x: Math.round(slider.shown * track.width - lane.knobR)
+            anchors.verticalCenter: parent.verticalCenter
+            width: 2 * lane.knobR
+            height: width
+            radius: lane.knobR
+            color: slider.dimmed ? Theme.colDim : Theme.colText
+            border.width: slider.activeFocus ? 2 : 0
+            border.color: Theme.colAccent
+            Behavior on width {
+                NumberAnimation {
+                    duration: Theme.motionFast
+                }
+            }
         }
-        onReleased: if (onIcon && !dragged)
-            slider.iconClicked()
+        MouseArea {
+            id: trackArea
+            anchors.fill: parent
+            anchors.leftMargin: -lane.knobR
+            anchors.rightMargin: -lane.knobR
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            function at(x) {
+                slider.moved(Math.max(0, Math.min(1, (x - lane.knobR) / track.width)));
+            }
+            onPressed: m => at(m.x)
+            onPositionChanged: m => {
+                if (pressed)
+                    at(m.x);
+            }
+        }
+    }
+
+    // ── The number, and the way on ──
+    Rectangle {
+        id: tail
+        anchors.right: parent.right
+        width: slider.tailWidth
+        height: slider.height
+        radius: Theme.radiusControl
+        color: slider.more && tailArea.containsMouse ? Theme.colHoverFill : "transparent"
+        // The number starts at the column's left, so two sliders stacked have their numbers aligned
+        // whether one carries the chevron or not.
+        Row {
+            x: Theme.sp1
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 0
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: Math.round(slider.shown * 100) + "%"
+                color: slider.dimmed ? Theme.colDim : Theme.colSubtext
+                font.family: Theme.uiFont
+                font.pixelSize: Theme.fontSmall
+                font.features: Theme.fontTabular
+            }
+            Text {
+                visible: slider.more
+                anchors.verticalCenter: parent.verticalCenter
+                text: "chevron_right"
+                color: Theme.colDim
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.iconBar
+                font.variableAxes: Theme.iconAxes
+            }
+        }
+        MouseArea {
+            id: tailArea
+            anchors.fill: parent
+            enabled: slider.more
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            Accessible.role: Accessible.Button
+            Accessible.name: slider.moreName
+            onClicked: slider.moreClicked()
+        }
+    }
+
+    // The wheel anywhere on it moves the level.
+    WheelHandler {
         onWheel: w => slider.moved(Math.max(0, Math.min(1, slider.shown + (w.angleDelta.y > 0 ? slider.step : -slider.step))))
     }
 

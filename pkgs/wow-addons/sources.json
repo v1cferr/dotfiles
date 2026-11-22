@@ -362,5 +362,12 @@
     "version": "9745479",
     "url": "https://edge.forgecdn.net/files/9745/479/GuildOS-v1.34.3.zip",
     "hash": "sha256-r5SLPX2jDeU2tymyR6wGN++LBkVuNPCVSIQqaNKzttY="
+  },
+  "spy": {
+    "source": "curseforge",
+    "projectId": 1701654,
+    "version": "9750849",
+    "url": "https://edge.forgecdn.net/files/9750/849/Spy-1.3.8-forever28.zip",
+    "hash": "sha256-plC93kxcnd2uGl9r4sW7l04m2ovenlwClYasfsetFyE="
   }
 }

@@ -41,9 +41,12 @@ Item {
         id: card
         visible: false
         // Under the control, kept inside the panel by sp1: mapToItem into a real Item is reliable.
+        // OVER it when there is no room under: the panel's own shape cuts what passes its foot,
+        // which is where the session's icons stand.
         readonly property point at: tip.target ? tip.target.mapToItem(tip, 0, tip.target.height) : Qt.point(0, 0)
+        readonly property bool fits: card.at.y + Theme.sp1 + card.height <= tip.height
         x: Math.max(Theme.sp1, Math.min(card.at.x + (tip.target ? tip.target.width / 2 : 0) - card.width / 2, tip.width - card.width - Theme.sp1))
-        y: card.at.y + Theme.sp1
+        y: card.fits ? card.at.y + Theme.sp1 : card.at.y - (tip.target ? tip.target.height : 0) - Theme.sp1 - card.height
         width: col.implicitWidth + 2 * Theme.sp3
         height: col.implicitHeight + 2 * Theme.sp2
         radius: Theme.radiusControl

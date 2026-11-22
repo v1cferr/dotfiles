@@ -161,6 +161,7 @@ export const navigation: NavItem[] = [
       { title: "tmux", doc: "notes/apps/tmux.md" },
       { title: "fastfetch", doc: "notes/apps/fastfetch.md" },
       { title: "Antigravity CLI", doc: "notes/apps/antigravity-cli.md" },
+      { title: "Antigravity IDE", doc: "notes/apps/antigravity-ide.md" },
       { title: "basic-memory", doc: "notes/apps/basic-memory.md" },
       { title: "Azure MCP", doc: "notes/apps/azure-mcp.md" },
       { title: "Flameshot", doc: "notes/apps/flameshot.md" },

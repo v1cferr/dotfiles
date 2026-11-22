@@ -9,6 +9,7 @@
     ./dolphin.nix # Dolphin: the view mode always "Details" (through activation)
     ./recoll.nix # Recoll: search documents and code by content (an hourly index)
     ./vscode.nix # VS Code: the package plus versioned settings/keybindings (hot-reload through a symlink)
+    ./antigravity-ide.nix # Antigravity IDE: Google's agent-first editor, the official tarball at its latest
     ./flameshot.nix # ~/.config/flameshot/flameshot.ini (screenshots; the keybind is in hypr.nix)
     ./screenrec.nix # screen recording: wl-screenrec plus the SUPER+SHIFT+R submap, GIF on demand
     ./obs.nix # OBS Studio: scenes for recording/streaming (per-app PipeWire audio, video follows the primary monitor)

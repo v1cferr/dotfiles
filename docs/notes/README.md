@@ -142,6 +142,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [claude-code](apps/claude-code.md)                   | two accounts, one archive, and the rules every project inherits                             |
 | [codex](apps/codex.md)                               | the declared config as the system layer, and why the settings option is left empty          |
 | [antigravity-cli](apps/antigravity-cli.md)           | why `agy` and not gemini-cli, and the symlink this one clobbers                             |
+| [antigravity-ide](apps/antigravity-ide.md)           | unstable's recipe on Google's tarball, and the version hidden in the url                    |
 | [basic-memory](apps/basic-memory.md)                 | two memory servers split at the FAI boundary, uv2nix, and why HTTP and not stdio            |
 | [azure-mcp](apps/azure-mcp.md)                       | the Azure MCP server, FAI only                                                              |
 | [flameshot](apps/flameshot.md)                       | the v14 keyboard flow, and the duplicated bar                                               |

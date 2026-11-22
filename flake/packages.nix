@@ -48,7 +48,7 @@ in
     curseforge # ./pkgs: the official AppImage (outside the CHECK below, the why is there)
     btop # nixpkgs + the src from PR #1457 (Intel Xe GPU): here so the check COMPILES the fork
     ;
-  inherit (pkgs.unstable) vscode; # the unstable recipe with the SRC from the official tarball
+  inherit (pkgs.unstable) vscode antigravity-ide; # the unstable recipe with the SRC from the official tarball
 
   # THE EVALUATED STATE, for a reader who would otherwise have to INFER it from Nix, which
   # the rule 16 secrets episode proved is not always possible: docs/notes/repo/flake.md

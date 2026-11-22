@@ -32,6 +32,16 @@ let
     };
   };
 
+  # The same swap for the Antigravity IDE: unstable's recipe, the SRC from pkgs/antigravity-ide.
+  overlayAntigravityIde = final: prev: {
+    unstable = prev.unstable // {
+      antigravity-ide = import ../pkgs/antigravity-ide/package.nix {
+        inherit (final) lib fetchurl callPackage;
+        inherit (prev.unstable) antigravity-ide;
+      };
+    };
+  };
+
   # btop with Intel Xe: TEMPORARY. nixpkgs' btop has GPU on, but its Intel backend is i915-ONLY and
   # the B580 is xe. REMOVE when PR #1457 lands in the channel: docs/notes/repo/flake.md
   overlayBtopXe = _: prev: {
@@ -168,8 +178,8 @@ let
             nixpkgs.lib.getAttrs (builtins.attrNames (localPkgs final)) final
           )
           // {
-            # Not a ./pkgs package, but its src bumps the same way.
-            inherit (final.unstable) vscode;
+            # Not ./pkgs packages, but their src bumps the same way.
+            inherit (final.unstable) vscode antigravity-ide;
           };
       };
     };
@@ -189,6 +199,7 @@ in
 [
   overlayUnstable
   overlayVscode # AFTER overlayUnstable: it patches that `unstable.vscode`
+  overlayAntigravityIde # same, for `unstable.antigravity-ide`
   overlayBtopXe # temporary: Intel Xe GPU (Arc B580) until PR #1457 merges
   overlayOpenrgbArc # temporary: the Arc B580's RGB, until the merge requests land
   overlayLocalPkgs

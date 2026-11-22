@@ -6,6 +6,7 @@ Modules: [`tools/vendored-bump/package.nix`](../../../tools/vendored-bump/packag
 [`pkgs/curseforge/bump.nix`](../../../pkgs/curseforge/bump.nix),
 [`pkgs/codex/bump.nix`](../../../pkgs/codex/bump.nix),
 [`pkgs/antigravity-cli/bump.nix`](../../../pkgs/antigravity-cli/bump.nix),
+[`pkgs/antigravity-ide/bump.nix`](../../../pkgs/antigravity-ide/bump.nix),
 [`pkgs/stack-wallet/bump.nix`](../../../pkgs/stack-wallet/bump.nix),
 [`pkgs/zapfast/bump.nix`](../../../pkgs/zapfast/bump.nix),
 [`pkgs/spotifast/bump.nix`](../../../pkgs/spotifast/bump.nix),
@@ -41,7 +42,8 @@ Each bump is the `passthru.updateScript` of the package it bumps, the nixpkgs co
 package knows how to update itself". VS Code's replaces nixpkgs' `update-vscode.sh`, which edits
 nixpkgs and not this repo. `vendored-bump` is built from `overlayLocalPkgs` in
 [`flake.nix`](../../../flake.nix): every local package whose `updateScript` is not null, plus VS
-Code (an override of unstable's, so not in `localPkgs`), each called by STORE PATH.
+Code and the Antigravity IDE (overrides of unstable's, so not in `localPkgs`), each called by STORE
+PATH.
 
 Until 26/09/2026 the alias listed the four by NAME, which cost two things. Adding a package meant
 editing a 250-character string in `zsh.nix`, and each script had to be on the PATH, so one that was

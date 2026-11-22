@@ -136,10 +136,39 @@ PanelWindow {
         }
     }
     // Growing is the spring and shrinking the ease, whichever of the two sizes it goes to or from.
+    // Once the Center has settled open, a change of ITS size (the media card, a page, a notification
+    // arriving) is a short ease both ways: the content changes at once, and a spring would trail
+    // it, cutting the foot on the way out and leaving bare glass on the way in.
     onWantReachChanged: {
-        if (Island.open)
-            drop.peekMode = false; // the card becomes the Center without closing first
-        drop.move(fall, rise, "reach", drop.wantReach, drop.wantReach > shape.reach);
+        if (Island.open && drop.peekMode) {
+            drop.cardLeaving = true; // the card fades as the Center comes in over it
+            drop.peekMode = false;
+        }
+        if (Island.open && drop.settled && !Theme.motionReduced) {
+            fall.stop();
+            rise.stop();
+            resize.to = drop.wantReach;
+            resize.restart();
+        } else {
+            resize.stop();
+            drop.move(fall, rise, "reach", drop.wantReach, drop.wantReach > shape.reach);
+        }
+    }
+    NumberAnimation {
+        id: resize
+        target: shape
+        property: "reach"
+        duration: Theme.motionNormal
+        easing.type: Easing.OutCubic
+    }
+    // Settled: open, and done with the spring that brought it there.
+    property bool settled: false
+    Connections {
+        target: fall
+        function onRunningChanged() {
+            if (!fall.running && Island.open)
+                drop.settled = true;
+        }
     }
     // The half follows the capsule while shut (nothing is drawn then), and moves only to open or shut.
     onWantHalfChanged: {
@@ -189,31 +218,30 @@ PanelWindow {
         }
     }
 
-    // What it holds enters as it opens: the logo is there from the first frame, the Center a beat later.
-    property real beat1: 1
+    // What it holds follows the SHAPE, never a clock of its own: the Center (or the card) shows in
+    // step with how far the glass has come down from where this opening started, so no frame has the
+    // glass bare, and on the way back in it fades as the glass rises instead of being cut. The card
+    // that becomes the Center fades out on the same progress the Center fades in on.
+    property real fromReach: 0
+    property bool cardLeaving: false
     Connections {
         target: Island
         function onOpenChanged() {
-            if (!Island.open || Theme.motionReduced)
-                return;
-            drop.beat1 = 0;
-            enter.restart();
+            drop.settled = false;
+            drop.fromReach = Island.open ? Math.max(0, shape.reach) : 0;
+            if (!Island.open)
+                drop.cardLeaving = false;
         }
     }
-    SequentialAnimation {
-        id: enter
-        PauseAnimation {
-            duration: Theme.motionStagger * 2
-        }
-        NumberAnimation {
-            target: drop
-            property: "beat1"
-            from: 0
-            to: 1
-            duration: Theme.motionNormal
-            easing.type: Easing.OutCubic
-        }
+    function progress(target, from) {
+        const span = target - from;
+        return span <= 0 ? 1 : Math.max(0, Math.min(1, (shape.reach - from) / (span * 0.7)));
     }
+    // Settled open, the Center is whole whatever its size does next (a page, the media card).
+    readonly property real centerShown: Theme.motionReduced || drop.settled ? 1 : drop.progress(drop.bodyTall, drop.fromReach)
+    readonly property real cardShown: Theme.motionReduced ? 1 : (drop.cardLeaving ? 1 - drop.centerShown : drop.progress(drop.peekTall, 0))
+    onCenterShownChanged: if (drop.cardLeaving && drop.centerShown >= 1)
+        drop.cardLeaving = false
 
     // Pinned, it closes on a click anywhere else; every bar is in the grab, so a click on another
     // item switches panels and a logo's own click still reaches it.
@@ -295,7 +323,7 @@ PanelWindow {
             // its ✕ are its own, the pointer on it holds it (Island.held) and never opens the Center ──
             MouseArea {
                 anchors.fill: peekCard
-                visible: drop.peekMode
+                visible: drop.peekMode && !Island.open
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     const n = drop.peekNotif;
@@ -310,7 +338,8 @@ PanelWindow {
                 x: (drop.wide - 2 * drop.peekHalf) / 2 + Theme.sp2
                 y: drop.headBottom + drop.bodyTop
                 width: 2 * drop.peekHalf - 2 * Theme.sp2
-                visible: drop.peekMode
+                visible: drop.peekMode || drop.cardLeaving
+                opacity: drop.cardShown
                 notif: drop.peekNotif
                 inIsland: true
             }
@@ -323,7 +352,10 @@ PanelWindow {
                 width: drop.wide - 2 * drop.pad
                 active: drop.everOpen
                 visible: !drop.peekMode
-                opacity: drop.beat1
+                opacity: drop.centerShown
+                transform: Translate {
+                    y: (1 - drop.centerShown) * -6
+                }
                 sourceComponent: CenterCard {
                     bar: drop.bar
                     screen: drop.screen

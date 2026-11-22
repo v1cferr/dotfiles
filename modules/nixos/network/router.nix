@@ -109,6 +109,8 @@ in
           raw=$(remote "sudo uci show $c 2>/dev/null || true")
           text=""
           while IFS= read -r line; do
+            # Runtime state, not config: adblock-fast rewrites each list's size on every refresh.
+            [[ "$line" == adblock-fast.@file_url\[+([0-9])\].size=* ]] && continue
             [[ -n "''${line//[[:space:]]/}" ]] && text+="$(redact "$line")"$'\n'
           done <<<"$raw"
           [[ -z "$text" ]] || live[$c]=$text

@@ -200,3 +200,10 @@ configs in sync with the mirror the Python had pulled, which compares the new re
 byte for byte; a `pull` into a scratch repo reproduced the mirror exactly. Two traps a shell port
 meets and this one handles: an `exit` inside `$(...)` leaves only the subshell, so every ssh goes
 into a variable first, and `ssh` inside a `while read` would swallow the loop's input, hence `-n`.
+
+**RUNTIME STATE IS FILTERED, not mirrored (22/11/2026).** adblock-fast writes each list's
+downloaded size back into UCI (`adblock-fast.@file_url[N].size`) on every refresh, so `diff`
+reported drift that nobody had made, and a reader learns to ignore a `DIVERGES` that is always
+there. Those leaves are dropped while reading, before `pull` and `diff` split, so the two can
+never disagree about them. Measured: the mirror lost 18 lines and `diff` went green right after a
+refresh.

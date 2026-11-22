@@ -91,6 +91,14 @@ Item {
                 tone: d.state === "error" ? Theme.colCrit : Theme.colText,
                 badges: e.ttl === 0
             });
+        case "capture":
+            return Object.assign(none, {
+                icon: d.what === "mic" ? "mic" : (d.what === "screen" ? "screen_share" : "cast"),
+                left: d.by,
+                right: d.what === "mic" ? "Microphone in use" : (d.what === "screen" ? "Being captured" : "Streaming"),
+                tone: Theme.colWarn,
+                badges: true
+            });
         case "task":
             return Object.assign(none, {
                 icon: d.state === "start" ? "terminal" : (d.state === "ok" ? "check_circle" : "error"),

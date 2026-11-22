@@ -170,10 +170,35 @@ Singleton {
     onLiveChanged: {
         root.syncMedia();
         root.syncUnseen();
+        root.syncCapture();
     }
     Component.onCompleted: {
         root.syncMedia();
         root.syncUnseen();
+        root.syncCapture();
+    }
+    // A capture is a state too, and one nobody should have to look for: there for as long as it
+    // lasts, in the capsule alone or aside of what plays (Privacy.qml).
+    function syncCapture() {
+        const say = (what, by) => by !== "" ? root.push("capture", {
+                what: what,
+                by: by
+            }, undefined, what) : root.drop("capture", what);
+        say("mic", Privacy.micBy);
+        say("screen", Privacy.screen ? "The screen" : "");
+        say("stream", Privacy.streamBy);
+    }
+    Connections {
+        target: Privacy
+        function onMicByChanged() {
+            root.syncCapture();
+        }
+        function onScreenChanged() {
+            root.syncCapture();
+        }
+        function onStreamByChanged() {
+            root.syncCapture();
+        }
     }
     // The wave listens only while the media is what the capsule shows.
     Binding {

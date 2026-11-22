@@ -294,6 +294,17 @@ shutting after the card, the card did not come back; and a page 420 px shorter t
 Center pinned, crashed nothing. Not seen: a page or the media card growing the open Center (no
 command reaches them in the harness), and how all of it looks to the owner.
 
+**A second recording, the same day.** Two faults were left. The open Center held still for about
+260 ms each time it got SHORTER (the media card folding, a shorter page) and then jumped: the
+island's window followed its content's height, and a layer surface that resizes waits on the
+compositor's answer. On Hyprland that held the frame; sway, in the harness, never did, which is
+why the first round did not see it. The window now grows at once with 260 px of headroom and
+shrinks only while the island is shut (the room left over is transparent, and the blur ignores
+it: `ignore_alpha`). And a page faded in from nothing, which read as a blink: it starts from 40%
+now and slides 16 px in from its side (`widgets/FadeIn.qml`). Traced in the harness with a
+command added to the test copy only: unfolding and folding the media card kept the window at
+771 px throughout, the glass easing 458 to 687 px and back in about 190 ms each way.
+
 **Measured on 21/11/2026** in the harness, every state driven over IPC:
 
 - The spring: 744 px down, passed by 0.7 px, within half a pixel of rest after 368 to 386 ms, half

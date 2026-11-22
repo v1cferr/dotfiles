@@ -31,7 +31,7 @@ island can never disagree.
 | Status        | CPU and GPU temperature, RAM, disk: four readings on one line, each opening its panel   |
 | What plays    | one row (the cover, the track, three keys); a chevron unfolds the whole media card      |
 | Notifications | the body: the history, newest first and grouped, scrolling on its own past 480 px       |
-| Session       | six icons, their commands exactly the old power menu's; the three that end it ask first |
+| Session       | five icons, their commands the old power menu's; the three that end it ask first        |
 
 The history scrolls by itself, so however long it grows, the session under it stays in reach.
 
@@ -144,18 +144,18 @@ state, not configuration (rule 6), and it needed no daemon. Tested on 17/10/2026
 **The three actions that end the session ask first, in the card** (22/10/2026, replacing the
 second click). Log out, reboot and shut down turn the Center's own card into the question
 (`bar/PowerConfirm.qml`): Cancel is focused, Escape or closing the Center cancels, the arrows or Tab
-move between the buttons, Enter confirms. Lock, darken and suspend run at once, since each is undone
+move between the buttons, Enter confirms. Lock and suspend run at once, since each is undone
 by coming back to the keyboard. Details in [the confirmation](#the-confirmation-22102026).
 
 **The commands are the power menu's, unchanged** (they live in `power/PowerMath.qml` now), with the same reasons: the lock starts
 `lockscreen.service` before marking the `LockedHint` (`loginctl lock-session` alone only emits the
-signal), darkening is gamma 0 through hyprsunset and never dpms, logging out is `loginctl
+signal), logging out is `loginctl
 terminate-user` because LightDM starts a bare Hyprland. The history of each is in
 [bar.md](bar.md#the-power-menu) and [lockscreen.md](lockscreen.md).
 
 ## The confirmation (22/10/2026)
 
-`Power.qml` owns the six actions; the Center's footer and `qs ipc call power ask <key>` only request
+`Power.qml` owns the five actions (six until 22/11/2026, when Darken left unused); the Center's footer and `qs ipc call power ask <key>` only request
 them. The rules it keeps:
 
 - **One command at a time.** The state machine is pure (`power/PowerMath.qml`, phases `idle`,
@@ -163,7 +163,7 @@ them. The rules it keeps:
   confirm never runs twice, a running command cannot be cancelled into a lie.
 - **The exit code is read.** The old footer fired the command and closed the panel. Now a non-zero
   exit shows the command's last stderr line, so a poweroff held by a logind inhibitor or a suspend
-  that failed says so, in the card, for any of the six.
+  that failed says so, in the card, for any of the five.
 - **No fake progress.** When reboot or shut down is accepted the card says `Restarting` or
   `Shutting down`, static, and the OS takes over. If nothing happened after 90 s (a delay
   inhibitor), it turns into an error instead of waiting forever.
@@ -239,7 +239,7 @@ made those rows tiles, and the System row a tile with a page.
 ## Driving it from the keyboard (22/10/2026)
 
 Every control in the card carries a `widgets/KeyTarget.qml`: the tiles, the two levels, the four
-readings, each notification card and group, the six session actions, and what each page holds.
+readings, each notification card and group, the five session actions, and what each page holds.
 Escape leaves a page before it closes the panel. One global bind opens the Center; inside it the keys are plain ones:
 
 | Key                        | Does                                                                                                    |

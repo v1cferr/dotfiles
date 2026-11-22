@@ -15,12 +15,6 @@ QtObject {
             cmd: ["sh", "-c", "command -v session-lock >/dev/null && exec session-lock; systemctl --user start lockscreen.service; loginctl lock-session"]
         },
         {
-            key: "darken",
-            icon: "󰖔",
-            label: "Darken",
-            cmd: ["hyprctl", "hyprsunset", "gamma", "0"] // gamma 0 through hyprsunset, NEVER dpms; input restores it
-        },
-        {
             key: "logout",
             icon: "󰗽",
             label: "Log out",

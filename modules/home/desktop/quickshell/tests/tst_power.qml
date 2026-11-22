@@ -15,8 +15,8 @@ TestCase {
         }, extra || {}));
     }
 
-    function test_six_actions_keep_their_commands() {
-        compare(m.actions.length, 6);
+    function test_five_actions_keep_their_commands() {
+        compare(m.actions.length, 5);
         compare(m.action("reboot").cmd.join(" "), "systemctl reboot");
         compare(m.action("poweroff").cmd.join(" "), "systemctl poweroff");
         compare(m.action("suspend").cmd.join(" "), "systemctl suspend");

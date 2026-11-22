@@ -184,7 +184,7 @@ Item {
         ];
     }
 
-    // ── The session: the six actions live in Power.qml, which asks before the three that end it ──
+    // ── The session: the five actions live in Power.qml, which asks before the three that end it ──
     function run(a) {
         if (!a.confirm)
             center.bar.closePanels(); // a safe action must not leave the panel over what it does

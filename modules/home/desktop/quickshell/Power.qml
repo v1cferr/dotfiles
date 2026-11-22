@@ -1,5 +1,5 @@
 pragma Singleton
-// The session actions' state: Lock, Darken, Log out, Suspend, Reboot, Shut down. One command at a
+// The session actions' state: Lock, Log out, Suspend, Reboot, Shut down. One command at a
 // time, its exit code read, and the three that end the session asked first in bar/PowerConfirm.qml.
 // IPC: `qs ipc call power ask <key>`. The rules: docs/notes/desktop/nixos-center.md
 import Quickshell

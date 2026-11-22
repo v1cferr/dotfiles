@@ -102,7 +102,7 @@ the verb (`lock/PowerAsk.qml`). The state is `Power.qml`, the same machine as th
 confirmation ([nixos-center](nixos-center.md)), so the commands and the failure path are one.
 
 - **Only these two, without the password**, as a login screen offers them. Log out would end a
-  session nobody authenticated for; lock, darken and suspend make no sense from here.
+  session nobody authenticated for; lock and suspend make no sense from here.
 - **Chosen from a bake-off** of real captures: the corner, under the signature, and two bare icons
   at the foot. Under the signature won because its ink is the clock column's MEASURED one, so it
   reads on every print. The words "reiniciar · desligar" became icons the same day, for a cleaner

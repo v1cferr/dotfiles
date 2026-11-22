@@ -876,7 +876,7 @@ draws its own menu at the cursor.
 
 ## The session actions (the old power menu)
 
-Lock, darken, log out, suspend, reboot and shut down live in the NixOS Center's footer since
+Lock, log out, suspend, reboot and shut down live in the NixOS Center's footer since
 17/10/2026 ([nixos-center.md](nixos-center.md)), with the commands they always had. No sudo:
 poweroff, reboot and suspend go through systemd-logind, where an active session is authorized with
 no password, and logging out is `loginctl terminate-user`, since LightDM starts a bare Hyprland.
@@ -887,6 +887,6 @@ what listened for it was hypridle, so with hypridle stopped by Sunshine's guard 
 silent no-op. The `start` is idempotent, so the `lock_cmd` hypridle fires on seeing the signal
 duplicates nothing. See [`lockscreen.md`](lockscreen.md).
 
-**Darken** is gamma 0 through hyprsunset, **NEVER dpms**. It restores itself on mouse or keyboard
-movement (hypridle's on-resume) or when sliding the brightness. Useful for sleeping with no light in
-the room. The dpms prohibition is the same one from [`sunshine.md`](../network/sunshine.md).
+**Darken left on 22/11/2026**, unused: it was gamma 0 through hyprsunset, never dpms (the same
+prohibition as in [`sunshine.md`](../network/sunshine.md)). It had nothing of its own behind it:
+the brightness keys or the Center's slider bring a dark screen back, as they always did.

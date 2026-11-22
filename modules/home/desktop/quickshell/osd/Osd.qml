@@ -18,8 +18,8 @@ Scope {
     property bool shown: false
 
     // Brightness (pushed through IPC by the brightness keys)
-    property int brightnessValue: 100
-    property int brightnessMax: 150
+    readonly property int brightnessValue: Backlight.value
+    readonly property int brightnessMax: Backlight.max
 
     // Mouse DPI (pushed through IPC by razer-dpi, which watches the mouse's ONBOARD button)
     property int dpiValue: 0
@@ -105,9 +105,12 @@ Scope {
     IpcHandler {
         target: "osd"
 
+        // The same level, said quietly: a slider set it, and needs no OSD to see it.
+        function level(value: int, max: int): void {
+            Backlight.said(value, max);
+        }
         function brightness(value: int, max: int): void {
-            root.brightnessMax = max > 0 ? max : 150;
-            root.brightnessValue = value;
+            Backlight.said(value, max);
             root.showNow("brightness");
         }
 

@@ -451,6 +451,17 @@ Item {
                 }
             }
 
+            // The screen's level: a panel's backlight where there is one, else the compositor's gamma,
+            // the same thing the brightness keys set (hypr.nix's brightness-osd).
+            Slider {
+                Layout.fillWidth: true
+                Layout.rightMargin: Theme.barControl + Theme.sp2 // as long as the volume's, whose row ends in a chevron
+                name: "Brightness"
+                icon: Backlight.level <= 0.34 ? "brightness_low" : (Backlight.level <= 0.67 ? "brightness_medium" : "brightness_high")
+                value: Backlight.level
+                onMoved: v => Backlight.set(v)
+            }
+
             // ── Status: four readings on one line; a click opens the panel behind each ──
             RowLayout {
                 Layout.fillWidth: true

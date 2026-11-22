@@ -101,6 +101,10 @@ let
       qsPkg
     ];
     text = ''
+      # `set <n>` is a slider's: it tells the shell the level quietly, where a key shows the OSD.
+      say=brightness
+      [ "''${1:-up}" = set ] && say=level
+
       # A panel with a backlight: logind sets it for the active session, so no group or udev rule.
       shopt -s nullglob
       panels=(/sys/class/backlight/*)
@@ -109,9 +113,10 @@ let
           up)    brightnessctl --quiet set 5%+ ;;
           down)  brightnessctl --quiet --min-value=1 set 5%- ;;
           reset) brightnessctl --quiet set 100% ;;
+          set)   brightnessctl --quiet --min-value=1 set "''${2:-100}%" ;;
         esac
         pct="$(brightnessctl --machine-readable info | cut -d, -f4 | tr -dc '0-9')"
-        qs ipc call osd brightness "''${pct:-0}" 100 >/dev/null 2>&1 || true
+        qs ipc call osd "$say" "''${pct:-0}" 100 >/dev/null 2>&1 || true
         exit 0
       fi
 
@@ -127,6 +132,7 @@ let
         up)    new=$((cur + step)) ;;
         down)  new=$((cur - step)) ;;
         reset) new=100 ;;           # back to normal brightness
+        set)   new="$(printf '%s' "''${2:-100}" | tr -dc '0-9')"; new="''${new:-100}" ;;
         *)     new=$cur ;;
       esac
 
@@ -135,7 +141,7 @@ let
       hyprctl hyprsunset gamma "$new" >/dev/null 2>&1 || true
 
       # pushes Quickshell's native OSD through IPC (the handler is in quickshell/osd/Osd.qml).
-      qs ipc call osd brightness "$new" "$ceil" >/dev/null 2>&1 || true
+      qs ipc call osd "$say" "$new" "$ceil" >/dev/null 2>&1 || true
     '';
   };
 

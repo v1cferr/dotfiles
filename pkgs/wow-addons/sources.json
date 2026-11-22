@@ -355,5 +355,12 @@
     "version": "9695357",
     "url": "https://edge.forgecdn.net/files/9695/357/GTFO-6.12.4.zip",
     "hash": "sha256-0jtgl5RNPfpdaVjfWjxhguLGKGV7GWVMUCeLqvUEwU4="
+  },
+  "guildos": {
+    "source": "curseforge",
+    "projectId": 1549177,
+    "version": "9745479",
+    "url": "https://edge.forgecdn.net/files/9745/479/GuildOS-v1.34.3.zip",
+    "hash": "sha256-r5SLPX2jDeU2tymyR6wGN++LBkVuNPCVSIQqaNKzttY="
   }
 }

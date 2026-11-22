@@ -619,39 +619,34 @@ Item {
                 }
             }
 
-            // ── The levels ──
-            RowLayout {
+            // ── The levels: two thin tracks that start and end on the same pixels (one value column
+            // for both); the volume's number leads on to the Sound page. The screen's level is a
+            // panel's backlight where there is one, else the compositor's gamma, the same thing the
+            // brightness keys set (hypr.nix's brightness-osd). ──
+            ColumnLayout {
                 Layout.fillWidth: true
-                spacing: Theme.sp2
+                spacing: Theme.sp1
                 Slider {
                     Layout.fillWidth: true
                     name: "Volume"
                     icon: Audio.muted || Audio.volume <= 0 ? "volume_off" : (Audio.volume <= 0.5 ? "volume_down" : "volume_up")
                     value: Audio.volume
                     dimmed: Audio.muted
+                    more: true
+                    moreName: "Sound: " + (Audio.sink ? (Audio.sink.description || Audio.sink.name || "") : "")
+                    tailWidth: 52
                     onMoved: v => Audio.setVolume(v)
                     onIconClicked: Audio.toggleMute()
+                    onMoreClicked: center.openPage("sound")
                 }
-                IconButton {
-                    glyph: "chevron_right"
-                    tint: Theme.colSubtext
-                    tips: tips
-                    name: "Sound"
-                    stateText: Audio.sink ? (Audio.sink.description || Audio.sink.name || "") : ""
-                    action: "Click for the outputs, the inputs and each app"
-                    onClicked: center.openPage("sound")
+                Slider {
+                    Layout.fillWidth: true
+                    name: "Brightness"
+                    icon: Backlight.level <= 0.34 ? "brightness_low" : (Backlight.level <= 0.67 ? "brightness_medium" : "brightness_high")
+                    value: Backlight.level
+                    tailWidth: 52
+                    onMoved: v => Backlight.set(v)
                 }
-            }
-
-            // The screen's level: a panel's backlight where there is one, else the compositor's gamma,
-            // the same thing the brightness keys set (hypr.nix's brightness-osd).
-            Slider {
-                Layout.fillWidth: true
-                Layout.rightMargin: Theme.barControl + Theme.sp2 // as long as the volume's, whose row ends in a chevron
-                name: "Brightness"
-                icon: Backlight.level <= 0.34 ? "brightness_low" : (Backlight.level <= 0.67 ? "brightness_medium" : "brightness_high")
-                value: Backlight.level
-                onMoved: v => Backlight.set(v)
             }
 
             // ── Status: four readings on one line; a click opens the panel behind each ──

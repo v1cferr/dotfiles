@@ -12,7 +12,7 @@ the band's bell and the power menu are gone; their functions are all here.
 
 | Part          | Holds                                                                                                |
 | ------------- | ---------------------------------------------------------------------------------------------------- |
-| Head          | on the capsule's row, around the logo: the title, then idle timeouts, do-not-disturb, clear all      |
+| Head          | on the capsule's row, right of the logo: idle timeouts, do-not-disturb, clear all; no title          |
 | Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen)     |
 | Status        | the weather, CPU and GPU temperature, RAM, disk: five columns of text (11/11/2026)                   |
 | Power         | the Balanced/Gaming/Eco profile and what its last apply did (18/10/2026)                             |
@@ -103,7 +103,7 @@ too, without the pin: open that way it shows the same things and takes no keyboa
 when the pointer leaves ([island.md](island.md#open)). The rules below are the pin's.
 
 **Cleaner, 21/11/2026** (asked for with a capture of the Center as it was): the head moved up to the
-capsule's row; the status values, the readings and the boot's proof lost their filled boxes and
+capsule's row, and lost its title the same day (the logo already says what the panel is); the status values, the readings and the boot's proof lost their filled boxes and
 are columns of text; and the five readings and the boot section fold behind one `System` row
 that sums them in a line (`6.5 GB available · boot verified`). The row opens by itself, and in
 the warning color, while the boot has something short of proven. Every action, key and tip is

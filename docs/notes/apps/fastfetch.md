@@ -6,6 +6,29 @@ fastfetch is run to screenshot the rice for r/NixOS and r/unixporn, so what it s
 whoever looks at the picture: the nixpkgs pin, the Nix version and the closure size, the pieces of
 the rice that fastfetch cannot detect (bar, launcher, prompt, editor), and no network address.
 
+## What each box shows
+
+| Box      | Rows                                                                                    |
+| -------- | --------------------------------------------------------------------------------------- |
+| nixos    | os, kernel, boot, nixpkgs, nix, inputs, dotfiles, packages, closure, gen, uptime, age   |
+| desktop  | wm, bar, launcher, two displays, terminal, shell, playing, editor, font, themes, cursor |
+| hardware | board, cpu, gpu, codec, fans, memory, swap, storage                                     |
+| now      | load, glance, colors                                                                    |
+
+A few of them are picked for a reason that does not show:
+
+- **boot** takes Secure Boot from the declaration in `limine.nix`, not from fastfetch's guess at
+  the EFI variable. **dotfiles** and **inputs** find the repo through `programs.nh.flake`, the
+  repo path's single source of truth.
+- **codec** reads the codec module's JSON, since the module itself prints the encoders and the
+  decoders on two lines. **storage** is the btrfs module and not disk, for the chunk allocation.
+- **fans** names the GPU's fan, which stops at idle (zero RPM mode), instead of letting it vanish.
+- **playing** prints a dash when nothing plays, so the row, and the boxes' height, never go away.
+- **load** comes from `/proc`: the cpuusage module samples, which added about 0.2 s to the fetch.
+- **glance** reads the weather and this repo's CI from the glance-feed cache
+  ([glance-feed.md](../desktop/glance-feed.md)), so nothing hits the network. The weather leaves
+  the city out, since the picture is posted.
+
 ## The boxes
 
 Each section is a box closed on both sides. fastfetch has no per-line suffix, and its format
@@ -44,7 +67,7 @@ goes on to the prompt.
 
 | Terminal                                                     | What prints                                            |
 | ------------------------------------------------------------ | ------------------------------------------------------ |
-| 143+ columns, taller than the boxes, a terminal on both ends | the spinning logo and the boxes                        |
+| 157+ columns, taller than the boxes, a terminal on both ends | the spinning logo and the boxes                        |
 | 64+ columns                                                  | the boxes alone                                        |
 | narrower                                                     | the plain list, from the same modules in another style |
 

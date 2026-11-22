@@ -1,6 +1,6 @@
 // The Network page: the wired links, then Wi-Fi where the machine has it, with its networks and
 // a password field for one that asks. NetworkManager is the one service behind it; the scan runs
-// only while this page is on screen. docs/notes/desktop/control-center.md#network
+// only while this page is on screen. docs/notes/desktop/nixos-center.md#network
 import Quickshell
 import Quickshell.Networking
 import QtQuick

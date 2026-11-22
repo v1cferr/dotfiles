@@ -134,7 +134,7 @@ directly").
 ### WASD on the tape
 
 The left hand drives the tape without leaving the home row (since 21/11/2026; SUPER+A used to be the
-Control Center, now SUPER+X):
+Control Center, whose SUPER+X pins the NixOS Center since the two became one on 22/11/2026):
 
 | Bind              | Message / dispatcher       | What it does                                     |
 | ----------------- | -------------------------- | ------------------------------------------------ |

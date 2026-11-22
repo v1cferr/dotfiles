@@ -1,6 +1,6 @@
 // A SLIDER for a level the user sets (a volume, a brightness): a tall rounded track with its icon
 // inside the left end. The owner holds the value; this only reports where the user put it.
-// Its keys and the tap on the icon: docs/notes/desktop/control-center.md#the-building-blocks
+// Its keys and the tap on the icon: docs/notes/desktop/nixos-center.md#the-levels
 import QtQuick
 import "root:/"
 

@@ -1,4 +1,4 @@
-// A Control Center page's header: the way back, then what the page is.
+// The header of a page of the NixOS Center: the way back, then what the page is.
 import QtQuick
 import QtQuick.Layouts
 import "root:/"

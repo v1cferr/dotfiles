@@ -67,7 +67,7 @@ take the width of the wider one, an icon and a name left of the logo, a level an
 it, each eliding past its room.
 
 A hover on the capsule OPENS the island into the NixOS Center, and a click pins it
-([open](#open)). On a level or a VPN the click leads to the Control Center instead, and the disk
+([open](#open)). On a level or a VPN the click opens the Center on that page instead, and the disk
 warning is dismissed by its click.
 
 It exists only on the main monitor's full bar. With no screen wide enough for it (`Island.live`),
@@ -323,7 +323,7 @@ pair stands out of the spread.
 | ------------------------------ | ----------------------------------------------------------------------------------- |
 | The bottom OSD                 | its events go to the capsule; the window stays shut                                 |
 | A toast for every notification | a plain one goes to the capsule; a critical one, or one with buttons, stays a toast |
-| The media item on the bar      | what plays rests in the capsule; the controls are in the Control Center             |
+| The media item on the bar      | what plays rests in the capsule; the controls are in the NixOS Center               |
 
 A notification is never shown twice: `Notifs.qml` sends each one either to `popups` (the toasts) or
 through `arrived` (the island). Do-not-disturb and an open NixOS Center

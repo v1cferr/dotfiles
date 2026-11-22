@@ -6,7 +6,7 @@
 ## Why it is here
 
 YouTube Music in a native window, with its own MPRIS player, so the shell's media surfaces (the
-island, the Control Center, the media panel and the bar) show and drive it like any other player.
+island, the NixOS Center, the media panel and the bar) show and drive it like any other player.
 Spotifast stays for Spotify and the `yt*` mpv aliases in `media.nix` stay for the CLI: three
 different jobs.
 

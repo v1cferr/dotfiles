@@ -1,6 +1,6 @@
 // The Sound page: where the sound goes out and comes in, the microphone, and each app's own level.
 // Pipewire binds a node's audio only while something tracks it, so the lists are tracked only
-// while this page is the one on screen. docs/notes/desktop/control-center.md#sound
+// while this page is the one on screen. docs/notes/desktop/nixos-center.md#sound
 import Quickshell
 import Quickshell.Services.Pipewire
 import QtQuick

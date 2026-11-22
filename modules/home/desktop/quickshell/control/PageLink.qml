@@ -1,4 +1,4 @@
-// A quiet text row that leaves the Control Center for a fuller surface (the NixOS Center, a mixer).
+// A quiet text row that leaves the NixOS Center for a fuller tool (a mixer, the link's own panel).
 import QtQuick
 import QtQuick.Layouts
 import "root:/"

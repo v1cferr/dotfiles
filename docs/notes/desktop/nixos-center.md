@@ -1,30 +1,138 @@
-# The NixOS Center: notifications and the session, behind the logo
+# The NixOS Center: the shell's one panel, behind the logo
 
-`modules/home/desktop/quickshell/bar/CenterCard.qml`, with the service in `Notifs.qml` and the
-toasts in `notifications/`. Since 12/11/2026 it is the ISLAND at its full size
-([island.md](island.md#open)): the same shape that rests around the logo, grown down. Since
-17/10/2026 the official NixOS logo at the center of the bar opens
-ONE panel holding everything that used to be spread over three controls: the notification history,
-do-not-disturb, and the session (lock, darken, log out, suspend, reboot, shut down). The bell pill,
-the band's bell and the power menu are gone; their functions are all here.
+`modules/home/desktop/quickshell/bar/CenterCard.qml`, with the service in `Notifs.qml`, the toasts
+in `notifications/` and its pages in `control/`. It is the ISLAND at its full size
+([island.md](island.md#open)): the same shape that rests around the logo, grown down. A hover on
+the logo or the capsule opens it, a click or SUPER pins it, and the item on the bar's right and
+SUPER+X pin it too.
+
+It was reformulated on 22/11/2026, asked for as cleaner, more intuitive and more informative. Until
+then it was seven sections of one weight in a column 867 px tall (what plays, the notifications,
+five status columns, the power profile, the System row, the screenshots, the session), and the
+everyday switches lived in ANOTHER panel on the bar's right, the Control Center of 12/11/2026. The
+owner chose, among three structures drawn for him: tiles on top and the notifications as the body,
+with no tabs; the date, the weather, the levels and the network, VPN and Bluetooth added; the
+screenshots, the system's detail, the power profile and the session folded to a tile or an icon;
+and the two panels made one. The references were GNOME's 2026 plan to put notifications and quick
+settings in one place, macOS's Control Center, Android's shade and Noctalia's cards. With two
+notifications it stands 628 px tall.
+
+It owns no state. Every tile reads and sets the service that does, so the panel, the bar and the
+island can never disagree.
 
 ## What is in it
 
-| Part          | Holds                                                                                                |
-| ------------- | ---------------------------------------------------------------------------------------------------- |
-| Head          | on the capsule's row, right of the logo: idle timeouts, do-not-disturb, clear all; no title          |
-| Notifications | the history, newest first and grouped, scrolling on its own past 480 px (less on a short screen)     |
-| Status        | the weather, CPU and GPU temperature, RAM, disk: five columns of text (11/11/2026)                   |
-| Power         | the Balanced/Gaming/Eco profile and what its last apply did (18/10/2026)                             |
-| System        | one row, folded: five memory and GPU readings, and what `boot-trust` proved of the boot (22/10/2026) |
-| Screenshots   | the two monitors by name (ASUS, LG), Both, and where the shot goes, always open (v2.3)               |
-| Session       | the six session actions, their commands exactly the old power menu's                                 |
+| Part          | Holds                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------- |
+| The day       | the date, the weather and the calendar's next date; each leads to its own panel         |
+| The tiles     | eight: the everyday switches, and the doors to what has more to show                    |
+| The levels    | the volume, whose chevron opens the Sound page, and the screen's level                  |
+| Status        | CPU and GPU temperature, RAM, disk: four readings on one line, each opening its panel   |
+| What plays    | one row (the cover, the track, three keys); a chevron unfolds the whole media card      |
+| Notifications | the body: the history, newest first and grouped, scrolling on its own past 480 px       |
+| Session       | six icons, their commands exactly the old power menu's; the three that end it ask first |
 
-The history scrolls by itself, so however long it grows, the three sections below it stay in reach.
+The history scrolls by itself, so however long it grows, the session under it stays in reach.
 
-**Do-not-disturb is an icon, never the word.** A bell when off, a struck bell in orange and a lit
-background when on. The icon's tip reads `Do Not Disturb / Enabled / Click to disable`, its title
-also the accessible name (`widgets/IconButton.qml` on `widgets/GlassTip.qml`, the shell's glass card,
+## The tiles
+
+`widgets/QuickTile.qml`: an icon over one word, four to a row. Its color is its state, the accent
+while on and the warning color while something wants a look (the idle timeouts off, the boot short
+of proven or the memory under pressure, the network down); its words are in its tip, which is also
+its accessible name. A click is its one act: a switch, or its page. A tile that is a switch AND has
+a page carries a mark in its corner, and the right button opens the page.
+
+| Tile      | A click                                       | Its page                                          |
+| --------- | --------------------------------------------- | ------------------------------------------------- |
+| Network   | opens the page                                | the wired links and the Wi-Fi networks            |
+| Bluetooth | the adapter's switch                          | the devices, paired and in range                  |
+| VPN       | connects the one used last, or takes all down | the tunnels, and Tor                              |
+| Focus     | do-not-disturb                                |                                                   |
+| Power     | opens the page                                | Balanced, Gaming, Eco and what the last apply did |
+| Idle      | the idle timeouts                             |                                                   |
+| Capture   | opens the page                                | the two monitors, Both, and where the shot goes   |
+| System    | opens the page                                | the memory and GPU readings, and the boot's proof |
+
+A tile whose hardware is not there (no Bluetooth adapter) stays, faded, and says so; the VPN tile
+is absent on a host that has no `vpn` command at all (`Theme.hasVpn`, a fact the generated
+`shell.json` carries).
+
+A wider tile, an icon with a name and its state beside it, two to a row, was the Control Center's
+and was rendered against this one on the day: it reads the state without a hover and stands 36 px
+taller for the same eight.
+
+## The pages
+
+What a tile has more to show takes the card's place, under a header with the way back
+(`control/PageHeader.qml`). Escape leaves a page first and the panel second, every open starts on
+the main view, and `qs ipc call bar centerPage <net|bt|vpn|sound|power|shots|system>` pins the
+Center on one: a click on a volume or a VPN in the island's capsule does exactly that.
+
+## The levels
+
+`widgets/Slider.qml`: a tall rounded track with its icon inside the left end. A drag or a click
+sets the level, the wheel moves it 5%, a tap on the icon is the mute. A press that starts on the
+icon sets nothing until the pointer travels 4 px, so a mute never zeroes the volume. With the
+keyboard, Left and Right set the level and Up and Down walk the panel.
+
+The screen's level is `Backlight.qml`: what `brightness-osd` (`hypr.nix`) said last, a panel's
+backlight where the machine has one and the compositor's gamma on this desk, the same thing the
+brightness keys set. The slider asks that script (`set <n>`, at most every 80 ms), which answers
+over a quiet IPC, so a level set by hand shows no OSD. It is not the monitors' own backlight,
+which is declared and held over DDC ([backlight.md](backlight.md)).
+
+## Network
+
+The Network page reads NetworkManager through `Quickshell.Networking`, which the shell had never
+used: until 12/11/2026 the link was an `nmcli` poll, and there was no way to pick a network. It
+lists the wired links (the cable, the connection, the link speed) and, where the machine has a
+Wi-Fi device, a switch and up to eight networks: the connected one first, then the saved ones, then
+by signal. A click connects a saved or an open network and disconnects the connected one. One that
+needs a password opens a field under its row; Enter hands the password to NetworkManager and the
+field forgets it. The scan runs only while this page is on screen. The row at the foot opens the
+link's own panel, with the rates, the latency and the speed test, which did not move.
+
+## Bluetooth
+
+The Bluetooth page reads BlueZ through `Quickshell.Bluetooth`. `MY DEVICES` are the paired ones,
+each with its state (connecting, connected with its battery when the device reports one, not
+connected); a click connects or disconnects. `IN RANGE` are devices that are not paired and said
+their name; a click pairs, and Blueman answers any prompt, since it stays the pairing agent.
+Discovery is switched on when the page opens and off when it closes or the panel does: nothing
+scans in the background. `Bluetooth manager` hands over to Blueman.
+
+## Sound
+
+The Sound page lists the outputs and the inputs, the one in use carrying a check; picking one sets
+`Pipewire.preferredDefaultAudioSink` or `Source`. Under the inputs, the microphone's level and its
+mute; then one slider per app that is playing. Pipewire reports a node's audio only while something
+tracks it, so the app streams are tracked only while this page is the one on screen. `Mixer` hands
+over to pavucontrol.
+
+## VPN
+
+The `vpn` CLI's JSON says connected or not, nothing else, and its `connect` returns as soon as the
+unit starts. The bar now keeps a phase per tunnel on top of it (`vpnPhase` in `Bar.qml`):
+
+| State         | When                                                                                      |
+| ------------- | ----------------------------------------------------------------------------------------- |
+| Off           | no tunnel and nothing asked                                                               |
+| Connecting    | from the command until the tunnel exists                                                  |
+| Connected     | the CLI's own test: the unit is active AND the interface is there                         |
+| Disconnecting | while the command runs                                                                    |
+| Error         | 45 s passed with no tunnel (the CLI's own patience); the text is `vpn diagnose`'s verdict |
+| Unknown       | the `vpn` command did not answer                                                          |
+
+A unit that is merely active never reads as connected. No privilege was added: every action is the
+CLI's, under the polkit rule that already let the user start the two units. The tile's switch
+connects the VPN used last, or takes every tunnel down.
+
+## Do-not-disturb, the session and its commands
+
+**Do-not-disturb is a tile, never only a word.** A bell when off, a struck one on a lit tile when
+on, and the notifications' own line says `Do not disturb` in its place of the count. The tile's
+tip reads `Do Not Disturb / Enabled / Click to disable`, its title also the accessible name
+(`widgets/QuickTile.qml` on `widgets/GlassTip.qml`, the shell's glass card,
 since Qt's native tooltip drew a light box off the theme), so a control shown only as a glyph still
 says what it does. The state
 **persists across restarts of the shell**: two keys in `Quickshell.statePath("notifs.json")`, read
@@ -102,19 +210,12 @@ every bar panel, with two differences. It has no window of its own: the island's
 too, without the pin: open that way it shows the same things and takes no keyboard, and it shuts
 when the pointer leaves ([island.md](island.md#open)). The rules below are the pin's.
 
-**Cleaner, 21/11/2026** (asked for with a capture of the Center as it was): the head moved up to the
-capsule's row, and lost its title the same day (the logo already says what the panel is); the status values, the readings and the boot's proof lost their filled boxes and
-are columns of text; and the five readings and the boot section fold behind one `System` row
-that sums them in a line (`6.5 GB available · boot verified`). The row opens by itself, and in
-the warning color, while the boot has something short of proven. Every action, key and tip is
-as it was.
-
-**The head is the logo alone, 22/11/2026.** Without its title the row held three switches right of
-the logo and nothing left of it, which the owner's rule of symmetry about the logo does not allow.
-Each went to the section it acts on, on a row shaped like the screenshots' own (a label, a word
-for the state, the switch): do-not-disturb and clear on `NOTIFICATIONS`, whose word is the count,
-`None` or `Do not disturb`; the idle timeouts on `SESSION`, `Sleeps on idle` or `Stays awake`.
-`bar/CenterHeader.qml` is gone.
+**Its two earlier shapes.** On 21/11/2026 the head moved up to the capsule's row and lost its
+title, the status values lost their filled boxes, and the memory readings and the boot's proof
+folded behind one `System` row. On 22/11/2026 the head became the logo alone: three switches right
+of it and nothing left broke the symmetry about the logo, so each went to a section's own row.
+The reformulation of the same day ([above](#the-nixos-center-the-shells-one-panel-behind-the-logo))
+made those rows tiles, and the System row a tile with a page.
 
 - **Where:** hung from the logo of the bar that was clicked, as one shape with it: 520 px wide or
   the screen's width less the windows' outer gap on each side, flush under the bar. Measured on
@@ -136,9 +237,9 @@ for the state, the switch): do-not-disturb and clear on `NOTIFICATIONS`, whose w
 
 ## Driving it from the keyboard (22/10/2026)
 
-Every control in the card carries a `widgets/KeyTarget.qml`: the header icons, each notification
-card and group, the four hardware cards, the three power profiles, the screenshot targets and the
-six session actions. One global bind opens the Center; inside it the keys are plain ones:
+Every control in the card carries a `widgets/KeyTarget.qml`: the tiles, the two levels, the four
+readings, each notification card and group, the six session actions, and what each page holds.
+Escape leaves a page before it closes the panel. One global bind opens the Center; inside it the keys are plain ones:
 
 | Key                        | Does                                                                                                    |
 | -------------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -160,8 +261,10 @@ Enter on a power profile was NOT pressed there: it talks to the real power-profi
 
 ## Power (18/10/2026)
 
-`bar/PowerSection.qml`, between the hardware and the screenshots. The profiles themselves, what
-each one changes and why ppd owns them: [power](../hardware/power.md).
+`bar/PowerSection.qml`, on two pages since 22/11/2026: the profile and what its last apply did on
+the Power tile's, the memory and GPU readings on the System tile's, above the boot's proof. The
+Power tile wears the profile's name and is lit while it is not Balanced. The profiles themselves,
+what each one changes and why ppd owns them: [power](../hardware/power.md).
 
 - **Three buttons, Balanced, Gaming, Eco.** A click sets `PowerProfiles.profile` through
   Quickshell's native binding (`Quickshell.Services.UPower`), so the shell asks power-profiles-
@@ -191,9 +294,9 @@ The zram card's caption elides its ratio at 520 px; the full text is in its acce
 
 ## Screenshots (18/10/2026)
 
-A `SCREENSHOTS` section between the hardware and the session, ALWAYS open since v2.3 (it was a folded
-line): three targets, the two monitors by their `my.monitors` names (`ASUS`, `LG`; `Main` and
-`Side` on a host that sets none) and Both, and, beside the title, where the shot goes, the clipboard by
+The Capture tile's page since 22/11/2026 (a section of its own before, always open since v2.3):
+three targets, the two monitors by their `my.monitors` names (`ASUS`, `LG`; `Main` and
+`Side` on a host that sets none) and Both, and, under them, where the shot goes, the clipboard by
 default (as the keybinds do) or a PNG in `~/Pictures/Screenshots`, named
 `<date>_<time>_<target>-<connector>.png` (`..._all.png` for the whole layout). A monitor that is not
 connected greys its button out.
@@ -214,10 +317,10 @@ are often scaled down by the app they are pasted into; the original file is the 
 
 ## Hardware
 
-A row of five cards under `STATUS` (four until 11/11/2026): the weather, then CPU and GPU
-temperature, RAM and disk use, each with what it is read from (the sky in words, `coretemp`, `xe`,
-the bytes used, the space free). The weather card is how the forecast panel opens from here since
-the weather left the bar; with no data it reads `n/a` and opens nothing. It READS the bar's own snapshot (the `/proc` and
+Four readings on one line since 22/11/2026 (a row of cards before): CPU and GPU temperature, RAM
+and disk use, each saying what it is read from in its tip (`coretemp`, `xe`, the bytes used, the
+space free). The weather went up to the day's line, which is how the forecast panel opens from
+here since the weather left the bar; with no data it is not there. It READS the bar's own snapshot (the `/proc` and
 hwmon read every 2 s, and `df` every 30 s): no read of its own. A sensor the machine does not publish
 shows `n/a` with `no sensor`, never a number. Colors follow the states catalog
 ([theme.md](theme.md#states)): a temperature against ITS OWN ceiling (70% warning, 80% degraded, 90%

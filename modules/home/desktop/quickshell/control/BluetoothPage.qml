@@ -1,6 +1,6 @@
 // The Bluetooth page: the devices this machine knows, with what each is doing, then the ones in
 // range. BlueZ is the one service behind it; discovery runs only while this page is on screen, and
-// Blueman stays the pairing agent. docs/notes/desktop/control-center.md#bluetooth
+// Blueman stays the pairing agent. docs/notes/desktop/nixos-center.md#bluetooth
 import Quickshell
 import Quickshell.Bluetooth
 import QtQuick

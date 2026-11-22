@@ -1,6 +1,20 @@
 # History: november 2026
 
-17 entries. Index in [README.md](../README.md).
+18 entries. Index in [README.md](../README.md).
+
+- [x] The NixOS Center reformulated, and the Control Center folded into it (asked 22/11/2026;
+      22/11/2026): "cleaner, more intuitive and more informative". How and why:
+      [notes/desktop/nixos-center.md](../../notes/desktop/nixos-center.md).
+      • SEVEN SECTIONS OF ONE WEIGHT, 867 px tall, became the day, eight tiles, two levels, a
+        line of status, what plays in one row, the notifications as the body and the session as
+        icons: 628 px with two notifications.
+      • A TILE'S DETAIL IS A PAGE in the card's place: networks, Bluetooth, VPN, sound, power,
+        screenshots, the memory and the boot's proof.
+      • ONE PANEL: the Control Center of 12/11/2026 held nothing of its own any more and left,
+        with its option and the bar it gave way to. Its item on the bar and SUPER+X pin the Center.
+      • THE SCREEN'S LEVEL got a slider, which asks the script the brightness keys run.
+      • CHOSEN among three structures drawn for the owner; the references were GNOME's 2026
+        plan, macOS's Control Center, Android's shade and Noctalia's cards.
 
 - [x] The island by the book (asked 22/11/2026; 22/11/2026): "are we following the best
       practices for a dynamic island?". How and why:

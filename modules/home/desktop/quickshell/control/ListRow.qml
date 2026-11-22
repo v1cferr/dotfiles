@@ -1,4 +1,4 @@
-// One row of a Control Center list (a network, a Bluetooth device): an icon, a name, what it is
+// One row of a list on a page of the NixOS Center (a network, a Bluetooth device): an icon, a name, what it is
 // now, and an optional mark at the far end. A click or Enter acts on it.
 import QtQuick
 import QtQuick.Layouts

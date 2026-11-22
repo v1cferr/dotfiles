@@ -104,18 +104,18 @@ that grows one day (media, a volume change, a notification) widens those two and
 ## The distribution (12/11/2026)
 
 The main monitor reads `Workspaces, app | the island's room, logo | alerts, network, VPN, tray,
-Control Center, clock`, and the standing monitor `Workspaces, app | logo | operational chips`.
+the Center's door, clock`, and the standing monitor `Workspaces, app | logo | operational chips`.
 
 **The island lives around the logo** (12/11/2026, [island.md](island.md)). On the main monitor the
 sides stop 208 px from the center, whether the capsule shows or not, and the media item left the
-strip: a track change is announced in the capsule and its controls are in the Control Center.
+strip: a track change is announced in the capsule and its controls are in the NixOS Center.
 
-**With the Control Center on, what it holds leaves the strip** (12/11/2026,
-[control-center.md](control-center.md)). The network keeps its icon and loses its numbers; the VPN
-shows only while a tunnel is up or coming up; the sound shows only while muted, as an alert; the
-bell is gone, and do-not-disturb turns the Control Center's own icon into its sign. A scroll on
-that icon is the volume. With `my.shell.controlCenter.enable = false` the strip is the one of
-11/11/2026 again, which is what the next paragraphs about the bell and the fold describe.
+**What the NixOS Center holds is not said twice on the strip** (12/11/2026, with the Control
+Center of that day; [nixos-center.md](nixos-center.md) since the two became one on 22/11/2026). The
+network is its icon alone; the VPN shows only while a tunnel is up or coming up; the sound shows
+only while muted, as an alert; there is no bell, and do-not-disturb turns the Center's door on
+that side into its sign. A scroll on that icon is the volume. The strip of 11/11/2026, with the
+labels, the bell and the fold that made room for them, left with the option that brought it back.
 
 **What left the strip, and where it went.** The bar held fifteen permanent cells; secondary
 telemetry now waits one hover or one click away.

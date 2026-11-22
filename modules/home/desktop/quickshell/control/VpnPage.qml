@@ -1,5 +1,5 @@
 // The VPN page: each tunnel with what it is doing and the one action that fits, then Tor. Every
-// action goes through the `vpn` CLI the bar already drives. docs/notes/desktop/control-center.md#vpn
+// action goes through the `vpn` CLI the bar already drives. docs/notes/desktop/nixos-center.md#vpn
 import QtQuick
 import QtQuick.Layouts
 import "root:/"

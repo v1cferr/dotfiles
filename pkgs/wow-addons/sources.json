@@ -2,37 +2,37 @@
   "questie": {
     "source": "github",
     "repo": "Questie/Questie",
-    "version": "bundle/v12.11.1+v1.1.3",
-    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.11.1%2Bv1.1.3/Questie-v12.11.1%2Bv1.1.3.zip",
-    "hash": "sha256-iEDy3fNwvYc3Qj2ZrlX15mMA1oaslsNHwkhIHrZgG5Q="
+    "version": "bundle/v12.12.0+v1.1.4",
+    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.12.0%2Bv1.1.4/Questie-v12.12.0%2Bv1.1.4.zip",
+    "hash": "sha256-EW6t1YM4NtG4/zDJyLWq9yS8Lede6jYtbu49mWJQa18="
   },
   "dbm": {
     "source": "github",
     "repo": "DeadlyBossMods/DeadlyBossMods",
-    "version": "12.1.23",
-    "url": "https://github.com/DeadlyBossMods/DeadlyBossMods/releases/download/12.1.23/DBM-Core-12.1.23.zip",
-    "hash": "sha256-e3i60hfJBnvMliwQd1itTuOXKoZU4X/MroBBpDZQMyY="
+    "version": "12.1.25",
+    "url": "https://github.com/DeadlyBossMods/DeadlyBossMods/releases/download/12.1.25/DBM-Core-12.1.25.zip",
+    "hash": "sha256-lts1mk9SSJylRM9NrS8/DxJJdqmkgLQ78HfgUlUHxjQ="
   },
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9730186",
-    "url": "https://edge.forgecdn.net/files/9730/186/LayerSwap-1.14.42.zip",
-    "hash": "sha256-tcX2dC7+PMhKjPO2GHx44BB6KgliBlPyLYePcINhMbA="
+    "version": "9768590",
+    "url": "https://edge.forgecdn.net/files/9768/590/LayerSwap-1.14.47.zip",
+    "hash": "sha256-L7lc0+bDqyTvqTpKNZn45C2fJWpyxv9b4j0fdjKWspo="
   },
   "leatrix-plus": {
     "source": "curseforge",
     "projectId": 94855,
-    "version": "9720351",
-    "url": "https://edge.forgecdn.net/files/9720/351/Leatrix_Plus-1.60.36-forever.zip",
-    "hash": "sha256-iBL2IpGx911Q5zsiUN9YuUHGnYWLqQmpamWZ1LA6apA="
+    "version": "9744906",
+    "url": "https://edge.forgecdn.net/files/9744/906/Leatrix_Plus-1.60.37-forever.zip",
+    "hash": "sha256-PeR5o7iEN/7ZQnHwLUa+GlgnR2JWm3mYowHqJWWwJRA="
   },
   "auctionator": {
     "source": "curseforge",
     "projectId": 6124,
-    "version": "9690303",
-    "url": "https://edge.forgecdn.net/files/9690/303/Auctionator-349.zip",
-    "hash": "sha256-2gVsJGGgut7D/zvNZLG4cKPEBY0BWspV0XEETvDElCM="
+    "version": "9761689",
+    "url": "https://edge.forgecdn.net/files/9761/689/Auctionator-352.zip",
+    "hash": "sha256-9TlzRDTa1tn2fXL3+PQbXCOAYjWIG39WQthUSfhjuDU="
   },
   "bugsack": {
     "source": "curseforge",
@@ -51,16 +51,16 @@
   "pawn": {
     "source": "curseforge",
     "projectId": 4646,
-    "version": "9724374",
-    "url": "https://edge.forgecdn.net/files/9724/374/Pawn-2.14.7-Forever.zip",
-    "hash": "sha256-TietR+A1rCl6Oc66JW4WQnPyYFrBsYiqHEtaL2V3vgs="
+    "version": "9736137",
+    "url": "https://edge.forgecdn.net/files/9736/137/Pawn-2.14.8-Forever.zip",
+    "hash": "sha256-tsyhckZhTBKhwk9AT3D3NziXqWzGrH6ksNasO3V2JBk="
   },
   "openmap": {
     "source": "curseforge",
     "projectId": 1735937,
-    "version": "9722247",
-    "url": "https://edge.forgecdn.net/files/9722/247/OpenMap-v0.8.11-forever.zip",
-    "hash": "sha256-71YcMCahQCTauawCr8T9AqDqf45tKY1qaPwjwZ1XtTs="
+    "version": "9753379",
+    "url": "https://edge.forgecdn.net/files/9753/379/OpenMap-v0.8.13-forever.zip",
+    "hash": "sha256-+WHed1aepA881SODW1OPlcclgrr0RZ007eSvOhMJelg="
   },
   "forever-loot-sparkles": {
     "source": "curseforge",
@@ -72,9 +72,9 @@
   "glowing-bars": {
     "source": "curseforge",
     "projectId": 1754997,
-    "version": "9706234",
-    "url": "https://edge.forgecdn.net/files/9706/234/GlowingBars-4.3.0.zip",
-    "hash": "sha256-DcqRAAgab/4HhjIJ8yBqhz0PpEdOy9BbdLaE7WXn8o4="
+    "version": "9763368",
+    "url": "https://edge.forgecdn.net/files/9763/368/GlowingBars-4.4.0.zip",
+    "hash": "sha256-SW4nyW59KDEwRvKVg+e/Q/IA3K2En2cKmN8kgVbo3Zc="
   },
   "prettytooltip": {
     "source": "curseforge",
@@ -86,37 +86,37 @@
   "keep-or-toss": {
     "source": "curseforge",
     "projectId": 1737994,
-    "version": "9718247",
-    "url": "https://edge.forgecdn.net/files/9718/247/KeepOrToss-2.3.0.zip",
-    "hash": "sha256-6IJkAvN3cpkID1t6Zpq3JH65sDyoiMW9hcWnJnSGVtM="
+    "version": "9770898",
+    "url": "https://edge.forgecdn.net/files/9770/898/KeepOrToss-2.5.1.zip",
+    "hash": "sha256-xsGf1OqZxLC0S/5O7fZTIY+zRP93ljHVwNsyTO9mfS0="
   },
   "social-diary": {
     "source": "curseforge",
     "projectId": 1733454,
-    "version": "9732302",
-    "url": "https://edge.forgecdn.net/files/9732/302/social_diary-v4.2.3.zip",
-    "hash": "sha256-OONSj4eQKFsKhDZpZhAXNeBgNNm6PBWcsXtEmno9Wd0="
+    "version": "9753182",
+    "url": "https://edge.forgecdn.net/files/9753/182/social_diary-v4.2.4.zip",
+    "hash": "sha256-b0kQPUv8dXuSzROwuaeqQG2HkWcsS/AKYms/Sb+Z+js="
   },
   "happy-camper": {
     "source": "curseforge",
     "projectId": 1715557,
-    "version": "9685654",
-    "url": "https://edge.forgecdn.net/files/9685/654/HappyCamper-1.1.5.1.zip",
-    "hash": "sha256-bN+tSu1OPyjaJdiwt6nu17YZabjujDwacJ1Mvv42fcg="
+    "version": "9753449",
+    "url": "https://edge.forgecdn.net/files/9753/449/HappyCamper-1.1.5.2.zip",
+    "hash": "sha256-FPW0EZNV0WuMDgb34RW4Rjv9rTHabC1iuHs+o66lLXk="
   },
   "dbm-vanilla": {
     "source": "github",
     "repo": "DeadlyBossMods/DBM-Vanilla",
-    "version": "r835",
-    "url": "https://github.com/DeadlyBossMods/DBM-Vanilla/releases/download/r835/DBM-Vanilla_SoD-r835.zip",
-    "hash": "sha256-ogy91/fr+60Ju1SXUN641f5/6CasSbPGAxgjj+uzg1g="
+    "version": "r837",
+    "url": "https://github.com/DeadlyBossMods/DBM-Vanilla/releases/download/r837/DBM-Vanilla_SoD-r837.zip",
+    "hash": "sha256-2EwqIdjeIk+oZ4d7TY5I9WCeEPY224/fLjBEielHsRA="
   },
   "simple-addon-manager": {
     "source": "curseforge",
     "projectId": 689213,
-    "version": "9535431",
-    "url": "https://edge.forgecdn.net/files/9535/431/SimpleAddonManager-v1.69.zip",
-    "hash": "sha256-ECuVzUmWaDQBAcspZNekDPcOZmZqrKrtSwizGqGsivk="
+    "version": "9758698",
+    "url": "https://edge.forgecdn.net/files/9758/698/SimpleAddonManager-v1.70.zip",
+    "hash": "sha256-9v+XHYQxsr3x/FxMz1gyaGWaghxtMBuhWwbvIq9WSUo="
   },
   "minimapbuttonbutton": {
     "source": "curseforge",
@@ -135,44 +135,44 @@
   "spoken": {
     "source": "curseforge",
     "projectId": 1700375,
-    "version": "9703204",
-    "url": "https://edge.forgecdn.net/files/9703/204/Spoken-3.10.1.zip",
-    "hash": "sha256-S5nirE95u/1FFcCnwJp4wFxspWDMVYAOxxB/U8mv4AE="
+    "version": "9762824",
+    "url": "https://edge.forgecdn.net/files/9762/824/Spoken-3.12.1.zip",
+    "hash": "sha256-aLDXYIOVorJStwkiSGaZDykK7I4/eslfEuSqBkYLqV4="
   },
   "spoken-ptbr-quests-shared": {
     "source": "curseforge",
     "projectId": 1717819,
-    "version": "9665524",
-    "url": "https://edge.forgecdn.net/files/9665/524/SpokenQuestsAudioShared_ptBR-1.0.2.zip",
-    "hash": "sha256-RvsUXC+i5HWZJCyQ4tIsocXp2IQR8gtvKu/WGPnrlPo="
+    "version": "9738617",
+    "url": "https://edge.forgecdn.net/files/9738/617/SpokenQuestsAudioShared_ptBR-1.1.0.zip",
+    "hash": "sha256-hUhsTHENA3LzFthPZ/4JGUomKvAiZDMJg/1eLeUfeCk="
   },
   "spoken-ptbr-quests-alliance": {
     "source": "curseforge",
     "projectId": 1743722,
-    "version": "9665515",
-    "url": "https://edge.forgecdn.net/files/9665/515/SpokenQuestsAudioAlliance_ptBR-1.0.2.zip",
-    "hash": "sha256-WUxEyoY9T/sWPq8XVLRBlh+r0XYecrdhoaQ9ufuHrYM="
+    "version": "9738605",
+    "url": "https://edge.forgecdn.net/files/9738/605/SpokenQuestsAudioAlliance_ptBR-1.1.0.zip",
+    "hash": "sha256-/EY+prbywMpXXxjeELsZoLUX1Egmos2Wd0aaCSu+dcQ="
   },
   "spoken-ptbr-quests-horde": {
     "source": "curseforge",
     "projectId": 1743740,
-    "version": "9665519",
-    "url": "https://edge.forgecdn.net/files/9665/519/SpokenQuestsAudioHorde_ptBR-1.0.2.zip",
-    "hash": "sha256-dwhry6Eo5KgoTSnkas6VrkctfgbAJE2p8Tq3RqgKPOY="
+    "version": "9738612",
+    "url": "https://edge.forgecdn.net/files/9738/612/SpokenQuestsAudioHorde_ptBR-1.1.0.zip",
+    "hash": "sha256-3vke20b0EqbWJhzwqxuIaUKJBv92oIAwVxyCn0VB+S4="
   },
   "spoken-ptbr-gossip": {
     "source": "curseforge",
     "projectId": 1743731,
-    "version": "9665531",
-    "url": "https://edge.forgecdn.net/files/9665/531/SpokenQuestsAudioGossip_ptBR-1.0.2.zip",
-    "hash": "sha256-5rzxlRyCIBkwJTB+ThNd7G1AF8iVED1GCoZnkiO+M3o="
+    "version": "9738626",
+    "url": "https://edge.forgecdn.net/files/9738/626/SpokenQuestsAudioGossip_ptBR-1.1.0.zip",
+    "hash": "sha256-/eeqb1wQM8FEX0X5rQQfDSHkDAWH+9MSXvCuNcAF/QQ="
   },
   "spoken-ptbr-readables": {
     "source": "curseforge",
     "projectId": 1723287,
-    "version": "9665538",
-    "url": "https://edge.forgecdn.net/files/9665/538/SpokenReadablesAudio_ptBR-2.0.9.zip",
-    "hash": "sha256-rrOFw6wbHS1PC3l3x7DAdv/Hr3tJAwc7LHpiJ456fMQ="
+    "version": "9738633",
+    "url": "https://edge.forgecdn.net/files/9738/633/SpokenReadablesAudio_ptBR-2.1.0.zip",
+    "hash": "sha256-8R8zPSGnM+Gvhbp2F3fq/RE/H6FLMGDBYJIXX0OQ3Nc="
   },
   "spoken-ptbr-places": {
     "source": "curseforge",
@@ -219,9 +219,9 @@
   "battletext-forever": {
     "source": "curseforge",
     "projectId": 1722502,
-    "version": "9729452",
-    "url": "https://edge.forgecdn.net/files/9729/452/BattleTextForever-v1.29.0-forever.zip",
-    "hash": "sha256-sfVRBUEf3HcNORQXgjbdYzpqOh6UevQadlT/FjUTwQw="
+    "version": "9774656",
+    "url": "https://edge.forgecdn.net/files/9774/656/BattleTextForever-v1.38.1-forever.zip",
+    "hash": "sha256-iu4FPqi93w8w6Eh4rY6VkNH1ZK45aQqMO+vxzbjf0bw="
   },
   "easy-experience-bar": {
     "source": "curseforge",
@@ -233,16 +233,16 @@
   "baganator": {
     "source": "curseforge",
     "projectId": 914482,
-    "version": "9718266",
-    "url": "https://edge.forgecdn.net/files/9718/266/Baganator-867.zip",
-    "hash": "sha256-hlIVXOSr4Rn9zAJB+le5U1R35H36BbAvpo1W7H1Mdek="
+    "version": "9738029",
+    "url": "https://edge.forgecdn.net/files/9738/29/Baganator-868.zip",
+    "hash": "sha256-5d1bi8fhjeF/20FWPFvnc0D9CMNMxLyggOW99OETwz4="
   },
   "syndicator": {
     "source": "curseforge",
     "projectId": 988370,
-    "version": "9718258",
-    "url": "https://edge.forgecdn.net/files/9718/258/Syndicator-292.zip",
-    "hash": "sha256-YY/Qa8MjZ6zt3aCwajQAp+nAmaf/06RG0D23J9CGlcs="
+    "version": "9738018",
+    "url": "https://edge.forgecdn.net/files/9738/18/Syndicator-293.zip",
+    "hash": "sha256-v6007w33iKRwNXJSASbDiwIcHGyy7lLfi3PfZcIErAg="
   },
   "dejunk": {
     "source": "curseforge",
@@ -261,9 +261,9 @@
   "lfg-forever": {
     "source": "curseforge",
     "projectId": 1707849,
-    "version": "9729242",
-    "url": "https://edge.forgecdn.net/files/9729/242/LFGForever.zip",
-    "hash": "sha256-MR7HZ/zVnkyKRBfp5goFxXTTJ1xlM7V+yZj8Cee9xIM="
+    "version": "9747838",
+    "url": "https://edge.forgecdn.net/files/9747/838/LFGForever.zip",
+    "hash": "sha256-WHI6bE2tI0Oni3DYHesgW12yt7mftC5HxkpwPqMGb+c="
   },
   "lfg-bulletin-board": {
     "source": "curseforge",
@@ -275,30 +275,30 @@
   "mastercraft": {
     "source": "curseforge",
     "projectId": 1711528,
-    "version": "9723747",
-    "url": "https://edge.forgecdn.net/files/9723/747/Mastercraft-v2.0.8.zip",
-    "hash": "sha256-mVY8614i7CKiCTfppQM76j7o5VPcUXQID9avplb6iHY="
+    "version": "9760561",
+    "url": "https://edge.forgecdn.net/files/9760/561/Mastercraft-v2.1.1.zip",
+    "hash": "sha256-FC1u8KmYEDMrgMNOD9kN/F4iWZbyk0sjo3VRW08/TXY="
   },
   "polestar": {
     "source": "curseforge",
     "projectId": 1744437,
-    "version": "9682366",
-    "url": "https://edge.forgecdn.net/files/9682/366/Polestar-0.4.1.1.zip",
-    "hash": "sha256-skjPvFlST7mB8VHYWb+83Ez/Nd/pmV4tzR+S2Sj8wFM="
+    "version": "9750975",
+    "url": "https://edge.forgecdn.net/files/9750/975/Polestar-0.4.2.2.zip",
+    "hash": "sha256-9ekWZ1zdSbG/Kk0QXdsHAbK2YjNUOAxkpIX1KdxDNYs="
   },
   "oneforall": {
     "source": "curseforge",
     "projectId": 1714201,
-    "version": "9704825",
-    "url": "https://edge.forgecdn.net/files/9704/825/OneForAll-6.2.12.zip",
-    "hash": "sha256-aoJEBB2c61PNVY6N0dIe3h3TpNk7G6Aaof3ky9lfspk="
+    "version": "9774593",
+    "url": "https://edge.forgecdn.net/files/9774/593/OneForAll-6.2.14.zip",
+    "hash": "sha256-o0gyxOyTh1/MJ/OXvyDqK7oojpjV4tZO4t09K2xsxBY="
   },
   "simple-item-levels": {
     "source": "curseforge",
     "projectId": 287692,
-    "version": "9208376",
-    "url": "https://edge.forgecdn.net/files/9208/376/SimpleItemLevel-v74.1.zip",
-    "hash": "sha256-iwot7Y0XruH/RIEFKVCtzeM78sVl28V/tBwJtIiwkSg="
+    "version": "9753825",
+    "url": "https://edge.forgecdn.net/files/9753/825/SimpleItemLevel-v76.zip",
+    "hash": "sha256-0LrzRofqdHTaglcn+PpiedhFIgzMt+HNKavvkdbZYb4="
   },
   "tacotip": {
     "source": "curseforge",
@@ -310,9 +310,9 @@
   "skald": {
     "source": "curseforge",
     "projectId": 1748824,
-    "version": "9722465",
-    "url": "https://edge.forgecdn.net/files/9722/465/Skald-v1.1.0.zip",
-    "hash": "sha256-B6i2yEjbz99oHXVeB4pwK6TqClvQWmkL+wu90jWisaE="
+    "version": "9744395",
+    "url": "https://edge.forgecdn.net/files/9744/395/Skald-v1.1.1.zip",
+    "hash": "sha256-3InO9d2/h45FdfLlpvHjCPymAu5pCrOa28gAIijPodI="
   },
   "forever-immersion": {
     "source": "curseforge",
@@ -338,9 +338,9 @@
   "remove-questie": {
     "source": "curseforge",
     "projectId": 1308020,
-    "version": "9672321",
-    "url": "https://edge.forgecdn.net/files/9672/321/RemoveQuestie_V1.14.zip",
-    "hash": "sha256-N8K0QZmrFY3lS5ouhToYdo36zy1XeMDwlPZ7ysfQcMY="
+    "version": "9773289",
+    "url": "https://edge.forgecdn.net/files/9773/289/RemoveQuestie-v1.15.zip",
+    "hash": "sha256-/P4CYHEV1JaED7HFkMbUpqVzPFnhGj616IRy6d/jxLA="
   },
   "details": {
     "source": "curseforge",
@@ -359,9 +359,9 @@
   "guildos": {
     "source": "curseforge",
     "projectId": 1549177,
-    "version": "9745479",
-    "url": "https://edge.forgecdn.net/files/9745/479/GuildOS-v1.34.3.zip",
-    "hash": "sha256-r5SLPX2jDeU2tymyR6wGN++LBkVuNPCVSIQqaNKzttY="
+    "version": "9773365",
+    "url": "https://edge.forgecdn.net/files/9773/365/GuildOS-v1.38.0.zip",
+    "hash": "sha256-Ji+hYTPjO/nJtBmVcKKsA/+7LN9r/+49YmF+Bo/zB04="
   },
   "spy": {
     "source": "curseforge",

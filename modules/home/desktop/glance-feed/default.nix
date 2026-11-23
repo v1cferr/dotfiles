@@ -46,13 +46,13 @@ let
       GLANCE_LON = config.my.weather.longitude;
       GLANCE_MODEL = config.my.weather.model;
       GLANCE_IBGE = config.my.weather.ibge;
-      GLANCE_SCHEMA = ./schema.sql;
+      GLANCE_SCHEMA = "${./schema.sql}"; # interpolated: a bare path is a string with no store reference, and GC deletes it
       # The CI source: the FAI GitLab (VPN only) and the pipeline hook's copy (ci-webhook.nix).
       GLANCE_GITLAB_URL = "https://git.sup.fai.ufscar.br";
       GLANCE_GITLAB_TOKEN_FILE = "/run/secrets/fai_gitlab_token";
       GLANCE_WEBHOOK_DIR = "/var/lib/ci-webhook/gitlab";
       # The network source: names and what counts as KNOWN come from the router's mirror (one owner).
-      GLANCE_ROUTER_UCI = ../../../../hosts/cudy-wr3000/uci;
+      GLANCE_ROUTER_UCI = "${../../../../hosts/cudy-wr3000/uci}";
       # The threats source: the router's syslog as router-log.nix keeps it (readable by wheel).
       GLANCE_ROUTER_LOG = "/var/log/router/router.log";
       # The claude_usage source: the FAI account's OAuth token, where claude-code.nix keeps it.
@@ -62,7 +62,7 @@ let
       GLANCE_DISK_GAMES = config.my.games.root;
       GLANCE_DISK_TREND = config.my.disk.trendFile;
       GLANCE_DISK_WATCH = lib.concatStringsSep "\n" config.my.disk.watchPaths;
-      GLANCE_DISK_GROWTH = ../../services/scripts/disk-growth.awk;
+      GLANCE_DISK_GROWTH = "${../../services/scripts/disk-growth.awk}";
     };
     text = builtins.readFile ./scripts/feed.sh;
   };

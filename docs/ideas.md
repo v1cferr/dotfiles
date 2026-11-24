@@ -109,10 +109,11 @@ media transcoding do not fit by any order of magnitude.
 coming back on its own.** That is BIOS (*Restore on AC Power Loss* = Power On), not Nix,
 and it is not declarable in this repo. WoL does NOT replace it: after a real power cut the
 NIC loses the state armed by `ethtool`, and it only comes back if the BIOS itself keeps
-wake enabled. The right order to attack it: (1) the BIOS powers back on by itself, (2) WoL
-as the rescue for a normal shutdown, (3) a UPS on the router and modem if the intent is to
-keep the internet up DURING the outage, but that does not turn the PC on, because the PC is
-not on the UPS.
+wake enabled. The right order to attack it: (1) the BIOS powers back on by itself (Last
+State, in the BIOS guide), (2) WoL as the rescue for a normal shutdown, (3) a UPS for the PC,
+the router and the modem, with NUT shutting the PC down cleanly on a long outage. The UPS is
+a planned purchase since the 24/11/2026 cut; requirements and the NUT-rated shortlist are in
+[power-loss](notes/hardware/power-loss.md#ups-planned-purchase).
 
 `hosts/cudy-wr3000/uci/etherwake.conf` is DEAD CONFIG: `name='example'`,
 `mac='11:22:33:44:55:66'`, the factory placeholder of the LuCI app, never filled in. What

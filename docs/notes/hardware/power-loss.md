@@ -33,6 +33,8 @@ the last seconds of writes still in the page cache, and the open Chromium sessio
 - **ntfs3** refuses a dirty volume, and `windows-disk-clear-dirty` only clears a flag
   `ntfs-3g.probe` calls safe ([games-disk](../boot-and-storage/games-disk.md)). ntfs3 fixes
   little things itself, but only Windows' chkdsk really checks NTFS.
+- **journald** syncs every minute (`SyncIntervalSec=1m` in `modules/nixos/core/core.nix`, the
+  default is 5 min), so a cut loses at most the last minute of log.
 
 ## The report
 

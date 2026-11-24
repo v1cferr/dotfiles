@@ -2,9 +2,9 @@
   "questie": {
     "source": "github",
     "repo": "Questie/Questie",
-    "version": "bundle/v12.12.0+v1.1.4",
-    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.12.0%2Bv1.1.4/Questie-v12.12.0%2Bv1.1.4.zip",
-    "hash": "sha256-EW6t1YM4NtG4/zDJyLWq9yS8Lede6jYtbu49mWJQa18="
+    "version": "bundle/v12.13.0+v1.1.5",
+    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.13.0%2Bv1.1.5/Questie-v12.13.0%2Bv1.1.5.zip",
+    "hash": "sha256-vUfkrekss1LTy88SZ8yFNDwBorxrzElfD6mSYzoy2ZU="
   },
   "dbm": {
     "source": "github",
@@ -16,9 +16,9 @@
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9768590",
-    "url": "https://edge.forgecdn.net/files/9768/590/LayerSwap-1.14.47.zip",
-    "hash": "sha256-L7lc0+bDqyTvqTpKNZn45C2fJWpyxv9b4j0fdjKWspo="
+    "version": "9790759",
+    "url": "https://edge.forgecdn.net/files/9790/759/LayerSwap-1.14.53.zip",
+    "hash": "sha256-ykUMIWDrbcaWHSTGKiBI2z08tsp4GCuNZ1nhP0KblDM="
   },
   "leatrix-plus": {
     "source": "curseforge",
@@ -93,9 +93,9 @@
   "social-diary": {
     "source": "curseforge",
     "projectId": 1733454,
-    "version": "9753182",
-    "url": "https://edge.forgecdn.net/files/9753/182/social_diary-v4.2.4.zip",
-    "hash": "sha256-b0kQPUv8dXuSzROwuaeqQG2HkWcsS/AKYms/Sb+Z+js="
+    "version": "9777981",
+    "url": "https://edge.forgecdn.net/files/9777/981/social_diary-v4.2.5.zip",
+    "hash": "sha256-nYYIyPnZDop1uoXGpK8wBPfznI1XfQ/MqPHyfu96oOE="
   },
   "happy-camper": {
     "source": "curseforge",
@@ -142,37 +142,37 @@
   "spoken-ptbr-quests-shared": {
     "source": "curseforge",
     "projectId": 1717819,
-    "version": "9738617",
-    "url": "https://edge.forgecdn.net/files/9738/617/SpokenQuestsAudioShared_ptBR-1.1.0.zip",
-    "hash": "sha256-hUhsTHENA3LzFthPZ/4JGUomKvAiZDMJg/1eLeUfeCk="
+    "version": "9791819",
+    "url": "https://edge.forgecdn.net/files/9791/819/SpokenQuestsAudioShared_ptBR-1.1.2.zip",
+    "hash": "sha256-Mf9+a4gVRf6gYbiZAecV7+jnIDlu4Ftd521KQRxAtlk="
   },
   "spoken-ptbr-quests-alliance": {
     "source": "curseforge",
     "projectId": 1743722,
-    "version": "9738605",
-    "url": "https://edge.forgecdn.net/files/9738/605/SpokenQuestsAudioAlliance_ptBR-1.1.0.zip",
-    "hash": "sha256-/EY+prbywMpXXxjeELsZoLUX1Egmos2Wd0aaCSu+dcQ="
+    "version": "9791804",
+    "url": "https://edge.forgecdn.net/files/9791/804/SpokenQuestsAudioAlliance_ptBR-1.1.2.zip",
+    "hash": "sha256-1HevHkvTOoG/6kx81IljByE0Zlvzk6HgQkBKkrACWBs="
   },
   "spoken-ptbr-quests-horde": {
     "source": "curseforge",
     "projectId": 1743740,
-    "version": "9738612",
-    "url": "https://edge.forgecdn.net/files/9738/612/SpokenQuestsAudioHorde_ptBR-1.1.0.zip",
-    "hash": "sha256-3vke20b0EqbWJhzwqxuIaUKJBv92oIAwVxyCn0VB+S4="
+    "version": "9791810",
+    "url": "https://edge.forgecdn.net/files/9791/810/SpokenQuestsAudioHorde_ptBR-1.1.2.zip",
+    "hash": "sha256-HeXfRxAFpV6xooDpN3XC3ArmR26C2QZBMmPI8zyHxJc="
   },
   "spoken-ptbr-gossip": {
     "source": "curseforge",
     "projectId": 1743731,
-    "version": "9738626",
-    "url": "https://edge.forgecdn.net/files/9738/626/SpokenQuestsAudioGossip_ptBR-1.1.0.zip",
-    "hash": "sha256-/eeqb1wQM8FEX0X5rQQfDSHkDAWH+9MSXvCuNcAF/QQ="
+    "version": "9791830",
+    "url": "https://edge.forgecdn.net/files/9791/830/SpokenQuestsAudioGossip_ptBR-1.1.2.zip",
+    "hash": "sha256-sS/eMVoSgGv7ETUJk05H6lvV2ybydCR/MjG8YdctL+E="
   },
   "spoken-ptbr-readables": {
     "source": "curseforge",
     "projectId": 1723287,
-    "version": "9738633",
-    "url": "https://edge.forgecdn.net/files/9738/633/SpokenReadablesAudio_ptBR-2.1.0.zip",
-    "hash": "sha256-8R8zPSGnM+Gvhbp2F3fq/RE/H6FLMGDBYJIXX0OQ3Nc="
+    "version": "9791842",
+    "url": "https://edge.forgecdn.net/files/9791/842/SpokenReadablesAudio_ptBR-2.1.2.zip",
+    "hash": "sha256-u0k0iyDBlWK3okH5rq8VcSz03p6oVhf/UtvFoZxNMDE="
   },
   "spoken-ptbr-places": {
     "source": "curseforge",
@@ -191,9 +191,9 @@
   "chat-translator": {
     "source": "curseforge",
     "projectId": 1726863,
-    "version": "9701490",
-    "url": "https://edge.forgecdn.net/files/9701/490/ChatTranslator-0.7.13.zip",
-    "hash": "sha256-YCnZ9OmixG28pxBRz0aFqF4UMNZLp32TQJicbZvI88U="
+    "version": "9791050",
+    "url": "https://edge.forgecdn.net/files/9791/50/ChatTranslator-0.7.15.zip",
+    "hash": "sha256-SEGGILd4TDXpeCMIW6i38/3dEo5hba6SZLBoncegc9U="
   },
   "blizzmove": {
     "source": "curseforge",
@@ -219,9 +219,9 @@
   "battletext-forever": {
     "source": "curseforge",
     "projectId": 1722502,
-    "version": "9774656",
-    "url": "https://edge.forgecdn.net/files/9774/656/BattleTextForever-v1.38.1-forever.zip",
-    "hash": "sha256-iu4FPqi93w8w6Eh4rY6VkNH1ZK45aQqMO+vxzbjf0bw="
+    "version": "9793668",
+    "url": "https://edge.forgecdn.net/files/9793/668/BattleTextForever-v1.42.0-forever.zip",
+    "hash": "sha256-/KKEQYcJGXTLLiGyq9bGU6reslpJk2wplQ1Jx33kQSc="
   },
   "easy-experience-bar": {
     "source": "curseforge",
@@ -254,16 +254,16 @@
   "wim": {
     "source": "curseforge",
     "projectId": 7474,
-    "version": "9721125",
-    "url": "https://edge.forgecdn.net/files/9721/125/WIM-3.19.8.zip",
-    "hash": "sha256-ssnRPJ8sj9G8VTDtt2kEsrBI7YthO7WyhMJnT5XCLMg="
+    "version": "9783943",
+    "url": "https://edge.forgecdn.net/files/9783/943/WIM-3.19.9.zip",
+    "hash": "sha256-QonAlhvchobmGaLEYxxQCc0EQFzdbcma9qFGGEiFqUw="
   },
   "lfg-forever": {
     "source": "curseforge",
     "projectId": 1707849,
-    "version": "9747838",
-    "url": "https://edge.forgecdn.net/files/9747/838/LFGForever.zip",
-    "hash": "sha256-WHI6bE2tI0Oni3DYHesgW12yt7mftC5HxkpwPqMGb+c="
+    "version": "9784989",
+    "url": "https://edge.forgecdn.net/files/9784/989/LFGForever.zip",
+    "hash": "sha256-aFKazOLemUdiJlIiQtqs2dJ3/+zVsaiy2cEsmf6+am4="
   },
   "lfg-bulletin-board": {
     "source": "curseforge",
@@ -289,9 +289,9 @@
   "oneforall": {
     "source": "curseforge",
     "projectId": 1714201,
-    "version": "9774593",
-    "url": "https://edge.forgecdn.net/files/9774/593/OneForAll-6.2.14.zip",
-    "hash": "sha256-o0gyxOyTh1/MJ/OXvyDqK7oojpjV4tZO4t09K2xsxBY="
+    "version": "9782203",
+    "url": "https://edge.forgecdn.net/files/9782/203/OneForAll-6.2.16.zip",
+    "hash": "sha256-aqulH7hvfsViXI/Mz0dl+ONlurYMScuhOaGamXGNkBo="
   },
   "simple-item-levels": {
     "source": "curseforge",
@@ -359,15 +359,15 @@
   "guildos": {
     "source": "curseforge",
     "projectId": 1549177,
-    "version": "9773365",
-    "url": "https://edge.forgecdn.net/files/9773/365/GuildOS-v1.38.0.zip",
-    "hash": "sha256-Ji+hYTPjO/nJtBmVcKKsA/+7LN9r/+49YmF+Bo/zB04="
+    "version": "9779767",
+    "url": "https://edge.forgecdn.net/files/9779/767/GuildOS-v1.40.0.zip",
+    "hash": "sha256-hHOHYIVgJPx6YaVuygwlv+FxbNvnM3I3xKD1YoJoAtg="
   },
   "spy": {
     "source": "curseforge",
     "projectId": 1701654,
-    "version": "9750849",
-    "url": "https://edge.forgecdn.net/files/9750/849/Spy-1.3.8-forever28.zip",
-    "hash": "sha256-plC93kxcnd2uGl9r4sW7l04m2ovenlwClYasfsetFyE="
+    "version": "9792800",
+    "url": "https://edge.forgecdn.net/files/9792/800/Spy-1.3.8-forever30.zip",
+    "hash": "sha256-CUt/cjgSAWfka888i383q8E6Kq52hWIeUO1ZS3ToXyQ="
   }
 }

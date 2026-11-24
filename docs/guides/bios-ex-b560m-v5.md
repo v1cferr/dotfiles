@@ -26,6 +26,7 @@ Access: `Del` at POST, then `F7` (Advanced Mode).
 | Fast Boot                         | Disabled                  | Boot                               | recommended                     |
 | Ai Overclock Tuner (XMP)          | XMP I (3200 MT/s)         | Ai Tweaker                         | confirmed (3200 MT/s)           |
 | Native ASPM, PEG - ASPM, PCH ASPM | (wanted: Enabled, L1, L1) | NOT in the menus: hidden by ASUS   | see below                       |
+| Restore AC Power Loss             | Last State                | Advanced → APM Configuration       | recommended (see below)         |
 
 - **Confirmed (OS):** measured from Linux. CSM off (the Arc is UEFI-only and it booted),
   Above 4G + ReBAR active (a 16G VRAM BAR mapped above 4G, through `lspci`).
@@ -186,6 +187,27 @@ monitors on), and watch a day of normal use and one game session for stutter, a 
 an `xe` reset in `journalctl -k`. If anything regresses, set PEG - ASPM back to Disabled: that
 is the whole rollback. Two lit monitors at 180 Hz and 144 Hz keep the display engine busy, so
 even a working L1 will not bring the card down to single-monitor figures.
+
+## Restore AC Power Loss
+
+What the board does when power comes back after a cut. ASUS calls it *Restore AC Power Loss*,
+under Advanced → APM Configuration. On 2026-11-24 a knocked power strip cut the desk
+([power-loss](../notes/hardware/power-loss.md)), and it will happen again.
+
+| Value      | After a cut while ON  | After a cut while OFF | Good for                                            |
+| ---------- | --------------------- | --------------------- | --------------------------------------------------- |
+| Power Off  | stays off             | stays off             | the ASUS default; you press power yourself          |
+| Last State | **powers back on**    | stays off             | an accidental unplug, and a UPS with NUT later      |
+| Power On   | powers back on        | **powers on**         | a headless server; here it turns on after any plug  |
+
+**Last State** fits the desk. An accidental unplug brings it back (Sunshine and the services
+return without a hand on the button), a PC you turned off stays off, and once a UPS arrives NUT
+shuts it down cleanly on low battery, so it stays off until you decide.
+
+Wake-on-LAN does NOT replace this: after a real cut the NIC loses the state `ethtool` armed, so
+the router's `wake-desktop` only works after a normal shutdown ([ideas](../ideas.md)).
+
+Applied by hand; flip **Status** in the table to confirmed once it is set.
 
 ## Backup and restore
 

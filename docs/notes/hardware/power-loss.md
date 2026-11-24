@@ -71,3 +71,9 @@ To read the last report: `sudo cat /var/lib/power-loss/last-report`.
 4. Any failed unit: `systemctl status <unit>`. A container whose volume is NOCOW
    (`/var/lib/docker/volumes`) has no btrfs checksums, so its own recovery is the only check.
 5. Confirm the backup is fresh: `systemctl status backup-staleness`.
+
+## The BIOS side
+
+The board's *Restore AC Power Loss* decides whether the PC comes back by itself. It is firmware,
+so it is not declared here; the choice (Last State) and why are in the
+[BIOS guide](../../guides/bios-ex-b560m-v5.md#restore-ac-power-loss).

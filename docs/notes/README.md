@@ -89,6 +89,7 @@ rule 16 applies in full, so a note that stops being true is a bug.
 | [oom](hardware/oom.md)                                             | earlyoom, and the three traps in its regex                                                         |
 | [power-and-memory-baseline](hardware/power-and-memory-baseline.md) | the 18/10/2026 audit: where the RAM goes, what was kept and why, what is still unmeasured          |
 | [power](hardware/power.md)                                         | Balanced, Gaming and Eco: power-profiles-daemon, and GameMode's hold                               |
+| [power-loss](hardware/power-loss.md)                               | what survives a power cut, the report after one, and the UPS shortlist                             |
 | [webcam](hardware/webcam.md)                                       | the UVC `-71`, everything it is NOT, and the one test left                                         |
 
 ### network

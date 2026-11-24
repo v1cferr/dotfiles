@@ -39,10 +39,12 @@
   ];
 
   # The journal's cap. The default is 10% of the FS, which here would be ~92 GiB, growing
-  # legitimately with nothing raising a flag.
+  # legitimately with nothing raising a flag. Sync every minute, not 5: a power cut loses at most
+  # the last minute of log (docs/notes/hardware/power-loss.md).
   services.journald.extraConfig = ''
     SystemMaxUse=2G
     SystemMaxFileSize=128M
+    SyncIntervalSec=1m
   '';
   # Idle priority: a build yields CPU and disk to the session, so it never freezes the stream.
   nix.daemonCPUSchedPolicy = "idle";

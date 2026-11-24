@@ -1,5 +1,5 @@
-# LOCAL SNAPSHOTS (btrbk): the minutes-scale "undo" for @home, NOT a backup (same disk, and no
-# off-disk copy since 24/09/2026). @home only and /.snapshots: docs/notes/boot-and-storage/btrbk.md
+# LOCAL SNAPSHOTS (btrbk): the minutes-scale "undo" for @home, NOT a backup (same disk; the backup
+# is restic on the Seagate). @home only and /.snapshots: docs/notes/boot-and-storage/btrbk.md
 { config, lib, ... }:
 
 lib.mkIf config.my.services.btrbk {

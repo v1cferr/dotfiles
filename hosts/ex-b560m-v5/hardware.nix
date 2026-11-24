@@ -83,9 +83,8 @@ in
   # a copy on each disk (MEASURED on 31/08: 135 GiB of the Kingston was a duplicate of what was
   # already sitting here).
   #
-  # "restic sweeping 900 GB" does not apply: the daily backup's `paths` was `/home/v1cferr` and
-  # nothing else, so a mount under /mnt was never in its scope. That backup is gone since
-  # 24/09/2026 anyway (docs/notes/boot-and-storage/restic.md), which settles it for good.
+  # "restic sweeping 900 GB" does not apply: the daily backup's `paths` are the home and the dump
+  # dir, so a mount under /mnt is outside its scope (docs/notes/boot-and-storage/restic.md).
   #
   # "NTFS writes with fast-startup pending" is real and is handled by what is ABSENT here: the
   # ntfs3 `force` option. Without it the driver REFUSES a read-write mount of a dirty volume, so a

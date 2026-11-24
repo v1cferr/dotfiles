@@ -322,6 +322,9 @@
   "window.zoomPerWindow": false,
   // It keeps unsaved files when closing the window or exiting (so no work is lost)
   "files.hotExit": "onExitAndWindowClose",
+  // Saves a second after each edit: hotExit only covers a window closed on purpose, not a power
+  // cut (docs/notes/hardware/power-loss.md)
+  "files.autoSave": "afterDelay",
   // It does not open the welcome screen at startup
   "workbench.startupEditor": "none",
   "chat.viewSessions.orientation": "stacked",

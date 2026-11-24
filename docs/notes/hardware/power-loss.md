@@ -35,6 +35,8 @@ the last seconds of writes still in the page cache, and the open Chromium sessio
   little things itself, but only Windows' chkdsk really checks NTFS.
 - **journald** syncs every minute (`SyncIntervalSec=1m` in `modules/nixos/core/core.nix`, the
   default is 5 min), so a cut loses at most the last minute of log.
+- **VS Code** saves a second after each edit (`files.autoSave`). `hotExit` alone only covers a
+  window closed on purpose.
 
 ## The report
 

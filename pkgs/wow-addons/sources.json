@@ -2,9 +2,9 @@
   "questie": {
     "source": "github",
     "repo": "Questie/Questie",
-    "version": "bundle/v12.13.0+v1.1.5",
-    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.13.0%2Bv1.1.5/Questie-v12.13.0%2Bv1.1.5.zip",
-    "hash": "sha256-vUfkrekss1LTy88SZ8yFNDwBorxrzElfD6mSYzoy2ZU="
+    "version": "bundle/v12.14.0+v1.1.6",
+    "url": "https://github.com/Questie/Questie/releases/download/bundle/v12.14.0%2Bv1.1.6/Questie-v12.14.0%2Bv1.1.6.zip",
+    "hash": "sha256-CEHjvGVXZiMhvimrA19swG73FYwRyhllpJo/T6NR5es="
   },
   "dbm": {
     "source": "github",
@@ -16,9 +16,9 @@
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9790759",
-    "url": "https://edge.forgecdn.net/files/9790/759/LayerSwap-1.14.53.zip",
-    "hash": "sha256-ykUMIWDrbcaWHSTGKiBI2z08tsp4GCuNZ1nhP0KblDM="
+    "version": "9799320",
+    "url": "https://edge.forgecdn.net/files/9799/320/LayerSwap-1.14.56.zip",
+    "hash": "sha256-1JhyUfExugP0g8M2wCiM/nGdt98FUPTXfdFUIQDgIM0="
   },
   "leatrix-plus": {
     "source": "curseforge",
@@ -30,9 +30,9 @@
   "auctionator": {
     "source": "curseforge",
     "projectId": 6124,
-    "version": "9761689",
-    "url": "https://edge.forgecdn.net/files/9761/689/Auctionator-352.zip",
-    "hash": "sha256-9TlzRDTa1tn2fXL3+PQbXCOAYjWIG39WQthUSfhjuDU="
+    "version": "9809922",
+    "url": "https://edge.forgecdn.net/files/9809/922/Auctionator-354.zip",
+    "hash": "sha256-Z+PUcavA/HJdtd/EpyAVxp9GnognF7Hv51CiZnC7uyI="
   },
   "bugsack": {
     "source": "curseforge",
@@ -65,9 +65,9 @@
   "forever-loot-sparkles": {
     "source": "curseforge",
     "projectId": 1729017,
-    "version": "9533118",
-    "url": "https://edge.forgecdn.net/files/9533/118/ForeverLootSparkles-v2.0.0-forever.zip",
-    "hash": "sha256-2iExJczEZGmloW0SSTaH44rp/yP7j4dWmUd8lwiX/ME="
+    "version": "9808270",
+    "url": "https://edge.forgecdn.net/files/9808/270/ForeverLootSparkles-v2.1.0-forever.zip",
+    "hash": "sha256-hP7vbHCW/OOHiAutFMO6jt5biILk2Q3gdr0ih2KdBq8="
   },
   "glowing-bars": {
     "source": "curseforge",
@@ -135,9 +135,9 @@
   "spoken": {
     "source": "curseforge",
     "projectId": 1700375,
-    "version": "9762824",
-    "url": "https://edge.forgecdn.net/files/9762/824/Spoken-3.12.1.zip",
-    "hash": "sha256-aLDXYIOVorJStwkiSGaZDykK7I4/eslfEuSqBkYLqV4="
+    "version": "9811495",
+    "url": "https://edge.forgecdn.net/files/9811/495/Spoken-3.13.1.zip",
+    "hash": "sha256-ZHcyTj5PmH/5I022/PsSVDUkJ26uHczJiNQ6WsdwOhc="
   },
   "spoken-ptbr-quests-shared": {
     "source": "curseforge",
@@ -191,9 +191,9 @@
   "chat-translator": {
     "source": "curseforge",
     "projectId": 1726863,
-    "version": "9791050",
-    "url": "https://edge.forgecdn.net/files/9791/50/ChatTranslator-0.7.15.zip",
-    "hash": "sha256-SEGGILd4TDXpeCMIW6i38/3dEo5hba6SZLBoncegc9U="
+    "version": "9798728",
+    "url": "https://edge.forgecdn.net/files/9798/728/ChatTranslator-0.8.0.zip",
+    "hash": "sha256-YotAkVGaRBRa1K9N52EM/E1J6IO8pcVjzyYaKN4USPY="
   },
   "blizzmove": {
     "source": "curseforge",
@@ -219,9 +219,9 @@
   "battletext-forever": {
     "source": "curseforge",
     "projectId": 1722502,
-    "version": "9793668",
-    "url": "https://edge.forgecdn.net/files/9793/668/BattleTextForever-v1.42.0-forever.zip",
-    "hash": "sha256-/KKEQYcJGXTLLiGyq9bGU6reslpJk2wplQ1Jx33kQSc="
+    "version": "9805069",
+    "url": "https://edge.forgecdn.net/files/9805/69/BattleTextForever-v1.43.0-forever.zip",
+    "hash": "sha256-iM0OeZ/1NH2mo7ppOFCPRQPZ0QfTXNiAR/h/0T+skJw="
   },
   "easy-experience-bar": {
     "source": "curseforge",
@@ -254,16 +254,16 @@
   "wim": {
     "source": "curseforge",
     "projectId": 7474,
-    "version": "9783943",
-    "url": "https://edge.forgecdn.net/files/9783/943/WIM-3.19.9.zip",
-    "hash": "sha256-QonAlhvchobmGaLEYxxQCc0EQFzdbcma9qFGGEiFqUw="
+    "version": "9796184",
+    "url": "https://edge.forgecdn.net/files/9796/184/WIM-3.19.10.zip",
+    "hash": "sha256-VZolLvHEx9ktRc1PQeJ7G8+gGjk1CX7cpqqST+WjiZk="
   },
   "lfg-forever": {
     "source": "curseforge",
     "projectId": 1707849,
-    "version": "9784989",
-    "url": "https://edge.forgecdn.net/files/9784/989/LFGForever.zip",
-    "hash": "sha256-aFKazOLemUdiJlIiQtqs2dJ3/+zVsaiy2cEsmf6+am4="
+    "version": "9804804",
+    "url": "https://edge.forgecdn.net/files/9804/804/LFGForever.zip",
+    "hash": "sha256-8ZhnamSN1g6yqcKyKSoY5FSK4hh/peDF/gIl0GW14ck="
   },
   "lfg-bulletin-board": {
     "source": "curseforge",
@@ -345,9 +345,9 @@
   "details": {
     "source": "curseforge",
     "projectId": 61284,
-    "version": "9521145",
-    "url": "https://edge.forgecdn.net/files/9521/145/Details-Details.20261109.15410.172.zip",
-    "hash": "sha256-UAK91cPpLdWb/6Pr38hn+YCwntYpxR2rBW+1RC+SrUE="
+    "version": "9801507",
+    "url": "https://edge.forgecdn.net/files/9801/507/Details-Details.20261124.15450.172.zip",
+    "hash": "sha256-/f4FQD/g0nWhD2advrJ44AfJkQjTAuqtsNwY9Kk1lKU="
   },
   "gtfo": {
     "source": "curseforge",
@@ -359,9 +359,9 @@
   "guildos": {
     "source": "curseforge",
     "projectId": 1549177,
-    "version": "9779767",
-    "url": "https://edge.forgecdn.net/files/9779/767/GuildOS-v1.40.0.zip",
-    "hash": "sha256-hHOHYIVgJPx6YaVuygwlv+FxbNvnM3I3xKD1YoJoAtg="
+    "version": "9810607",
+    "url": "https://edge.forgecdn.net/files/9810/607/GuildOS-v1.43.3.zip",
+    "hash": "sha256-p8vYwmTd9JxBCcrrYyb+XTZEOlJqpX0/9HWRy8pE6rY="
   },
   "spy": {
     "source": "curseforge",

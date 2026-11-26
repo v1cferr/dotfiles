@@ -7,7 +7,7 @@
     imports = [
       ./games.nix # the games on its Windows disk, their saves and their Bottles entries, beyond WoW
       ../../modules/home/desktop/backlight.nix # DDC/CI: both panels held at one declared brightness and white point
-      ../../modules/home/desktop/keyring.nix # the "Login" keyring unlocked at start from a TPM-sealed password (autologin)
+      ../../modules/home/desktop/keyring.nix # the TPM-sealed password oo7 unlocks the "Login" keyring with (autologin)
       ../../modules/home/desktop/lockscreen # the session lock plus hypridle: this desk logs in by itself, so the lock IS its login
       ../../modules/home/services/fai-workstation-mount.nix # ~/FAI-workstation = SFTP to the FAI workstation (rclone plus cache), under the VPN
       ../../modules/home/services/razer-dpi.nix # the OSD for the Razer mouse's onboard DPI button (it polls hidraw)

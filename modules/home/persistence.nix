@@ -122,7 +122,7 @@ in
           directory = ".local/share/keyrings";
           mode = "0700";
         }
-        ".local/state/keyring" # the TPM-sealed keyring password (keyring-tpm-seal)
+        ".config/credstore.encrypted" # the TPM-sealed keyring password (keyring-tpm-seal)
         ".config/rclone" # Drive and FAI-workstation remotes, with their tokens
         ".config/gh" # the GitHub CLI token
         ".config/Bitwarden CLI"

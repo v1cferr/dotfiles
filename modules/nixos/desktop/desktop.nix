@@ -10,7 +10,6 @@ let
     bitwarden-cli
     jq
     sops
-    glib
     ;
   # The app vault's own password (NOT the login one): pam_exec hands the typed password on stdin,
   # NUL-terminated, and this compares it with the sops secret. No secret yet means no unlock.
@@ -67,14 +66,6 @@ in
     "org.freedesktop.impl.portal.Screenshot" = [ "wlr" ];
   };
 
-  # KEYRING (org.freedesktop.secrets). Under an autologin PAM never types a password, so the
-  # unlock comes from a TPM-sealed one (modules/home/desktop/keyring.nix). See the notes.
-  services.gnome.gnome-keyring.enable = true;
-  # Every Electron app then finds it: Chromium matches no "Hyprland" and falls back to this var.
-  environment.sessionVariables.GNOME_DESKTOP_SESSION_ID = "this-is-deprecated";
-  # That var also makes xdg-open pick its GNOME path, which runs `gio`: without it every file fails (exit 3).
-  programs.seahorse.enable = true; # the "Passwords and Keys" GUI, to manage/change the keyring's password
-
   # hyprlock's PAM. WITHOUT this it does not unlock and it LOCKS YOU OUT. The package and config
   # are the user's (modules/home/desktop/lockscreen/default.nix); {} inherits the default login stack.
   security.pam.services.hyprlock = { };
@@ -82,10 +73,7 @@ in
   security.pam.services.quickshell-lock = { };
   # The app vault's card (quickshell/vault/VaultPrompt.qml): its own password, from Bitwarden through
   # sops (vault_password). docs/notes/desktop/vault.md
-  environment.systemPackages = [
-    vaultPasswd
-    glib # gio, for the xdg-open note above
-  ];
+  environment.systemPackages = [ vaultPasswd ];
   security.pam.services.quickshell-vault.text = ''
     auth    required ${pam}/lib/security/pam_exec.so expose_authtok quiet ${lib.getExe vaultCheck}
     account required ${pam}/lib/security/pam_permit.so

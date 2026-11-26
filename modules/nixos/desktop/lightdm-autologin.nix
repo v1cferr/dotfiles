@@ -11,7 +11,4 @@
     enable = true;
     user = "v1cferr";
   };
-
-  # Only for an INTERACTIVE login (a rescue path); inert under autologin.
-  security.pam.services.lightdm.enableGnomeKeyring = true;
 }

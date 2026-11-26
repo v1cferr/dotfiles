@@ -7,7 +7,7 @@
     ./core # Nix/flakes, boot, users, secrets, locale
     ./hardware # CPU/microcode, the GPU (Arc B580), audio (PipeWire), fonts
     ./network # NetworkManager, the domain/subnet/ingress interfaces, the tunnel, Tor
-    ./desktop # Hyprland, xkb, the portal (dark mode), gnome-keyring
+    ./desktop # Hyprland, xkb, the portal (dark mode), the oo7 keyring
     ./services # snapshots (btrbk), hooks (Claude Code), media (Jellyfin/qBit), AI (Ollama/duo)
     ./packages.nix # environment.systemPackages (system apps/tools)
   ];

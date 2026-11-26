@@ -60,13 +60,18 @@ in `modules/nixos/desktop/desktop.nix`: when `XDG_CURRENT_DESKTOP` matches nothi
 `GetDesktopEnvironment` still reads that old variable and lands on GNOME, which means
 `gnome_libsecret`. The value is the one GNOME itself exported for years. Measured with a bare
 Electron 43 printing `safeStorage.getSelectedStorageBackend()`: `basic_text` without it,
-`gnome_libsecret` with it.
+`gnome_libsecret` with it. Re-measured on 26/11/2026 with Electron 45.3.4, the newest in
+nixpkgs-unstable: still `basic_text` without it. Chromium's newer async os_crypt maps an unknown
+desktop to the Secret Service, but Electron's `safeStorage` does not use it yet. Re-measure on
+Electron bumps before dropping the variable.
 
 Why this variable and not `XDG_CURRENT_DESKTOP=Hyprland:GNOME`, which measured the same: the
 portals and the `OnlyShowIn=GNOME` autostart entries also read `XDG_CURRENT_DESKTOP`, and this
-one has only two other readers here. xdg-utils' `xdg-open` falls back to it too, but its GNOME
-branch needs `gio`, which is not on the PATH, so it lands on the same generic opener as before.
-Qt only reads it when `XDG_CURRENT_DESKTOP` is empty.
+one has only two other readers here. Qt only reads it when `XDG_CURRENT_DESKTOP` is empty.
+
+The other reader is xdg-utils' `xdg-open`, which takes its GNOME branch and opens files through
+`gio`. Without `gio` on the PATH every file open failed with exit 3 (PDFs from ZapFast, 26/11/2026),
+so `desktop.nix` ships `glib` for it.
 
 It is a session variable, so it reaches a NEW login, not the running one.
 

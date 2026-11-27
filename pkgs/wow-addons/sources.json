@@ -9,16 +9,16 @@
   "dbm": {
     "source": "github",
     "repo": "DeadlyBossMods/DeadlyBossMods",
-    "version": "12.1.25",
-    "url": "https://github.com/DeadlyBossMods/DeadlyBossMods/releases/download/12.1.25/DBM-Core-12.1.25.zip",
-    "hash": "sha256-lts1mk9SSJylRM9NrS8/DxJJdqmkgLQ78HfgUlUHxjQ="
+    "version": "12.1.26",
+    "url": "https://github.com/DeadlyBossMods/DeadlyBossMods/releases/download/12.1.26/DBM-Core-12.1.26.zip",
+    "hash": "sha256-tm5P4PQiZ0AzwdYMcvlqcwC34iTCTcmQ5mcMoDK8dqM="
   },
   "layer-swap": {
     "source": "curseforge",
     "projectId": 1710286,
-    "version": "9811790",
-    "url": "https://edge.forgecdn.net/files/9811/790/LayerSwap-1.14.57.zip",
-    "hash": "sha256-V5I1p7V6nkYnP6cbCyWrn7SwhsudA/Eenm/BKEOd9W0="
+    "version": "9845626",
+    "url": "https://edge.forgecdn.net/files/9845/626/LayerSwap-1.14.60.zip",
+    "hash": "sha256-UHujDUdAalN0bR9sKTlWq9oZ4zahlztrtxRLG3WmYqs="
   },
   "leatrix-plus": {
     "source": "curseforge",
@@ -72,16 +72,16 @@
   "glowing-bars": {
     "source": "curseforge",
     "projectId": 1754997,
-    "version": "9816091",
-    "url": "https://edge.forgecdn.net/files/9816/91/GlowingBars-4.5.0.zip",
-    "hash": "sha256-lwdAryUmikZ+tYbVIFSTAjoUH/iZvEE5skEnEIsF/ZI="
+    "version": "9837303",
+    "url": "https://edge.forgecdn.net/files/9837/303/GlowingBars-4.5.1.zip",
+    "hash": "sha256-90Xw6GXykl+AXmOfG10uqJBhXQztuXiQFcxqH0+PMig="
   },
   "prettytooltip": {
     "source": "curseforge",
     "projectId": 1720719,
-    "version": "9654209",
-    "url": "https://edge.forgecdn.net/files/9654/209/PrettyTooltip-v1.4.2.zip",
-    "hash": "sha256-d/2yhIiSgShR73SX8ahhrfspboelaCY+WO5yx4ROfag="
+    "version": "9838800",
+    "url": "https://edge.forgecdn.net/files/9838/800/PrettyTooltip-v1.5.0.zip",
+    "hash": "sha256-Slgq4n6CIbm45AUxa/PXIo/xmFHFH2ETkgiwI0C5yLc="
   },
   "keep-or-toss": {
     "source": "curseforge",
@@ -219,9 +219,9 @@
   "battletext-forever": {
     "source": "curseforge",
     "projectId": 1722502,
-    "version": "9805069",
-    "url": "https://edge.forgecdn.net/files/9805/69/BattleTextForever-v1.43.0-forever.zip",
-    "hash": "sha256-iM0OeZ/1NH2mo7ppOFCPRQPZ0QfTXNiAR/h/0T+skJw="
+    "version": "9841595",
+    "url": "https://edge.forgecdn.net/files/9841/595/BattleTextForever-v1.47.2-forever.zip",
+    "hash": "sha256-nuqJ4+RfzbMuoman8h01zHqBujqZyqHM9JMRotD5SiA="
   },
   "easy-experience-bar": {
     "source": "curseforge",
@@ -289,9 +289,9 @@
   "oneforall": {
     "source": "curseforge",
     "projectId": 1714201,
-    "version": "9817323",
-    "url": "https://edge.forgecdn.net/files/9817/323/OneForAll-6.2.17.zip",
-    "hash": "sha256-ZthP6nDHJyC4+wGz/cIEMfhOjDRxWD95nIPY+5aPc+w="
+    "version": "9847336",
+    "url": "https://edge.forgecdn.net/files/9847/336/OneForAll-6.3.0.zip",
+    "hash": "sha256-pz8zILjUJBHQELTzCmwuXiaUAUzGf/H4xH3V7GDnsg8="
   },
   "simple-item-levels": {
     "source": "curseforge",
@@ -303,9 +303,9 @@
   "tacotip": {
     "source": "curseforge",
     "projectId": 1555962,
-    "version": "9816541",
-    "url": "https://edge.forgecdn.net/files/9816/541/TacoTip.zip",
-    "hash": "sha256-Wwwbs2kH3IAFQpcERPB72bGvaCP4urHK+SHCNJFkOL4="
+    "version": "9847068",
+    "url": "https://edge.forgecdn.net/files/9847/68/TacoTip.zip",
+    "hash": "sha256-pazLPCMKQqeuKyDy3WkzppgBR+J/gzxSWh63B2N12nk="
   },
   "skald": {
     "source": "curseforge",
@@ -331,9 +331,9 @@
   "panorama-forever": {
     "source": "curseforge",
     "projectId": 1706544,
-    "version": "9812917",
-    "url": "https://edge.forgecdn.net/files/9812/917/Panorama-1.9.0-forever.zip",
-    "hash": "sha256-1UypGYcdah5AsNO9nak0duAJCEI1uv1mqtbBPqPe/QI="
+    "version": "9831403",
+    "url": "https://edge.forgecdn.net/files/9831/403/Panorama-1.9.1-forever.zip",
+    "hash": "sha256-xRjPu25kXlyna5N41P3bwK5TDbgtzOS+NU3Kjr5msEI="
   },
   "remove-questie": {
     "source": "curseforge",
@@ -366,8 +366,8 @@
   "spy": {
     "source": "curseforge",
     "projectId": 1701654,
-    "version": "9792800",
-    "url": "https://edge.forgecdn.net/files/9792/800/Spy-1.3.8-forever30.zip",
-    "hash": "sha256-CUt/cjgSAWfka888i383q8E6Kq52hWIeUO1ZS3ToXyQ="
+    "version": "9833906",
+    "url": "https://edge.forgecdn.net/files/9833/906/SpyForever-0.1.31-release.zip",
+    "hash": "sha256-JdtE8tDiYDZn/ttpgaD7ajMGFbClAhN70m5D2bpb7Zw="
   }
 }

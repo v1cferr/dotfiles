@@ -94,6 +94,21 @@ hl.window_rule({
   rounding = 0,
 })
 
+-- Live Captions: a caption strip floating at the bottom center, on every workspace, never taking
+-- focus when it opens. Only the main window: its settings share the class. docs/notes/apps/livecaptions.md
+hl.window_rule({
+  name = "livecaptions-strip",
+  match = { class = "^(net\\.sapples\\.LiveCaptions)$", title = "^(Live Captions)$" },
+
+  float = true,
+  pin = true,
+  no_initial_focus = true,
+  -- The size is pinned because the window is born larger and shrinks AFTER the rule, which
+  -- left the strip off center. 1030x110 = its own two lines at the default font.
+  size = "1030 110",
+  move = "(monitor_w-1030)*0.5 monitor_h-170",
+})
+
 -- Vicinae's layer surface: a fade and NO movement (150 ms in, 100 ms out). Pinned here so a later
 -- `layers` style cannot zoom the launcher; the measurements: docs/notes/desktop/motion.md
 hl.layer_rule({ match = { namespace = "^vicinae$" }, animation = "fade" })

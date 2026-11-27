@@ -261,6 +261,16 @@ hl.define_submap("screenshot", function()
   hl.bind("escape", hl.dsp.exec_cmd("flameshot-cancel"))        -- cancel plus leave the submap
 end)
 
+-- Live Captions (apps/livecaptions.nix): opens the caption strip, or closes it when it is up.
+hl.bind(mainMod .. " + SHIFT + C", function()                                    -- live captions (English) on/off
+  for _, w in ipairs(hl.get_windows()) do
+    if w.class == "net.sapples.LiveCaptions" then
+      return hl.dispatch(hl.dsp.window.close({ window = "address:" .. w.address }))
+    end
+  end
+  return hl.dispatch(hl.dsp.exec_cmd("livecaptions"))
+end)
+
 -- Screen recording (wl-screenrec). SUPER+SHIFT+R starts AND stops: idle, it enters a submap where
 -- 1/2 pick the monitor and R a region; recording, it stops and offers the GIF. docs/notes/apps/screenrec.md
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("screenrec-toggle"))

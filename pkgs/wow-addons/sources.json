@@ -369,5 +369,12 @@
     "version": "9833906",
     "url": "https://edge.forgecdn.net/files/9833/906/SpyForever-0.1.31-release.zip",
     "hash": "sha256-JdtE8tDiYDZn/ttpgaD7ajMGFbClAhN70m5D2bpb7Zw="
+  },
+  "forever-dungeon-routes": {
+    "source": "curseforge",
+    "projectId": 1735098,
+    "version": "9829523",
+    "url": "https://edge.forgecdn.net/files/9829/523/ForeverDungeonRoutes-1.3.16.zip",
+    "hash": "sha256-mttcwCY4LmsHE8VYnXeOr+LCD8hM5PtL5n+okLjf+AU="
   }
 }

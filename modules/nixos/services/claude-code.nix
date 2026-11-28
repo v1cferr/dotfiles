@@ -98,6 +98,11 @@ in
     every row opens and closes with a pipe, and the pipes line up with the header's, padded with
     spaces. A repo with no markdownlint config gets one with these 2 rules.
 
+    Leave NOTHING outside the repository: build/test logs, PR bodies and throwaway files go to
+    the session scratchpad (or `mktemp`), never to `..`, because the parent is my projects
+    folder and it is not a git repo, so stray files there are never noticed. Git worktrees
+    live INSIDE the repo under a gitignored `.worktrees/`, never as sibling folders.
+
     In STUDY projects, help me organize, explain and plan, but do not replace the practical
     part. Implementing it and getting it wrong myself is the point of those repositories.
   '';

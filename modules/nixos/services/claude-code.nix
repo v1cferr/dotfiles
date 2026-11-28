@@ -101,7 +101,8 @@ in
     Leave NOTHING outside the repository: build/test logs, PR bodies and throwaway files go to
     the session scratchpad (or `mktemp`), never to `..`, because the parent is my projects
     folder and it is not a git repo, so stray files there are never noticed. Git worktrees
-    live INSIDE the repo under a gitignored `.worktrees/`, never as sibling folders.
+    are created through `claude -w`, `EnterWorktree` or `ctw`, which put them in
+    `<repo>/.claude/worktrees/`; never `git worktree add ../<name>` as a sibling folder.
 
     In STUDY projects, help me organize, explain and plan, but do not replace the practical
     part. Implementing it and getting it wrong myself is the point of those repositories.

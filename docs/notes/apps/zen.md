@@ -71,10 +71,21 @@ the session went with it in silence. Now the package carries the `Homepage` poli
 `about:policies` shows it. A policy writes the DEFAULT branch, so `prefs.js` never gets the line,
 which is why the old `grep` precondition had to go.
 
-The same policy file installs Vicinae's add-on (`ExtensionSettings`, `firefox@vicinae.com`,
-`normal_installed` from AMO's `latest.xpi`), so tab search survives a new profile. It is the signed
-AMO build, so signature checks stay as they are, and AMO keeps it updated. Why it is there:
+The same policy file installs **every extension** (`ExtensionSettings`, the `extensions` map in
+`zen.nix`, ID to AMO slug, `normal_installed` from AMO's `latest.xpi`), so a new profile comes up
+complete. It is the signed AMO build, so signature checks stay as they are, and AMO keeps it
+updated: no NUR, no pinned versions, no flake bump per release. `normal_installed` lets an extension
+be disabled in `about:addons` but not removed. Vicinae's entry is why tab search works:
 [`vicinae.md`](../desktop/vicinae.md#the-browser).
+
+Three things the map does NOT do:
+
+- **Dropping a line does not uninstall.** The policy only installs; remove it in `about:addons` too.
+- **Extension settings stay in the profile** (filter lists, the Bitwarden login). The policy's
+  `3rdparty` key could carry them, nothing uses it yet.
+- **No spellcheck dictionary and no language pack.** Spellcheck comes from DICPATH plus the
+  `spellchecker.dictionary` policy (`spellcheck.md`), and the UI stays en-US. An AMO dictionary
+  would duplicate `pt_BR` and a langpack would switch the UI.
 
 ## Killing precisely, because `pgrep -f` is wider than it looks
 

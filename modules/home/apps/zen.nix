@@ -26,6 +26,20 @@ let
     zenity
     ;
 
+  # Extension ID -> AMO slug. Policy installs the signed AMO build and AMO keeps it current; dropping
+  # a line does NOT uninstall it (docs/notes/apps/zen.md). Spellcheck needs none: DICPATH serves it.
+  extensions = {
+    "uBlock0@raymondhill.net" = "ublock-origin";
+    "{446900e4-71c2-419f-a6a7-df9c091e268b}" = "bitwarden-password-manager";
+    "addon@darkreader.org" = "darkreader";
+    "{036a55b4-5e72-4d05-a06c-cba2dfcc134a}" = "traduzir-paginas-web";
+    "simple-translate@sienori" = "simple-translate";
+    "Librezam@Librezam" = "librezam";
+    "wappalyzer@crunchlabz.com" = "wappalyzer";
+    # Vicinae's tab search (docs/notes/desktop/vicinae.md).
+    "firefox@vicinae.com" = "vicinae";
+  };
+
   # The policy pins session restore in the package itself: prefs.js and Settings cannot drop the
   # tabs on a cold start (an update, a logout, the guard below). It goes on the UNWRAPPED build and
   # is wrapped again, as the flake's own HM module does: Gecko reads the policies.json next to
@@ -43,11 +57,11 @@ let
             Value = lib.concatStringsSep "," osConfig.my.spellcheck.languages;
             Status = "default";
           };
-          # Vicinae's tab search (docs/notes/desktop/vicinae.md): the signed AMO build, kept current by AMO.
-          ExtensionSettings."firefox@vicinae.com" = {
+          # normal_installed: can be disabled in about:addons, not removed.
+          ExtensionSettings = lib.mapAttrs (_: slug: {
             installation_mode = "normal_installed";
-            install_url = "https://addons.mozilla.org/firefox/downloads/latest/vicinae/latest.xpi";
-          };
+            install_url = "https://addons.mozilla.org/firefox/downloads/latest/${slug}/latest.xpi";
+          }) extensions;
         };
       }
   ) { icon = "zen-browser"; };

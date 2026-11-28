@@ -77,9 +77,17 @@ once first) keeps its dead pane, so the error stays on screen. Close it with `pr
 - **What exists**: `git worktree list` for checkouts, `tmux ls` for sessions.
 - **Done with a task**: merge or push the branch, then quit Claude. On exit Claude itself asks
   whether to keep or remove the worktree, and removing also deletes the `worktree-<task>` branch.
-  Something left behind is removed by hand, from the main checkout:
+  Something left behind is cleaned with `ctw --prune` (below), or by hand from the main checkout:
   `git worktree remove .claude/worktrees/<task>` (plus `git worktree unlock` first if git says it is
-  locked) and `git branch -d worktree-<task>`. `ctw` deletes nothing on its own.
+  locked) and `git branch -d worktree-<task>`.
+- **Many left behind**: `ctw --prune`, from anywhere in the repo. Claude only sweeps subagent and
+  background worktrees, never interactive ones, so they pile up (dotfiles had 33 on 28/11/2026, 31
+  of them already merged). It lists what goes and what stays, with the reason, and asks `[y/N]`
+  before touching anything. A worktree goes only when nothing can be lost: no live `ctw` session,
+  not locked, a clean tree, and a branch already merged into the default one (`origin/HEAD`, or
+  `main`). It runs `git worktree remove` and `git branch -d`, never `--force` or `-D`, so git
+  refuses anything unsafe again at the last second. A squash-merged branch looks unmerged and stays:
+  remove that one by hand. `ctw` never deletes on its own, only when asked.
 
 ### What a worktree does not carry
 
@@ -101,7 +109,8 @@ once first) keeps its dead pane, so the error stays on screen. Close it with `pr
 
 Claude Code already creates, reopens, locks and cleans up its worktrees, and asks before deleting
 work. A manager (or a script of `git worktree add`) would be a second owner of the same directories
-(rule 14). `--tmux` from Claude itself was not used either: it names and runs the session its own
+(rule 14). `ctw --prune` does not break that: it creates nothing and only removes what Claude would
+have removed on exit anyway (merged and clean). `--tmux` from Claude itself was not used either: it names and runs the session its own
 way, outside the `ct` / `ca` contract the phone depends on.
 
 ## What the config changes, and why

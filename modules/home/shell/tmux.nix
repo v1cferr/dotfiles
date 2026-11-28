@@ -75,8 +75,96 @@ let
       ''
         usage() {
           echo "usage: ctw <task-id> [${accountFlags}] [claude args...]" >&2
+          echo "       ctw --prune    remove merged, clean worktrees (asks first)" >&2
           exit 2
         }
+
+        # The MAIN checkout, even when called from inside a worktree: Claude creates them at its root.
+        main_checkout() {
+          if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
+            echo "ctw: not inside a git working tree" >&2
+            exit 1
+          fi
+          local first
+          first=$(git worktree list --porcelain)
+          first=''${first%%$'\n'*}
+          echo "''${first#worktree }"
+        }
+
+        # Claude only sweeps subagent and background worktrees, so interactive ones pile up. This
+        # removes a worktree only when nothing can be lost: no live session, not locked, a clean
+        # tree, and a branch already merged into the default one. Squash merges look unmerged and
+        # are kept. No --force and no -D, and nothing at all without a "y".
+        prune() {
+          local root dir def live path br lk reason ans i
+          root=$(main_checkout)
+          dir="$root/.claude/worktrees"
+          def=$(git -C "$root" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/main)
+          def=''${def#origin/}
+          live=$(tmux list-sessions -F "#{@ctw}" 2>/dev/null || true)
+          local -a gone_path=() gone_branch=() kept=()
+          path="" br="" lk=""
+          while IFS= read -r line; do
+            case $line in
+              "worktree "*) path=''${line#worktree } ;;
+              "branch "*) br=''${line#branch refs/heads/} ;;
+              locked*) lk=1 ;;
+              "")
+                if [[ $path == "$dir"/* ]]; then
+                  reason=""
+                  if grep -Fxq -- "$path" <<<"$live"; then
+                    reason="a ctw session is running in it"
+                  elif [ -n "$lk" ]; then
+                    reason="locked"
+                  elif [ ! -d "$path" ]; then
+                    reason="folder is gone (git worktree prune)"
+                  elif [ -n "$(git -C "$path" status --porcelain)" ]; then
+                    reason="uncommitted changes"
+                  elif [ -z "$br" ]; then
+                    reason="detached HEAD"
+                  elif ! git -C "$root" merge-base --is-ancestor "$br" "$def" 2>/dev/null; then
+                    reason="$br not merged into $def"
+                  fi
+                  if [ -n "$reason" ]; then
+                    kept+=("''${path#"$dir"/}: $reason")
+                  else
+                    gone_path+=("$path")
+                    gone_branch+=("$br")
+                  fi
+                fi
+                path="" br="" lk=""
+                ;;
+            esac
+          done < <(git -C "$root" worktree list --porcelain; echo)
+
+          if [ ''${#kept[@]} -gt 0 ]; then
+            echo "keeping (''${#kept[@]}):"
+            printf '  %s\n' "''${kept[@]}"
+          fi
+          if [ ''${#gone_path[@]} -eq 0 ]; then
+            echo "nothing to remove"
+            return
+          fi
+          echo "merged and clean (''${#gone_path[@]}):"
+          for i in "''${!gone_path[@]}"; do
+            echo "  ''${gone_path[$i]#"$dir"/}  (''${gone_branch[$i]})"
+          done
+          read -r -p "Remove ''${#gone_path[@]}? [y/N] " ans </dev/tty
+          [[ $ans == [yY] ]] || { echo "nothing removed"; return; }
+          # One failure (git refusing at the last second) must not stop the others: errexit is on.
+          for i in "''${!gone_path[@]}"; do
+            if ! { git -C "$root" worktree remove -- "''${gone_path[$i]}" \
+              && git -C "$root" branch -d -- "''${gone_branch[$i]}"; }; then
+              echo "ctw: kept ''${gone_path[$i]#"$dir"/} (git refused, see above)" >&2
+            fi
+          done
+        }
+
+        if [ "''${1-}" = --prune ]; then
+          prune
+          exit 0
+        fi
+
         task=''${1-}
         # No dots or slashes: the id is a dir, a branch (worktree-<id>) and a tmux name all at once.
         if ! [[ $task =~ ^[A-Za-z0-9][A-Za-z0-9_-]*$ ]]; then
@@ -100,14 +188,7 @@ let
           exit 1
         fi
 
-        # The MAIN checkout, even when called from inside a worktree: Claude creates them at its root.
-        if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
-          echo "ctw: not inside a git working tree" >&2
-          exit 1
-        fi
-        root=$(git worktree list --porcelain)
-        root=''${root%%$'\n'*}
-        root=''${root#worktree }
+        root=$(main_checkout)
         wt="$root/.claude/worktrees/$task"
 
         join() {

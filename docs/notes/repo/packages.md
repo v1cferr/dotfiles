@@ -75,7 +75,7 @@ necessary.
 **wrangler went out**, tested and removed on 07/08/2026, the same day it went in. It costs 2.2 GiB
 of closure (FOUR copies of nodejs-24: slim, -npm, -corepack and the full one) and has NO DNS or
 zone command, since the whole help is Workers/Pages/KV/R2/AI. The DNS work here is done by the
-`cloudflare-api` MCP ([`.mcp.json`](../../../.mcp.json)).
+`cloudflare-api` MCP ([claude-code](../apps/claude-code.md#the-cloudflare-mcps-are-on-both-accounts-since-28112026)).
 
 ## What is NOT in the list, and why
 

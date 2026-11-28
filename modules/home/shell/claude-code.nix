@@ -127,6 +127,23 @@ let
     }
   );
 
+  # The two Cloudflare MCPs (DNS of v1cferr.dev and the docs), OAuth per account like Vercel's.
+  # User scope, not a repo's .mcp.json: they serve whichever project touches the domain.
+  cloudflareMcp = writeText "mcp-cloudflare.json" (
+    builtins.toJSON {
+      mcpServers = {
+        cloudflare-api = {
+          type = "http";
+          url = "https://mcp.cloudflare.com/mcp";
+        };
+        cloudflare-docs = {
+          type = "http";
+          url = "https://docs.mcp.cloudflare.com/mcp";
+        };
+      };
+    }
+  );
+
   # The FAI memory server (modules/home/services/basic-memory.nix). Keyed `basic-memory` so the permission
   # rules in settings-fai.json still match; it follows the service toggle, so no dead endpoint.
   faiMemory = lib.optional osConfig.my.services.basic-memory (
@@ -146,6 +163,7 @@ let
     gitlabMcp
     openrouterMcp
     gitguardianMcp
+    cloudflareMcp
   ];
 
   # The accounts' SSOT (rule 11): wrappers, menu, symlinks and MCP all come from here.

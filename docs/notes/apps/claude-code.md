@@ -137,9 +137,9 @@ gets no flag.
 Delivery is the wrapper's `--mcp-config`. Three alternatives were discarded, each for a concrete
 reason:
 
-- **the repo root's `.mcp.json`** (which serves the two Cloudflare MCP servers) is PROJECT scope,
-  so Azure would only exist when running `claude` inside the dotfiles, which is exactly where we
-  will never touch Azure;
+- **the repo root's `.mcp.json`** (which served the two Cloudflare MCP servers until 28/11/2026)
+  is PROJECT scope, so Azure would only exist when running `claude` inside the dotfiles, which is
+  exactly where we will never touch Azure;
 - **user scope in `.claude.json`** is app state, and CC rewrites the whole file, so declaring
   there is rule 14's recipe for drift;
 - **`/etc/claude-code/managed-mcp.json`** looks like the right place, being the sibling of the
@@ -170,6 +170,15 @@ imperative form of this same line. It writes into `.claude.json`, which CC rewri
 it would be a second owner on a file the app owns (rule 14) and invisible to git. The wrapper's
 `--mcp-config` puts it in the build instead, which is also why it reaches BOTH accounts without
 being done twice by hand.
+
+## The Cloudflare MCPs are on BOTH accounts, since 28/11/2026
+
+`cloudflare-api` (`https://mcp.cloudflare.com/mcp`) manages the DNS of `v1cferr.dev`, and
+`cloudflare-docs` (`https://docs.mcp.cloudflare.com/mcp`) answers from Cloudflare's docs. They used
+to live in two `.mcp.json` files, the dotfiles' and portfolio-weblog's, both PROJECT scope, so they
+only existed inside those two repos and were declared twice. They now enter through `shared`, like
+Vercel: HTTP, OAuth inside the session, one `/mcp` login per account, no credential here (rule 12).
+Both repo files were deleted (rule 16).
 
 ## The GitLab MCP registers ITSELF, so there is no application to create
 
